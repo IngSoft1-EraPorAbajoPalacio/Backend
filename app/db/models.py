@@ -1,7 +1,9 @@
 from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey
 from enum import Enum as PyEnum
-from base_de_datos.bd import Base
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 class Jugador(Base) :
     """Clase de Jugador
@@ -17,7 +19,7 @@ class Jugador(Base) :
 
     id = Column(Integer, primary_key=True, autoincrement= True)
     nickname = Column(String(255))
-    #partidas = relationship("Jugador_Partida", back_populates='jugadores',cascade="all")
+    partidas = relationship("Jugador_Partida", back_populates='jugadores',cascade="all")
     
     def __init__(self, id=None, nickname=None) :
         self.id = id
@@ -41,7 +43,7 @@ class Partida(Base):
     activa = Column(Boolean, nullable=True)
     psw = Column(String(15), nullable=True)
     turno = Column(Integer,nullable=True)
-    #jugadores = relationship("Jugador_Partida",back_populates='partida')
+    jugadores = relationship("Jugador_Partida",back_populates='partida')
 
     
     def __init__(self, name,min, max, id=None, activa=None , psw=None,turno=None) :
@@ -66,8 +68,8 @@ class Jugador_Partida(Base) :
     
     id_jugador = Column(Integer,ForeignKey('Jugadores.id'), primary_key=True, ) 
     id_partida = Column(Integer,ForeignKey('Partidas.id') ,primary_key=True)
-    #jugador = relationship("Jugador",back_populates = 'partidas')
-    #partida = relationship("Partida",back_populates = 'jugadores')
+    jugador = relationship("Jugador",back_populates = 'partidas')
+    partida = relationship("Partida",back_populates = 'jugadores')
     
      
     def __init__(self, id_jugador,id_partida) :

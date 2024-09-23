@@ -1,14 +1,13 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from uvicorn import run
-from base_de_datos.bd import Base,engine
-
+from db.base import engine
+from db.models import Base 
 
 #Base.metadata.drop_all(bind=engine)  # Elimina todas las tablas
-
 Base.metadata.create_all(bind=engine) # Crea todas las tablas
 
 app = FastAPI(title="El Switcher")
+
 
 @app.get("/")
 def root() :
