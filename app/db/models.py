@@ -19,7 +19,7 @@ class Jugador(Base) :
 
     id = Column(Integer, primary_key=True, autoincrement= True)
     nickname = Column(String(255))
-    partidas = relationship("Jugador_Partida", back_populates='jugadores',cascade="all")
+    partidas = relationship("Jugador_Partida", back_populates='jugador',cascade="all")
     
     def __init__(self, id=None, nickname=None) :
         self.id = id
