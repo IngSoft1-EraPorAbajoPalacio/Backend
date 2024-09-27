@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from db.base import engine
 from db.models import Base 
+from app.routers import partida
 
 #Base.metadata.drop_all(bind=engine)  # Elimina todas las tablas
 Base.metadata.create_all(bind=engine) # Crea todas las tablas
@@ -15,3 +16,5 @@ def root() :
 
 #if __name__ == "__main__":
 #    run("main:app",host="0.0.0.0", reload=True, port=8000)
+
+app.include_router(partida.router)
