@@ -1,83 +1,96 @@
 from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey
+from typing import List,Optional
 from enum import Enum as PyEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship,Mapped,mapped_column
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
 class Jugador(Base) :
-    """Clase de Jugador
-
-    Args:
-        Base (Base): clase base declarativa
-
-    Returns:
-        class 'models.Productos': Clase de Jugador
-    """
-    
+   
     __tablename__ = "Jugadores"
-
-    id = Column(Integer, primary_key=True, autoincrement= True)
-    nickname = Column(String(255))
-    partidas = relationship("Jugador_Partida", back_populates='jugadores',cascade="all")
     
-    def __init__(self, id=None, nickname=None) :
-        self.id = id
-        self.nickname = nickname
-        
-    def __repr__(self):
-        return f"Jugadores({self.id}, {self.nickname})"   
-
-    def __str__(self):
-        return self.nickname
+    id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nickname: Mapped[str] = mapped_column(String(50))
     
+    #relaciones
+    partidas: Mapped[List["Jugador_Partida"]] = relationship(back_populates='jugador', cascade= "all")
+    
+    def __repr__(self) -> str:
+        return f"Jugador(id = {self.id}, nickname = {self.nickname})"   
+
 
 class Partida(Base):
     
     __tablename__ = "Partidas"
     
-    id = Column(Integer, primary_key=True, autoincrement= True)
-    name = Column(String(40), nullable=False)
-    max = Column(Integer, nullable=False)
-    min = Column(Integer,nullable=False)
-    activa = Column(Boolean, nullable=True)
-    psw = Column(String(15), nullable=True)
-    turno = Column(Integer,nullable=True)
-    jugadores = relationship("Jugador_Partida",back_populates='partida')
-
+    id : Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
+    nombre : Mapped[str] = mapped_column(String(40), nullable=False)
+    min : Mapped[int] = mapped_column(nullable=False)
+    max : Mapped[int] = mapped_column(nullable=False)
+    activa : Mapped[bool] = mapped_column(Boolean,nullable=False)
+    id_owner : Mapped[int] = mapped_column(nullable=False)
+    #turno : Mapped[int] = mapped_column(nullable=False)
+    #psw : Mapped[Optional[str]] = mapped_column(String(40),nullable=False)
     
-    def __init__(self, name,min, max, id=None, activa=None , psw=None,turno=None) :
-        self.id = id
-        self.name = name
-        self.min = min
-        self.max = max
-        self.activa = activa
-        self.psw = psw
-        self.turno = turno
+    #relaciones
+    jugadores : Mapped[List['Jugador_Partida']] = relationship(back_populates='partida', cascade="all")
+    tablero : Mapped['Tablero'] = relationship(back_populates = 'relacion_partida' , uselist=False)
         
     def __repr__(self):
-        return f"Partidas({self.id}, {self.name})"   
+        return f"Partida( id : {self.id}, name : {self.name})"   
 
-    def __str__(self):
-        return self.name
-    
     
 class Jugador_Partida(Base) :
     
     __tablename__ = "Jugador_Partida"
     
-    id_jugador = Column(Integer,ForeignKey('Jugadores.id'), primary_key=True, ) 
-    id_partida = Column(Integer,ForeignKey('Partidas.id') ,primary_key=True)
-    jugador = relationship("Jugador",back_populates = 'partidas')
-    partida = relationship("Partida",back_populates = 'jugadores')
+    id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id'),primary_key=True)
+    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id'),primary_key=True)
     
-     
-    def __init__(self, id_jugador,id_partida) :
-        self.id_jugador = id_jugador
-        self.id_partida = id_partida
+    #relaciones
+    jugador : Mapped['Jugador'] = relationship(back_populates='partidas')
+    partida : Mapped['Partida'] = relationship(back_populates='jugadores')
     
     def __repr__(self):
-        return f"Jugadores - Partidas({self.id_jugador}, {self.id_partida})"   
+        return f"Jugador con id {self.id_jugador} se encuentra en Partida con id : {self.id_partida})"   
+ 
+
+colores = ["rojo","verde","azul","amarillo"] 
+Color = PyEnum("Color",colores)
+
+
+class Tablero(Base):
     
-    def __str__(self):
-        return self.id_partida
+    __tablename__ = "Tableros"
+    
+    id : Mapped[int] = mapped_column(primary_key=True,autoincrement=True) 
+    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id'))
+    color_prohibido : Mapped[Color] = mapped_column(Enum(Color), nullable = True)
+    #turno??
+    
+    
+    #relaciones
+    relacion_partida : Mapped['Partida'] = relationship(back_populates='tablero')
+    fichas : Mapped[List['Ficha']] = relationship(back_populates='relacion_tablero')
+
+    
+class Ficha(Base):
+    
+    __tablename__ = 'Fichas'
+    
+    id : Mapped[int] = mapped_column(primary_key=True,autoincrement=True) # ? 
+    x : Mapped[int] = mapped_column(nullable=False)
+    y : Mapped[int] = mapped_column(nullable=False)
+    color : Mapped[Color] = mapped_column(Enum(Color),nullable=False)
+    id_tablero : Mapped[int] = mapped_column(ForeignKey('Tableros.id')) 
+    
+    #relaciones
+    relacion_tablero : Mapped['Tablero'] = relationship(back_populates='fichas')
+
+
+
+
+
+
+
