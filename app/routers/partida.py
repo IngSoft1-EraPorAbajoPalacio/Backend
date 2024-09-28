@@ -6,14 +6,10 @@ from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-
-#la creo yo
 @router.get("/partidas/{id}", response_model=PartidaResponse)
 def obtener_partida(id : int, db:Session = Depends(crear_session)) :
     try:
-        return partida_service.obtener_partida_particular(id,db)
-        #supongo que aca falta lo de sockets
-        
+        return partida_service.obtener_partida_particular(id,db)        
     except Exception as e: 
         raise HTTPException(status_code=404, detail=str(e))
 
