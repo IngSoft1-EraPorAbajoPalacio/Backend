@@ -1,33 +1,58 @@
-from fastapi import APIRouter, HTTPException
-from app.schema.partida_schema import PartidaCreate, PartidaResponse, PartidasListResponse, UnirsePartidaRequest, UnirsePartidaResponse
-from app.services.partida_service import partida_service
+from fastapi import APIRouter, HTTPException,Depends
+from schema.partida_schema import *
+from services.partida_service import partida_service
+from db.base import crear_session
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-@router.post("/partida", response_model=PartidaResponse, status_code=201)
-async def crear_partida(partida: PartidaCreate):
+
+#la creo yo
+@router.get("/partidas/{id}", response_model=PartidaResponse)
+def obtener_partida(id : int, db:Session = Depends(crear_session)) :
     try:
-        id_partida = partida_service.crear_partida(partida)
-        return PartidaResponse(
-            id_partida=id_partida,
-            nombre_partida=partida.nombre_partida,
-            cant_jugadores=1
-        )
+        return partida_service.obtener_partida_particular(id,db)
+        #supongo que aca falta lo de sockets
+        
+    except Exception as e: 
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
+async def crear_partida(partida: CrearPartida, db :Session =  Depends(crear_session)):    
+    try:
+        return partida_service.crear_partida(partida,db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=201)
-async def unirse_partida(idPartida: str, request: UnirsePartidaRequest):
+async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db:Session = Depends(crear_session)):
     try:
-        id_jugador = await partida_service.unirse_partida(idPartida, request.nombreJugador)
-        return UnirsePartidaResponse(idJugador=id_jugador)
+        return await partida_service.unirse_partida(idPartida, request.nombreJugador,db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/partidas", response_model=PartidasListResponse)
-async def listar_partidas():
-    partidas = partida_service.listar_partidas()
-    if not partidas:
-        return PartidasListResponse(partidas=[], mensaje="No hay partidas disponibles en este momento.")
-    return PartidasListResponse(partidas=partidas, mensaje="Partidas disponibles encontradas.")
+
+@router.get("/partidas", response_model=list[PartidaResponse])
+async def listar_partidas(db:Session = Depends(crear_session)):
+    try:
+        return partida_service.listar_partidas(db)
+    except Exception as e: 
+        raise HTTPException(status_code=404, detail=str(e))
     
+
+@router.post("/partida/{id_partida}/jugador/{id_jugador}", response_model=InicarPartidaResponse)
+def iniciar_partida(id_partida :int, id_jugador : int, db : Session = Depends(crear_session)):
+    try:
+        return partida_service.iniciar_partida(id_partida,id_jugador,db)
+    except Exception as e:
+        raise HTTPException(status_code= 404, detail= str(e))
+    
+
+@router.delete("/partida/{idPartida}/jugador/{idJugador}")
+def abandonar_partida(id_partida :int, id_jugador : int, db : Session = Depends(crear_session)):
+    try:
+        return partida_service.abandonar_partida(id_partida,id_jugador,db)
+    except Exception as e:
+        raise HTTPException(status_code= 404, detail= str(e))

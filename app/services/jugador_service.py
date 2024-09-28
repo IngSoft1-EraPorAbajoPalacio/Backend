@@ -2,20 +2,23 @@ from db.base import SessionLocal
 from db.models import Jugador
 from sqlalchemy.exc import *
 from sqlalchemy.orm import Session
-from schema.jugador_schema import JugadorOut, JugadorIn
+#from schema.jugador_schema import JugadorOut, JugadorIn
 
 #jugadores
 
-def crear_jugador(db:Session , jugador : JugadorIn) :
-    jugador_creado = Jugador(nickname=jugador.nickname)
+#def crear_jugador(jugador : JugadorIn, db:Session) :
+def crear_jugador(nombre:str,db:Session):
+    jugador_creado = Jugador(nickname=nombre)
     try :
         db.add(jugador_creado)
         db.commit()
-        return JugadorOut(id= jugador_creado.id, nickname=jugador_creado.nickname)
+        #return JugadorOut(id= jugador_creado.id, nickname=jugador_creado.nickname)
+        return jugador_creado
     except SQLAlchemyError as e :
         print(str(e))
 
     
+"""    
 def obtener_jugadores_db(db:Session):
     try : 
         jugadores = db.query(Jugador).all()
@@ -51,7 +54,7 @@ def  get_tablero():
 
 
 """
-
+"""
 def agregar_jugador(self,nickname : str) -> JugadorOut :
     session = SessionLocal()
     jugador_creado = Jugador(nickname=nickname)
