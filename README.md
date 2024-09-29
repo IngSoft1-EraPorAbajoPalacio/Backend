@@ -7,5 +7,7 @@ Actualizar pip e instalar dependencias:
 ###  python -m pip install --upgrade pip
 ###  python3 -m pip install -r requirements.txt
 
-Correr proyecto 
-###  uvicorn app.main:app --reload
+Correr proyecto
+
+### cd/app 
+###  uvicorn main:app --reload
