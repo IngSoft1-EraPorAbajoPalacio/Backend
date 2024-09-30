@@ -20,11 +20,9 @@ class Jugador(Base) :
     
     #relaciones
     partidas: Mapped[List["Jugador_Partida"]] = relationship(back_populates='jugador', cascade= "all")
-    
-    cartas_de_figuras : Mapped[List["CartasFigura"]] = relationship(back_populates='jugador')
-    cartas_de_movimientos : Mapped[List["CartaMovimientos"]] = relationship(back_populates='jugador')
+    cartas_de_figuras : Mapped[List["CartasFigura"]] = relationship(back_populates='jugador_fig')
+    cartas_de_movimientos : Mapped[List["CartaMovimientos"]] = relationship(back_populates='jugador_mov')
 
-    
     def __repr__(self) -> str:
         return f"Jugador(id = {self.id}, nickname = {self.nickname})"   
  
@@ -76,7 +74,7 @@ class Tablero(Base):
     id : Mapped[int] = mapped_column(primary_key=True,autoincrement=True) 
     id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id'))
     color_prohibido : Mapped[Color] = mapped_column(Enum(Color), nullable = True)
-    #turno??
+    turno : Mapped[int] = mapped_column(nullable=False)
     
     
     #relaciones
@@ -129,7 +127,7 @@ class CartasFigura(Base):
     carta_fig : Mapped[int]  = mapped_column(ForeignKey('Figuras.id'))
 
     #relacion
-    jugador: Mapped["Jugador"] = relationship(back_populates='cartas_de_figuras')
+    jugador_fig: Mapped["Jugador"] = relationship(back_populates='cartas_de_figuras')
 
     figura: Mapped["Figuras"] = relationship(back_populates='cartas_de_figura')
 
@@ -158,8 +156,7 @@ class CartaMovimientos(Base):
     carta_mov : Mapped[int] = mapped_column(ForeignKey('Movimientos.id'))    
 
     #relacion
-    jugador: Mapped["Jugador"] = relationship(back_populates='cartas_de_movimientos')
-
+    jugador_mov: Mapped["Jugador"] = relationship(back_populates='cartas_de_movimientos')
     movimiento: Mapped["Movimientos"] = relationship(back_populates='cartas_de_movimiento')
 
 
