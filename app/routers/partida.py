@@ -58,7 +58,7 @@ async def listar_partidas(db: Session = Depends(crear_session)):
         raise HTTPException(status_code=404, detail= str(e))
 
 
-@router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=201, response_model=InicarPartidaResponse)
+@router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=InicarPartidaResponse)
 async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         response = partida_service.iniciar_partida(id_partida, id_jugador, db)
