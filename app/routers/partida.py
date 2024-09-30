@@ -39,10 +39,9 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
         jugadores = partida_service.obtener_jugadores(int(idPartida), db)
         await manager.broadcast({
             "type":"JugadorUnido",
-            "data":{
-                "idJugador": response.idJugador,
-                "ListaJugadores": [[j.id, j.nickname] for j in jugadores]
-            }
+            "ListaJugadores":[
+                {"id": j.id, "nombre": j.nickname} for j in jugadores
+            ]
         })
         return response
     except ValueError as e:
@@ -77,6 +76,7 @@ async def pasar_turno(id_partida: int, db: Session = Depends(crear_session)):
 @router.delete("/partida/{idPartida}/jugador/{idJugador}")
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
+        
         partida_service.abandonar_partida(id_partida, id_jugador, db)
         return partida_service.listar_partidas(db)
     except Exception as e:
