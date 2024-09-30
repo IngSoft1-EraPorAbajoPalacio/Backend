@@ -14,6 +14,8 @@ class PartidaService:
     
     def __init__(self):
         self.partidas = {}
+            
+                 
         
         
     def esta_iniciada(self, id_partida: int, db: Session) -> bool:
@@ -126,9 +128,11 @@ class PartidaService:
             PartidaResponse(
                 id_partida=str(partida.id),
                 nombre_partida=partida.nombre,
-                cant_jugadores=str(len(partida.jugadores))
+                cant_min_jugadores=partida.min, 
+                cant_max_jugadores=partida.max
             ) for partida in partidas
         ]       
+
     
     
     async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:

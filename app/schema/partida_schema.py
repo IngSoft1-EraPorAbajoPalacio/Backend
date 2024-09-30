@@ -9,12 +9,16 @@ class CrearPartidaResponse(BaseModel):
     #nombre_partida: str
     #esto agrego para devolver el id del jugador 
     id_jugador : str =  None
+    
 
 
 class PartidaResponse(BaseModel):
     id_partida: str
     nombre_partida: str
-    cant_jugadores: str
+    #cant_jugadores: str
+    cant_min_jugadores: int
+    cant_max_jugadores: int
+         
     
     
 #class PartidasListResponse(BaseModel):
