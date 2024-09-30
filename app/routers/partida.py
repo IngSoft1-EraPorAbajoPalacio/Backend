@@ -49,10 +49,9 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
 @router.get("/partidas", response_model=List[PartidaResponse])
 async def listar_partidas(db: Session = Depends(crear_session)):
-        return partida_service.listar_partidas(db)
+    return partida_service.listar_partidas(db)
 
 
 @router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=InicarPartidaResponse)

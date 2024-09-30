@@ -121,7 +121,7 @@ class PartidaService:
     def listar_partidas(self, db: Session):
         partidas = db.query(Partida).all()
         if not partidas:
-            []
+            return []
         return [
             PartidaResponse(
                 id_partida=str(partida.id),
