@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey
-from typing import List,Optional
+from typing import List, Optional
 from enum import Enum as PyEnum
-from sqlalchemy.orm import relationship,Mapped,mapped_column
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, Mapped, mapped_column, declarative_base
 
 Base = declarative_base()
 

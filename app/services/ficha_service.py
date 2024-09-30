@@ -1,7 +1,7 @@
 from sqlalchemy.exc import *
 import random
 from sqlalchemy.orm import Session
-from db.models import *
+from app.db.models import *
 
 TAMANO_TABLERO = 6
 
@@ -28,8 +28,6 @@ def obtener_fichas(id_partida: int, db:Session) :
         fichas = partida.tablero.fichas
         lista_fichas =  [{"x": ficha.x, "y": ficha.y, "color": ficha.color.name } for ficha in fichas]
         return lista_fichas   
-
-
-                
+       
                 
             
