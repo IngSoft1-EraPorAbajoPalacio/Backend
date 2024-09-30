@@ -32,9 +32,11 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=201)
+@router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=200)
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
+        print("holaaaa")
+        print(idPartida)
         response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
         jugadores = partida_service.obtener_jugadores(int(idPartida), db)
         await manager.broadcast({
@@ -101,12 +103,18 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
+    await manager.connect(websocket)
+    print("SE INICIO CONEXION")
     try:
         while True:
             data = await websocket.receive_text()
-            await websocket.send_text(f"Message received: {data}")
+            print("SE INICIO CONEXION")
+            print(f"la data es : {data}")
+    except WebSocketDisconnect as e :
+        print("SE CERRO LA CONEXION")
+        print(e)
+        await manager.disconnect(websocket)        
     except Exception as e:
         print("WebSocket connection closed", e)
     finally:
-        await websocket.close()
+        await manager.disconnect(websocket)
