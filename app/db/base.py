@@ -1,19 +1,28 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from urllib.parse import quote_plus
 
-#escribir path relativo
-DATABASE_URL = "mysql+mysqldb://lucas:123@localhost/el_switcher" 
+load_dotenv()
 
-# Configurar conexiones entre SQLAlchemy y MYSQL
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+
+encoded_password = quote_plus(DB_PASSWORD)
+
+DATABASE_URL = f"mysql+mysqldb://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}"
+print(f"Database URL: {DATABASE_URL}")
+
 engine = create_engine(DATABASE_URL, echo=True)
 
-# Crear session para realizar consultas e inserciones
 SessionLocal = sessionmaker(bind=engine)
 
-
-def crear_session() :
+def crear_session():
     session = SessionLocal()
-    try : 
+    try:
         yield session
     finally:
         session.close()

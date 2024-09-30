@@ -180,7 +180,7 @@ class PartidaService:
 
         return InicarPartidaResponse(id_partida=str(partida.id))
     
-    
+    '''''
     def pasar_turno(self, id_partida: int, db: Session):  
         partida = self.obtener_partida(id_partida,db)  
         tablero = partida.tablero
@@ -195,7 +195,7 @@ class PartidaService:
         db.commit()
         
         return PasarTurnoResponse(id_turno = tablero.turno)      
-        
+    ''' 
 
     def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
     
@@ -209,13 +209,6 @@ class PartidaService:
             db.commit()
             
         #en el caso que sean 3 o 4 solo elimino ese jugador y los datos relacionados a él
-            
-        
-        
-                       
-                    
-    
-
 
 #Crea una instancia del servicio que se utilizará en el router.
 partida_service = PartidaService()

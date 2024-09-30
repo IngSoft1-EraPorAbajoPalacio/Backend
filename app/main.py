@@ -6,8 +6,8 @@ from routers import partida
 from fastapi.middleware.cors import CORSMiddleware
 
 
-Base.metadata.drop_all(bind=engine)  # Elimina todas las tablas
-#Base.metadata.create_all(bind=engine) # Crea todas las tablas
+#Base.metadata.drop_all(bind=engine)  # Elimina todas las tablas
+Base.metadata.create_all(bind=engine) # Crea todas las tablas
 
 app = FastAPI(title="El Switcher")
 
@@ -17,17 +17,15 @@ app.include_router(partida.router)
 def root() :
     return RedirectResponse(url='/docs/')   
 
-origins = [
-    "http://localhost:5173",  
-    "http://127.0.0.1:5173",
-]
-
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:5173"],  # Allow your React app's origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
