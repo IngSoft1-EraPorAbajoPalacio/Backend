@@ -121,7 +121,7 @@ class PartidaService:
     def listar_partidas(self, db: Session):
         partidas = db.query(Partida).all()
         if not partidas:
-            raise HTTPException(status_code=404, detail="No existe ninguna partida")
+            []
         return [
             PartidaResponse(
                 id_partida=str(partida.id),
