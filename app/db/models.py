@@ -61,7 +61,7 @@ class Jugador_Partida(Base) :
         return f"Jugador con id {self.id_jugador} se encuentra en Partida con id : {self.id_partida})"   
  
 
-colores = ["rojo","verde","azul","amarillo"] 
+colores = ["Rojo","Verde","Azul","Amarillo"] 
 Color = PyEnum("Color",colores)
 
 
@@ -93,8 +93,8 @@ class Ficha(Base):
     relacion_tablero : Mapped['Tablero'] = relationship(back_populates='fichas')
 
 
-Figura = PyEnum("Figura", ["f1","f2","f3","f4","f5","f6","f7",
-                           "d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18"])
+Figura = PyEnum("Figura", ["1","2","3","4","5","6","7",
+                           "8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25"])
 
 Movimiento = PyEnum("Movimiento", ["mov1","mov2","mov3","mov4","mov5","mov6","mov7"])
 
