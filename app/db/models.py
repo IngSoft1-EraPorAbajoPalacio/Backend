@@ -37,12 +37,10 @@ class Partida(Base):
     max : Mapped[int] = mapped_column(nullable=False)
     activa : Mapped[bool] = mapped_column(Boolean,default=False)
     id_owner : Mapped[int] = mapped_column(nullable=False)
-    #turno : Mapped[int] = mapped_column(nullable=False)
-    #psw : Mapped[Optional[str]] = mapped_column(String(40),nullable=False)
     
     #relaciones
     jugadores : Mapped[List['Jugador_Partida']] = relationship(back_populates='partida', cascade="all")
-    tablero : Mapped['Tablero'] = relationship(back_populates = 'relacion_partida' , uselist=False)
+    tablero : Mapped['Tablero'] = relationship(back_populates = 'relacion_partida' , cascade="all")
         
     def __repr__(self):
         return f"Partida( id : {self.id}, name : {self.name})"   
@@ -52,8 +50,8 @@ class Jugador_Partida(Base) :
     
     __tablename__ = "Jugador_Partida"
     
-    id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id'),primary_key=True)
-    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id'),primary_key=True)
+    id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id', ondelete='CASCADE'),primary_key=True)
+    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'), primary_key=True)
     
     #relaciones
     jugador : Mapped['Jugador'] = relationship(back_populates='partidas')
@@ -72,10 +70,9 @@ class Tablero(Base):
     __tablename__ = "Tableros"
     
     id : Mapped[int] = mapped_column(primary_key=True,autoincrement=True) 
-    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id'))
+    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'))
     color_prohibido : Mapped[Color] = mapped_column(Enum(Color), nullable = True)
     turno : Mapped[int] = mapped_column(nullable=False)
-    
     
     #relaciones
     relacion_partida : Mapped['Partida'] = relationship(back_populates='tablero')
@@ -108,11 +105,9 @@ class Figuras(Base):
     __tablename__ = "Figuras"
     
     id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) 
-    #img : Mapped[str] = mapped_column(String(100),nullable=True)
     fig : Mapped[Figura] = mapped_column(Enum(Figura))
-    #facil : Mapped[bool] = mapped_column(nullable=False)
     
-    #relacion
+    #relaciones
     cartas_de_figura: Mapped[List["CartasFigura"]] = relationship(back_populates='figura')
 
     
@@ -126,7 +121,7 @@ class CartasFigura(Base):
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE')) 
     carta_fig : Mapped[int]  = mapped_column(ForeignKey('Figuras.id'))
 
-    #relacion
+    #relaciones
     jugador_fig: Mapped["Jugador"] = relationship(back_populates='cartas_de_figuras')
 
     figura: Mapped["Figuras"] = relationship(back_populates='cartas_de_figura')
@@ -138,10 +133,9 @@ class Movimientos(Base):
     __tablename__ = "Movimientos"
     
     id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) 
-    #img : Mapped[str] = mapped_column(String(100), nullable=True)
     mov : Mapped[Movimiento] = mapped_column(Enum(Movimiento), primary_key=True)
     
-    #relacion
+    #relaciones
     cartas_de_movimiento: Mapped["CartaMovimientos"] = relationship(back_populates='movimiento')
 
     
@@ -155,7 +149,7 @@ class CartaMovimientos(Base):
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE'))
     carta_mov : Mapped[int] = mapped_column(ForeignKey('Movimientos.id'))    
 
-    #relacion
+    #relaciones
     jugador_mov: Mapped["Jugador"] = relationship(back_populates='cartas_de_movimientos')
     movimiento: Mapped["Movimientos"] = relationship(back_populates='cartas_de_movimiento')
 
