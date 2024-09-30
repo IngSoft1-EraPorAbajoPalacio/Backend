@@ -7,7 +7,7 @@ from db.models import Partida,Jugador_Partida
 from sqlalchemy.exc import *
 from services.jugador_service import *
 from services.ficha_service import * 
-from services.cartas_service import inicializacion_figuras_db,inicializacion_movimientos_db,repartir_cartas_figuras, repartir_cartas_movimientos
+from services.cartas_service import *
 
 
 class PartidaService:
@@ -31,33 +31,35 @@ class PartidaService:
         return [jugador.id_jugador for jugador in partida.jugadores]  
        
      
-    def cartas_jugador(self, id_jugador: int, db: Session):
+    def obtener_cartas_figuras(self, id_jugador:int, db: Session):
         jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-        list_cartas_figuras = []
-        list_cartas_movimientos = []
-        
-        print(f"El jugar con id {id_jugador} tiene las siguientes cartas de figuras :")
+        cartas_figuras = []        
         for carta in jugador.cartas_de_figuras:
             figura = carta.figura
-            list_cartas_figuras.append({
+            cartas_figuras.append({
                 "id_jugador": id_jugador,
                 "nombre_jugador": jugador.nickname,
                 "id_figura": figura.id,
                 "figura":figura.fig.name
             })
-            
-        print(f"El jugar con id {id_jugador} tiene las siguientes cartas de movimientos :")
+        return cartas_figuras    
+     
+     
+    def obtener_cartas_movimientos(self, id_jugador: int, db: Session):
+        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+        cartas_movimientos = []
+        
         for carta in jugador.cartas_de_movimientos:
-            list_cartas_movimientos.append({
+            movimiento = carta.movimiento
+            cartas_movimientos.append({
                 "id_jugador": id_jugador,
                 "nombre_jugador": jugador.nickname,
-                "id_movimiento": carta.movimiento.id,
-                "figura": carta.movimiento.mov.name
+                "id_figura": movimiento.id,
+                "figura":movimiento.mov.name
             })
-        
-        print(list_cartas_figuras)  
-        print(list_cartas_movimientos)    
-            
+        return cartas_movimientos   
+   
+
         
     def obtener_jugadores(self,id_partida:int,db : Session):
         partida = self.obtener_partida(id_partida,db)
@@ -177,8 +179,22 @@ class PartidaService:
             jugador.jugando = True
             
         db.commit()
-
-        return InicarPartidaResponse(id_partida=str(partida.id))
+        
+        
+        cartas_movimientos = self.obtener_cartas_movimientos(id_jugador, db)
+        cartas_figuras = self.obtener_cartas_figuras(id_jugador, db)
+        fichas = obtener_fichas(id_partida, db)
+        orden = self.obtener_id_jugadores(id_partida, db)
+        resultado = {
+            "type": "IniciarPartida",
+            "fichas": fichas, 
+            "orden": orden,
+            "cartasMovimiento": cartas_movimientos,  
+            "cartasFigura": cartas_figuras  
+        }
+        
+        return resultado
+        
     
     '''''
     def pasar_turno(self, id_partida: int, db: Session):  
@@ -203,12 +219,13 @@ class PartidaService:
         cantidad_jugadores = self.obtener_cantidad_jugadores(id_partida,db)
         print(cantidad_jugadores)
         
-        #si cant jug == 2 debo eliminar todo lo relacionado a la partida
         if cantidad_jugadores == 2:
             db.delete(partida)
             db.commit()
-            
-        #en el caso que sean 3 o 4 solo elimino ese jugador y los datos relacionados a él
+                    
+        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+        db.delete(jugador)
+        db.commit()
 
-#Crea una instancia del servicio que se utilizará en el router.
+
 partida_service = PartidaService()
