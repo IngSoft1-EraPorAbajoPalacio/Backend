@@ -13,19 +13,17 @@ app = FastAPI(title="El Switcher")
 
 app.include_router(partida.router)
 
-@app.get("/")
-def root() :
-    return RedirectResponse(url='/docs/')   
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Allow your React app's origin
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+@app.get("/")
+def root() :
+    return RedirectResponse(url='/docs/')   
+
