@@ -20,8 +20,8 @@ class Jugador(Base) :
     
     #relaciones
     partidas: Mapped[List["Jugador_Partida"]] = relationship(back_populates='jugador', cascade= "all")
-    cartas_de_figuras : Mapped[List["CartasFigura"]] = relationship(back_populates='jugador_fig')
-    cartas_de_movimientos : Mapped[List["CartaMovimientos"]] = relationship(back_populates='jugador_mov')
+    cartas_de_figuras : Mapped[List["CartasFigura"]] = relationship(back_populates='jugador_fig', cascade="all")#
+    cartas_de_movimientos : Mapped[List["CartaMovimientos"]] = relationship(back_populates='jugador_mov', cascade="all")#
 
     def __repr__(self) -> str:
         return f"Jugador(id = {self.id}, nickname = {self.nickname})"   
@@ -93,7 +93,6 @@ class Ficha(Base):
     relacion_tablero : Mapped['Tablero'] = relationship(back_populates='fichas')
 
 
-
 Figura = PyEnum("Figura", ["f1","f2","f3","f4","f5","f6","f7",
                            "d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18"])
 
@@ -111,7 +110,6 @@ class Figuras(Base):
     cartas_de_figura: Mapped[List["CartasFigura"]] = relationship(back_populates='figura')
 
     
-
 class CartasFigura(Base):
     
     __tablename__ = "CartasFiguras"
@@ -127,7 +125,6 @@ class CartasFigura(Base):
     figura: Mapped["Figuras"] = relationship(back_populates='cartas_de_figura')
 
 
-
 class Movimientos(Base):
     
     __tablename__ = "Movimientos"
@@ -138,13 +135,12 @@ class Movimientos(Base):
     #relaciones
     cartas_de_movimiento: Mapped["CartaMovimientos"] = relationship(back_populates='movimiento')
 
-    
 
 class CartaMovimientos(Base):
     
     __tablename__ = "CartasMovimientos"
     
-    id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) #?
+    id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) 
     id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'))
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE'))
     carta_mov : Mapped[int] = mapped_column(ForeignKey('Movimientos.id'))    
