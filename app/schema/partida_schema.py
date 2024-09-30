@@ -83,5 +83,5 @@ class UnirsePartidaResponse(BaseModel):
 #    id_partida : int
     
 
-class InicarPartidaResponse(BaseModel):
+class IniciarPartidaResponse(BaseModel):
     id_partida : str

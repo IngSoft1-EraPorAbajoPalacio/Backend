@@ -150,7 +150,7 @@ class PartidaService:
         return UnirsePartidaResponse(idJugador=jugador_a_unirse.id)
     
 
-    def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session) -> InicarPartidaResponse:
+    def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session) -> IniciarPartidaResponse:
         if not self.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no pertenece a la partida")
 

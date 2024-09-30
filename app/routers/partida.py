@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
-from schema.partida_schema import CrearPartidaResponse, CrearPartida, PartidaResponse, UnirsePartidaResponse, UnirsePartidaRequest, InicarPartidaResponse 
+from schema.partida_schema import * 
 from services.partida_service import partida_service
 from db.base import crear_session
 from sqlalchemy.orm import Session
@@ -54,11 +54,12 @@ async def listar_partidas(db: Session = Depends(crear_session)):
     return partida_service.listar_partidas(db)
 
 
-@router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=InicarPartidaResponse)
+@router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=IniciarPartidaResponse)
 async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         response = partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager.broadcast(response)
+        return IniciarPartidaResponse(id_partida=str(id_partida))
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
     
