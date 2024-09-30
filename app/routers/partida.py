@@ -90,11 +90,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            print("SE INICIO CONEXION")
     except WebSocketDisconnect as e :
-        print("SE CERRO LA CONEXION DEL CLIENTE")
-    except RuntimeError:
-        await manager.disconnect(websocket)
-        
-    finally:
-        await manager.disconnect(websocket)
+        print(str(e))
+    except RuntimeError as e:
+        print(str(e))
