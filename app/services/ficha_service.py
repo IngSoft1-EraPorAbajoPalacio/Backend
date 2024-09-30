@@ -22,6 +22,12 @@ def repartir_fichas(id_partida : int , db:Session)  :
     db.add_all(posiciones)
     db.commit()
     
+       
+def obtener_fichas(id_partida: int, db:Session) :
+        partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        fichas = partida.tablero.fichas
+        lista_fichas =  [{"x": ficha.x, "y": ficha.y, "color": ficha.color.name } for ficha in fichas]
+        return lista_fichas   
 
 
                 
