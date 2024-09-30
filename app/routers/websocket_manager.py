@@ -10,12 +10,18 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     async def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            await websocket.close()
-            self.active_connections.remove(websocket)
+        try:
+            if websocket in self.active_connections:
+                await websocket.close()
+                self.active_connections.remove(websocket)
+        except Exception as e:
+            print(str(e))
 
     async def broadcast(self, message: dict):
         for connection in self.active_connections:
-            await connection.send_json(message)
+            try:
+                await connection.send_json(message)
+            except RuntimeError:
+                await self.disconnect(connection)
 
 manager = ConnectionManager()

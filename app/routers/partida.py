@@ -32,11 +32,9 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=200)
+@router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=201)
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
-        print("holaaaa")
-        print(idPartida)
         response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
         jugadores = partida_service.obtener_jugadores(int(idPartida), db)
         await manager.broadcast({
@@ -72,6 +70,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
         return response
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
 '''''
 @router.patch("/partida/{idPartida}", response_model=PasarTurnoResponse)
 async def pasar_turno(id_partida: int, db: Session = Depends(crear_session)):
@@ -82,6 +81,7 @@ async def pasar_turno(id_partida: int, db: Session = Depends(crear_session)):
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 '''''
+
 @router.delete("/partida/{idPartida}/jugador/{idJugador}")
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
@@ -109,12 +109,10 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             print("SE INICIO CONEXION")
-            print(f"la data es : {data}")
     except WebSocketDisconnect as e :
-        print("SE CERRO LA CONEXION")
-        print(e)
-        await manager.disconnect(websocket)        
-    except Exception as e:
-        print("WebSocket connection closed", e)
+        print("SE CERRO LA CONEXION DEL CLIENTE")
+    except RuntimeError:
+        await manager.disconnect(websocket)
+        
     finally:
         await manager.disconnect(websocket)
