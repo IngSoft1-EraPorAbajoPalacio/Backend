@@ -7,9 +7,13 @@ TAMANO_TABLERO = 6
 
 def crear_tablero(id_partida: int, db: Session):       
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        if not partida:
+            return []
         id_jugadores = [jugador.id_jugador for jugador in partida.jugadores]        
-        tablero_nuevo = Tablero(id_partida = id_partida, color_prohibido=random.choice(list(Color)),
-                                turno = random.choice(id_jugadores) )
+        tablero_nuevo = Tablero(id_partida = id_partida,
+                                color_prohibido=random.choice(list(Color)),
+                                turno = random.choice(id_jugadores) 
+        )
         db.add(tablero_nuevo)
         db.commit()
         

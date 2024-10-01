@@ -14,9 +14,6 @@ class PartidaService:
     
     def __init__(self):
         self.partidas = {}
-            
-                 
-        
         
     def esta_iniciada(self, id_partida: int, db: Session) -> bool:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
@@ -132,8 +129,6 @@ class PartidaService:
                 cant_max_jugadores=partida.max
             ) for partida in partidas
         ]       
-
-    
     
     async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
@@ -184,7 +179,6 @@ class PartidaService:
             
         db.commit()
         
-        
         cartas_movimientos = self.obtener_cartas_movimientos(id_jugador, db)
         cartas_figuras = self.obtener_cartas_figuras(id_jugador, db)
         fichas = obtener_fichas(id_partida, db)
@@ -195,10 +189,9 @@ class PartidaService:
             "orden": orden,
             "cartasMovimiento": cartas_movimientos,  
             "cartasFigura": cartas_figuras  
-        }
-        
+        } 
         return resultado
-        
+    
     
     '''''
     def pasar_turno(self, id_partida: int, db: Session):  
@@ -221,15 +214,20 @@ class PartidaService:
     
         partida = self.obtener_partida(id_partida,db)
         cantidad_jugadores = self.obtener_cantidad_jugadores(id_partida,db)
-        print(cantidad_jugadores)
+        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()       
         
-        if cantidad_jugadores == 2:
-            db.delete(partida)
-            db.commit()
+        if (partida.activa):
+            if(cantidad_jugadores == 2):
+                db.delete(partida)
+            else:
+                db.delete(jugador)
+        else:
+            if cantidad_jugadores > 1:
+                db.delete(jugador)   
+            else:
+                db.delete(partida)
                     
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-        db.delete(jugador)
         db.commit()
-
+        
 
 partida_service = PartidaService()
