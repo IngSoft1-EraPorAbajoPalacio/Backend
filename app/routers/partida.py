@@ -18,7 +18,7 @@ def obtener_partida(id: int, db: Session = Depends(crear_session)):
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
 async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_session)):
     try:
-        response = partida_service.crear_partida(partida, db)
+        response = await partida_service.crear_partida(partida, db)
         await manager.broadcast({
             "type": "AgregarPartida",
             "data": {
@@ -56,7 +56,8 @@ async def listar_partidas(db: Session = Depends(crear_session)):
 @router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=IniciarPartidaResponse)
 async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
-        response = partida_service.iniciar_partida(id_partida, id_jugador, db)
+        response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
+        print(response)
         await manager.broadcast(response)
         return IniciarPartidaResponse(id_partida=str(id_partida))
     except Exception as e:

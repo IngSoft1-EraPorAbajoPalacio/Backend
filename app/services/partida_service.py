@@ -98,7 +98,7 @@ class PartidaService:
        )
  
  
-    def crear_partida(self, partida: CrearPartida, db: Session):
+    async def crear_partida(self, partida: CrearPartida, db: Session):
         owner = crear_jugador(partida.nombre_host, db)
         partida_creada = Partida(
             nombre=partida.nombre_partida,
