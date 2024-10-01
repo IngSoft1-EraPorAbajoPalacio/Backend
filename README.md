@@ -24,5 +24,5 @@ Creamos una base de datos llamada el_switcher
 ### CREATE DATABASE el_switcher
 
 Correr proyecto
-### cd/app 
-###  uvicorn main:app --reload
+
+###  uvicorn app.main:app --reload
