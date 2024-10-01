@@ -1,5 +1,5 @@
-from db.base import SessionLocal
-from db.models import Jugador
+from app.db.base import SessionLocal
+from app.db.models import Jugador
 from sqlalchemy.exc import *
 from sqlalchemy.orm import Session
 #from schema.jugador_schema import JugadorOut, JugadorIn

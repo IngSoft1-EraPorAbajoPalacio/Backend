@@ -1,10 +1,10 @@
-from schema.partida_schema import *
-from services.jugador_service import *
+from app.schema.partida_schema import *
+from app.services.jugador_service import *
 from sqlalchemy.exc import *
-from services.partida_service import *
+from app.services.partida_service import *
 from sqlalchemy.orm import Session
-from db.models import *
-from schema.partida_schema import *
+from app.db.models import *
+from app.schema.partida_schema import *
 import random
 
 

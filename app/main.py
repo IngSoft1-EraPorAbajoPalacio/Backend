@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from db.base import engine
-from db.models import * 
-from routers import partida
+from app.db.base import engine
+from app.db.models import * 
+from app.routers import partida
 from fastapi.middleware.cors import CORSMiddleware
 
 

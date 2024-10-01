@@ -1,13 +1,13 @@
-from schema.partida_schema import *
+from app.schema.partida_schema import *
 from typing import List
 from fastapi import HTTPException
 import uuid
 from sqlalchemy.orm import Session
-from db.models import Partida,Jugador_Partida
+from app.db.models import Partida,Jugador_Partida
 from sqlalchemy.exc import *
-from services.jugador_service import *
-from services.ficha_service import * 
-from services.cartas_service import *
+from app.services.jugador_service import *
+from app.services.ficha_service import * 
+from app.services.cartas_service import *
 
 
 class PartidaService:
