@@ -30,18 +30,34 @@ class PartidaService:
         return [jugador.id_jugador for jugador in partida.jugadores]  
        
      
-    def obtener_cartas_figuras(self, id_jugador:int, db: Session):
+    def obtener_cartas_figuras(self, id_jugador:int,id_partida:int, db: Session):
+        partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        """
         jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
         cartas_figuras = []        
         for carta in jugador.cartas_de_figuras:
             figura = carta.figura
             cartas_figuras.append({
-                "id_jugador": id_jugador,
-                "nombre_jugador": jugador.nickname,
-                "id_figura": figura.id,
-                "figura":figura.fig.name
+                "idJugador": id_jugador,
+                "nombreJugador": jugador.nickname,
+                "cartas": [{"id": figura.id, "figura": int(figura.fig.name)}]
+                #"idFigura": figura.id,
+                #"figura":int(figura.fig.name)
             })
-        return cartas_figuras    
+           """
+        cartas_figura = []
+        for jugador in partida.jugadores:
+            jugador_data = {
+                "idJugador": jugador.id_jugador,
+                "nombreJugador": jugador.jugador.nickname,
+                "cartas": [
+                    {"id": carta.id, "figura": carta.figura.fig.name} 
+                    for carta in jugador.jugador_fig.cartas_de_figuras
+                ]
+        }
+        cartas_figura.append(jugador_data)
+        return cartas_figura
+          
      
      
     def obtener_cartas_movimientos(self, id_jugador: int, db: Session):
@@ -51,10 +67,10 @@ class PartidaService:
         for carta in jugador.cartas_de_movimientos:
             movimiento = carta.movimiento
             cartas_movimientos.append({
-                "id_jugador": id_jugador,
-                "nombre_jugador": jugador.nickname,
-                "id_figura": movimiento.id,
-                "figura":movimiento.mov.name
+                #"idJugador": id_jugador,
+                #"nombreJugador": jugador.nickname,
+                "id": movimiento.id,
+                "movimiento":movimiento.mov.name
             })
         return cartas_movimientos   
    
@@ -82,7 +98,7 @@ class PartidaService:
        )
  
  
-    def crear_partida(self, partida: CrearPartida, db: Session):
+    async def crear_partida(self, partida: CrearPartida, db: Session):
         owner = crear_jugador(partida.nombre_host, db)
         partida_creada = Partida(
             nombre=partida.nombre_partida,
@@ -149,7 +165,7 @@ class PartidaService:
         return UnirsePartidaResponse(idJugador=jugador_a_unirse.id)
     
 
-    def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session) -> IniciarPartidaResponse:
+    async def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session) -> IniciarPartidaResponse:
         if not self.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no pertenece a la partida")
 
@@ -179,8 +195,10 @@ class PartidaService:
             
         db.commit()
         
+
         cartas_movimientos = self.obtener_cartas_movimientos(id_jugador, db)
-        cartas_figuras = self.obtener_cartas_figuras(id_jugador, db)
+        #cartas_figuras = self.obtener_cartas_figuras(id_jugador,id_partida, db)
+        cartas_figuras = [{"id": 1, "figura":"f1"},{"id": 2, "figura":"f2"}, {"id": 3, "figura":"f3"}]
         fichas = obtener_fichas(id_partida, db)
         orden = self.obtener_id_jugadores(id_partida, db)
         resultado = {
@@ -188,7 +206,7 @@ class PartidaService:
             "fichas": fichas, 
             "orden": orden,
             "cartasMovimiento": cartas_movimientos,  
-            "cartasFigura": cartas_figuras  
+            "cartasFigura": cartas_figuras   
         } 
         return resultado
     
@@ -210,7 +228,7 @@ class PartidaService:
         return PasarTurnoResponse(id_turno = tablero.turno)      
     ''' 
 
-    def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
+    async def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
     
         partida = self.obtener_partida(id_partida,db)
         cantidad_jugadores = self.obtener_cantidad_jugadores(id_partida,db)
