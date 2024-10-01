@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
-from schema.partida_schema import * 
-from services.partida_service import partida_service
-from db.base import crear_session
+from app.schema.partida_schema import * 
+from app.services.partida_service import partida_service
+from app.db.base import crear_session
 from sqlalchemy.orm import Session
-from routers.websocket_manager import manager
+from app.routers.websocket_manager import manager
 from typing import List
 
 router = APIRouter()
