@@ -8,6 +8,7 @@ from sqlalchemy.exc import *
 from app.services.jugador_service import *
 from app.services.ficha_service import * 
 from app.services.cartas_service import *
+import logging
 
 
 class PartidaService:
@@ -147,24 +148,34 @@ class PartidaService:
         ]       
     
     async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        if not partida:
-            raise HTTPException(status_code=404, detail=f"No existe partida con id {id_partida}")
-        
-        if len(partida.jugadores) >= partida.max:
-            raise HTTPException(status_code=404, detail="La partida está llena")
-        
-        jugador_a_unirse = crear_jugador(nombre=nombre_jugador, db=db)
-        agregar_jugador = Jugador_Partida(
-            id_jugador=jugador_a_unirse.id,
-            id_partida=id_partida
-        )
-        db.add(agregar_jugador)
-        db.commit()
+        try:
+            partida = db.query(Partida).filter(Partida.id == id_partida).first()
+            if not partida:
+                raise HTTPException(status_code=404, detail=f"No existe partida con id {id_partida}")
+            
+            if len(partida.jugadores) >= partida.max:
+                raise HTTPException(status_code=404, detail="La partida está llena")
+            
+            jugador_a_unirse = crear_jugador(nombre=nombre_jugador, db=db)
+            agregar_jugador = Jugador_Partida(
+                id_jugador=jugador_a_unirse.id,
+                id_partida=id_partida
+            )
+            db.add(agregar_jugador)
+            db.commit()
 
-        return UnirsePartidaResponse(idJugador=jugador_a_unirse.id)
+            return UnirsePartidaResponse(
+                idJugador=jugador_a_unirse.id,
+                unidos=[
+                    JugadorListado(id=jugador.jugador.id, nombre=jugador.jugador.nickname)
+                    for jugador in partida.jugadores
+                ]
+            )
+        except Exception as e:
+            db.rollback()
+            logging.error(f"Error al unirse a la partida: {e}")
+            raise HTTPException(status_code=500, detail="Error interno del servidor")
     
-
     async def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session) -> IniciarPartidaResponse:
         if not self.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no pertenece a la partida")

@@ -79,8 +79,13 @@ class UnirsePartidaRequest(BaseModel):
         return v
 
 
+class JugadorListado(BaseModel):
+        id: int
+        nombre: str
+
 class UnirsePartidaResponse(BaseModel):
     idJugador: int
+    unidos: List[JugadorListado]
 
 
 #class IniciarPartida(UnirsePartidaRequest):
