@@ -198,7 +198,7 @@ class PartidaService:
 
         cartas_movimientos = self.obtener_cartas_movimientos(id_jugador, db)
         #cartas_figuras = self.obtener_cartas_figuras(id_jugador,id_partida, db)
-        cartas_figuras = [{"id": 1, "figura":"f1"},{"id": 2, "figura":"f2"}, {"id": 3, "figura":"f3"}]
+        cartas_figuras = [{"id": 1, "figura": 1},{"id": 2, "figura": 2}, {"id": 3, "figura": 3}]
         fichas = obtener_fichas(id_partida, db)
         orden = self.obtener_id_jugadores(id_partida, db)
         resultado = {
