@@ -64,15 +64,16 @@ class PartidaService:
             print(e)
                
         return CrearPartidaResponse(
-             id_partida=str(partida_creada.id),
-             nombre_partida=partida_creada.nombre,
-             id_jugador=str(owner.id)
-         )                
-                      
+            id_partida=str(partida_creada.id),
+            nombre_partida=partida_creada.nombre,
+            id_jugador=str(owner.id)
+        )                
+                    
     
     
-    async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> Jugador:
+    async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        
         if not partida:
             raise HTTPException(status_code=404, detail=f"No existe partida con id {id_partida}")
         
@@ -91,7 +92,13 @@ class PartidaService:
             db.rollback()
             print(f"Error al unirse a la partida: {e}")
             
-        return jugador_a_unirse       
+        return UnirsePartidaResponse(
+            idJugador=str(jugador_a_unirse.id),
+            unidos=[
+                JugadorListado(id=str(jugador.jugador.id), nombre=jugador.jugador.nickname)
+                for jugador in partida.jugadores
+            ]
+        )
 
     async def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session):
         if not self.pertenece(id_partida, id_jugador, db):
@@ -139,12 +146,10 @@ class PartidaService:
         } 
         return response
     
-    
-    '''''
-    def pasar_turno(self, id_partida: int, db: Session):  
+    def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
         partida = self.obtener_partida(id_partida,db)  
         tablero = partida.tablero
-        turno_actual = tablero.turno
+        turno_actual = id_jugador
 
         id_jugadores = [jugador.id_jugador for jugador in partida.jugadores]
         cantidad_jugadores = len(id_jugadores)
@@ -154,8 +159,7 @@ class PartidaService:
 
         db.commit()
         
-        return PasarTurnoResponse(id_turno = tablero.turno)      
-    ''' 
+        return tablero.turno
 
     def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):       
         partida = self.obtener_partida(id_partida,db)

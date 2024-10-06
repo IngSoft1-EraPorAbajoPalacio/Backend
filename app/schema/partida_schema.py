@@ -63,8 +63,13 @@ class PartidaResponse(BaseModel):
     cant_max_jugadores: int
          
 
+class JugadorListado(BaseModel):
+    id: str
+    nombre: str
+
 class UnirsePartidaResponse(BaseModel):
-    idJugador: int
+    idJugador: str
+    unidos: List[JugadorListado]
 
 
 class IniciarPartidaResponse(BaseModel):

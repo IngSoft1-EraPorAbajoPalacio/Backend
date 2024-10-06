@@ -46,7 +46,7 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
 @router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=201)
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
-        jugador_unido = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
+        response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
         jugadores = obtener_jugadores(int(idPartida), db)
         await manager.broadcast({
             "type":"JugadorUnido",
@@ -56,7 +56,7 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
         })
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))    
-    return UnirsePartidaResponse(idJugador=jugador_unido.id)
+    return response
 
 
 @router.get("/partidas", response_model=List[PartidaResponse])
@@ -82,16 +82,14 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
-'''''
-@router.patch("/partida/{idPartida}", response_model=PasarTurnoResponse)
-async def pasar_turno(id_partida: int, db: Session = Depends(crear_session)):
+@router.patch("/partida/{id_partida}/jugador/{id_jugador}", status_code=202)
+async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
-        response = partida_service.pasar_turno(id_partida, db)
-        await manager.pasar_turno(str(id_partida))
-        return response
+        sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
+        await manager.broadcast({"type": "PasarTurno", "turno": sigTurno})
+        return
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-'''''
 
 
 @router.delete("/partida/{idPartida}/jugador/{idJugador}")
