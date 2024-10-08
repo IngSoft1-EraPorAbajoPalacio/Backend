@@ -4,7 +4,10 @@ from app.services.partida_service import partida_service
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager import manager
+from app.schema.websocket_schema import * 
 from typing import List
+
+import logging
 
 router = APIRouter()
 
@@ -18,18 +21,19 @@ def obtener_partida(id: int, db: Session = Depends(crear_session)):
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
 async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_session)):
     try:
-        response = await partida_service.crear_partida(partida, db)
-        await manager.broadcast({
-            "type": "AgregarPartida",
-            "data": {
-                "idPartida": response.id_partida,
-                "nombrePartida": partida.nombre_partida,
-                "cantJugadoresMin": partida.cant_min_jugadores,
-                "cantJugadoresMax": partida.cant_max_jugadores
-            }
-        })
-        return response
-    except ValueError as e:
+        partida_creada = await partida_service.crear_partida(partida, db)
+        agregar_partida_message = AgregarPartidaSchema(
+            type=WebSocketMessageType.AGREGAR_PARTIDA,
+            data=AgregarPartidaDataSchema(
+                idPartida=partida_creada.id_partida,
+                nombrePartida=partida.nombre_partida,
+                cantJugadoresMin=partida.cant_min_jugadores,
+                cantJugadoresMax=partida.cant_max_jugadores
+            )
+        )
+        await manager.broadcast(agregar_partida_message.dict())
+        return partida_creada    
+    except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=201)
@@ -37,12 +41,15 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
     try:
         response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
         jugadores = partida_service.obtener_jugadores(int(idPartida), db)
-        await manager.broadcast({
-            "type":"JugadorUnido",
-            "ListaJugadores":[
-                {"id": j.id, "nombre": j.nickname} for j in jugadores
-            ]
-        })
+
+        lista_jugadores = [
+            JugadorSchema(id=j.id, nombre=j.nickname) for j in jugadores
+        ]
+        jugador_unido_message = JugadorUnidoSchema(
+            type=WebSocketMessageType.JUGADOR_UNIDO,
+            ListaJugadores=lista_jugadores
+        )
+        await manager.broadcast(jugador_unido_message.model_dump())
         return response
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -77,11 +84,37 @@ async def pasar_turno(id_partida: int, db: Session = Depends(crear_session)):
 @router.delete("/partida/{idPartida}/jugador/{idJugador}")
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
+        logging.info(f"Received request to remove player {id_jugador} from game {id_partida}")
+        responce = await partida_service.abandonar_partida(id_partida, id_jugador, db)
+        logging.info(f"Successfully processed abandonar_partida: {responce}")
         
-        partida_service.abandonar_partida(id_partida, id_jugador, db)
-        return partida_service.listar_partidas(db)
+        if responce.get("partida_eliminada"):
+            eliminar_partida_message = EliminarPartidaSchema(
+            type=WebSocketMessageType.ELIMINAR_PARTIDA,
+            data=EliminarPartidaDataSchema(
+                idPartida=id_partida
+                )
+            )
+            await manager.broadcast(eliminar_partida_message.dict())
+            logging.info(f"Broadcast abandonar_partida message: {eliminar_partida_message.dict()}")
+        else :   
+            abandonar_partida_message = AbandonarPartidaSchema(
+                type=WebSocketMessageType.ABANDONAR_PARTIDA,
+                data=AbandonarPartidaDataSchema(
+                    idPartida=id_partida,
+                    idJugador=id_jugador
+                )
+            )
+            await manager.broadcast(abandonar_partida_message.dict())
+            logging.info(f"Broadcast abandonar_partida message: {abandonar_partida_message.dict()}")
+        
+        return responce
+    except HTTPException as he:
+        logging.error(f"HTTP exception in abandonar_partida route: {str(he)}")
+        raise he
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        logging.error(f"Unexpected error in abandonar_partida route: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 
 @router.websocket("/ws")

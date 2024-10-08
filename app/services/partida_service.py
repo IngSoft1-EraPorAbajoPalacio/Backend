@@ -8,7 +8,8 @@ from sqlalchemy.exc import *
 from app.services.jugador_service import *
 from app.services.ficha_service import * 
 from app.services.cartas_service import *
-
+from app.schema.websocket_schema import EliminarPartidaDataSchema, EliminarPartidaSchema
+from app.routers.websocket_manager import manager
 
 class PartidaService:
     
@@ -227,25 +228,91 @@ class PartidaService:
         
         return PasarTurnoResponse(id_turno = tablero.turno)      
     ''' 
+   
 
     async def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
     
-        partida = self.obtener_partida(id_partida,db)
-        cantidad_jugadores = self.obtener_cantidad_jugadores(id_partida,db)
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()       
-        
-        if (partida.activa):
-            if(cantidad_jugadores == 2):
-                db.delete(partida)
+        try:
+            print(f"Attempting to remove player {id_jugador} from game {id_partida}")
+
+            partida = self.obtener_partida(id_partida, db)
+            if not partida:
+                raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
+
+            jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+            if not jugador:
+                raise HTTPException(status_code=404, detail=f"No existe ningún jugador con id {id_jugador}")
+
+            jugador_partida = db.query(Jugador_Partida).filter_by(id_partida=id_partida, id_jugador=id_jugador).first()
+            if not jugador_partida:
+                raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no está en la partida {id_partida}")
+
+            cantidad_jugadores = self.obtener_cantidad_jugadores(id_partida, db)
+            print(f"Cantidad de jugadores: {cantidad_jugadores}")
+
+            if partida.activa:
+                if cantidad_jugadores == 2:
+                    await self.eliminar_partida(id_partida, db)  # Elimina partida si quedan 2 jugadores y uno abandona
+                    return {"partida_eliminada": True}                    
+                else:
+                    db.delete(jugador_partida)
             else:
-                db.delete(jugador)
-        else:
-            if cantidad_jugadores > 1:
-                db.delete(jugador)   
-            else:
-                db.delete(partida)
-                    
-        db.commit()
-        
+                if cantidad_jugadores > 1 and id_jugador != partida.id_owner:
+                    db.delete(jugador_partida)
+                else:
+                    await self.eliminar_partida(id_partida, db)  # Elimina si el owner abandona antes de comenzar
+                    return {"partida_eliminada": True}
+
+            jugador.jugando = False
+            db.commit()
+            print(f"Successfully removed player {id_jugador} from game {id_partida}")
+            return {"message": f"Jugador {id_jugador} ha abandonado la partida {id_partida}"}
+
+        except SQLAlchemyError as e:
+            db.rollback()
+            print(f"Database error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Database error occurred")
+        except HTTPException as he:
+            print(f"HTTP error: {str(he)}")
+            raise he
+        except Exception as e:
+            db.rollback()
+            print(f"Unexpected error: {str(e)}")
+            raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+    async def eliminar_partida(self, id_partida: int, db: Session):
+        try:
+            # Obtener la partida
+            partida = db.query(Partida).filter(Partida.id == id_partida).first()
+
+            if not partida:
+                raise HTTPException(status_code=404, detail="Partida no encontrada")
+
+            # Eliminar las cartas de figuras asociadas a la partida
+            db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
+
+            # Eliminar las cartas de movimientos asociadas a la partida
+            db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
+
+            # Obtener los tableros y eliminar las fichas asociadas
+            tableros = db.query(Tablero).filter(Tablero.id_partida == id_partida).all()
+            for tablero in tableros:
+                db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
+
+            # Eliminar los tableros asociados a la partida
+            db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
+
+            # Eliminar los jugadores asociados a la partida
+            db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).delete()
+
+            # Finalmente, eliminar la partida
+            db.delete(partida)
+
+            # Confirmar los cambios en la base de datos
+            db.commit()
+
+        except Exception as e:
+            db.rollback()  # Deshacer los cambios en caso de error
+            raise HTTPException(status_code=500, detail=f"Error eliminando la partida: {str(e)}")
 
 partida_service = PartidaService()
