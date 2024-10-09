@@ -52,9 +52,47 @@ async def test_unirse_partida(partida_service: PartidaService, partida_test, nom
         session.close()
 
 @pytest.mark.asyncio
-async def test_unirse_partida_id_invalido(partida_service: PartidaService, nombre_jugador):
+async def test_unirse_partida_id_invalido(nombre_jugador):
     response = client.post(
         "/partida/999/jugador",
         json=nombre_jugador.model_dump()
     )
     assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_unirse_partida_iniciada(partida_service: PartidaService, partida_test, nombre_jugador):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+        response = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
+        assert response.status_code == 200
+
+        response = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador",
+            json=nombre_jugador.model_dump()
+        )
+        assert response.status_code == 404
+    finally:
+        session.close()
+    
+@pytest.mark.asyncio
+async def test_unirse_partida_llena(partida_service: PartidaService, partida_test, nombre_jugador):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 3", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 4", session)
+
+        response = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador",
+            json=nombre_jugador.model_dump()
+        )
+        assert response.status_code == 404
+        response_data = response.json()
+        assert response_data['detail'] == "La partida está llena"
+
+    finally:
+        session.close()
