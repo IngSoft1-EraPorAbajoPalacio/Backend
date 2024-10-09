@@ -1,7 +1,6 @@
 from app.schema.partida_schema import *
 from typing import List
 from fastapi import HTTPException
-import uuid
 from sqlalchemy.orm import Session
 from app.db.models import Partida,Jugador_Partida
 from sqlalchemy.exc import *
@@ -13,142 +12,75 @@ from app.routers.websocket_manager import manager
 
 class PartidaService:
     
-    def __init__(self):
-        self.partidas = {}
+    def _init_(self):
+        self.partidas_lobby = []
+        self.partidas_iniciadas = []
+        
+        
+    def obtener_partidas(self, db: Session):
+        partidas = db.query(Partida).all()
+        if not partidas:
+            return []
+        return partidas 
+     
+            
+    def obtener_partida(self, id_partida: int, db: Session):        
+        print(id_partida)
+        partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        if partida is None:
+            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}, error 1")
+        return partida
+               
+    def obtener_jugadores(id_partida:int,db : Session):
+        partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        if partida is None:
+            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
+        return [jugador.jugador for jugador in partida.jugadores]
         
     def esta_iniciada(self, id_partida: int, db: Session) -> bool:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        return partida.activa
+        return partida.activa  
     
     
     def pertenece(self, id_partida: int, id_jugador: int, db: Session) -> bool:
-        id_jugadores = self.obtener_id_jugadores(id_partida, db)
-        return id_jugador in id_jugadores
+        return id_jugador in obtener_id_jugadores(id_partida, db)
     
-     
-    def obtener_id_jugadores(self,id_partida:int,db : Session):
-        partida = self.obtener_partida(id_partida,db)
-        return [jugador.id_jugador for jugador in partida.jugadores]  
-       
-     
-    def obtener_cartas_figuras(self, id_jugador:int,id_partida:int, db: Session):
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        """
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-        cartas_figuras = []        
-        for carta in jugador.cartas_de_figuras:
-            figura = carta.figura
-            cartas_figuras.append({
-                "idJugador": id_jugador,
-                "nombreJugador": jugador.nickname,
-                "cartas": [{"id": figura.id, "figura": int(figura.fig.name)}]
-                #"idFigura": figura.id,
-                #"figura":int(figura.fig.name)
-            })
-           """
-        cartas_figura = []
-        for jugador in partida.jugadores:
-            jugador_data = {
-                "idJugador": jugador.id_jugador,
-                "nombreJugador": jugador.jugador.nickname,
-                "cartas": [
-                    {"id": carta.id, "figura": carta.figura.fig.name} 
-                    for carta in jugador.jugador_fig.cartas_de_figuras
-                ]
-        }
-        cartas_figura.append(jugador_data)
-        return cartas_figura
-          
-     
-     
-    def obtener_cartas_movimientos(self, id_jugador: int, db: Session):
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-        cartas_movimientos = []
-        
-        for carta in jugador.cartas_de_movimientos:
-            movimiento = carta.movimiento
-            cartas_movimientos.append({
-                #"idJugador": id_jugador,
-                #"nombreJugador": jugador.nickname,
-                "id": movimiento.id,
-                "movimiento":movimiento.mov.name
-            })
-        return cartas_movimientos   
-   
-
-        
-    def obtener_jugadores(self,id_partida:int,db : Session):
-        partida = self.obtener_partida(id_partida,db)
-        jugadores = [jugador.jugador for jugador in partida.jugadores]
-        return jugadores
-    
-    
-    def obtener_cantidad_jugadores(self, id_partida: int, db: Session):
-        partida = self.obtener_partida(id_partida, db)
-        return len(partida.jugadores)
-        
- 
-    def obtener_partida_particular(self, id_partida: int, db: Session):
-       partida = db.query(Partida).filter(Partida.id == id_partida).first()
-       if partida is None:
-           raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
-       return PartidaResponse(
-           id_partida=str(id_partida),
-           nombre_partida=partida.nombre,
-           cant_jugadores=str(len(partida.jugadores))
-       )
- 
  
     async def crear_partida(self, partida: CrearPartida, db: Session):
         owner = crear_jugador(partida.nombre_host, db)
+        
         partida_creada = Partida(
             nombre=partida.nombre_partida,
             min=partida.cant_min_jugadores,
             max=partida.cant_max_jugadores,
             id_owner=owner.id
         )
-        try:
-            db.add(partida_creada)
-            db.commit()
-        except SQLAlchemyError as e:
-            print(str(e))
-
-        nuevo_jugador_partida = Jugador_Partida(
-            id_jugador=owner.id,
-            id_partida=partida_creada.id
-        )
-        db.add(nuevo_jugador_partida)
+        db.add(partida_creada)
         db.commit()
         
+        try:
+            jugador_partida = Jugador_Partida(
+                id_jugador=owner.id,
+                id_partida=partida_creada.id
+            )
+                                
+            db.add(jugador_partida)
+            db.commit()
+        except SQLAlchemyError as e:
+            db.rollback() 
+            print(e)
+               
         return CrearPartidaResponse(
             id_partida=str(partida_creada.id),
             nombre_partida=partida_creada.nombre,
             id_jugador=str(owner.id)
-        ) 
-         
+        )                
+                    
     
-    def obtener_partida(self, id_partida: int, db: Session):
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        if partida is None:
-            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
-        return partida
-
-    
-    def listar_partidas(self, db: Session):
-        partidas = db.query(Partida).all()
-        if not partidas:
-            return []
-        return [
-            PartidaResponse(
-                id_partida=str(partida.id),
-                nombre_partida=partida.nombre,
-                cant_min_jugadores=partida.min, 
-                cant_max_jugadores=partida.max
-            ) for partida in partidas
-        ]       
     
     async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
+        
         if not partida:
             raise HTTPException(status_code=404, detail=f"No existe partida con id {id_partida}")
         
@@ -160,63 +92,71 @@ class PartidaService:
             id_jugador=jugador_a_unirse.id,
             id_partida=id_partida
         )
-        db.add(agregar_jugador)
-        db.commit()
+        try:
+            db.add(agregar_jugador)
+            db.commit()
+        except SQLAlchemyError as e:
+            db.rollback()
+            print(f"Error al unirse a la partida: {e}")
+            
+        return UnirsePartidaResponse(
+            idJugador=str(jugador_a_unirse.id),
+            unidos=[
+                JugadorListado(id=str(jugador.jugador.id), nombre=jugador.jugador.nickname)
+                for jugador in partida.jugadores
+            ]
+        )
 
-        return UnirsePartidaResponse(idJugador=jugador_a_unirse.id)
-    
-
-    async def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session) -> IniciarPartidaResponse:
+    async def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session):
         if not self.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no pertenece a la partida")
 
         if not db.query(Partida).filter(Partida.id_owner == id_jugador).first():
             raise HTTPException(status_code=404, detail="Solo el owner puede iniciar la partida")
 
-        if self.obtener_cantidad_jugadores(id_partida, db) == 1:
+        if obtener_cantidad_jugadores(id_partida, db) == 1:
             raise HTTPException(status_code=404, detail="No puedes iniciar la partida con menos de 2 jugadores")
 
         partida = self.obtener_partida(id_partida, db)
+
         if partida.activa:
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} ya está iniciada")
 
         crear_tablero(id_partida, db)
         repartir_fichas(id_partida, db)
-
+        
         inicializacion_figuras_db(db)
         inicializacion_movimientos_db(db)
-
+        
         repartir_cartas_movimientos(id_partida, db)
         repartir_cartas_figuras(id_partida, db)
 
         partida.activa = True
-        jugadores = [jugador.jugador for jugador in partida.jugadores]
+        db.commit()
+        
+        jugadores = obtener_jugadores(id_partida, db)
         for jugador in jugadores:
             jugador.jugando = True
             
-        db.commit()
+        db.commit()        
         
-
-        cartas_movimientos = self.obtener_cartas_movimientos(id_jugador, db)
-        #cartas_figuras = self.obtener_cartas_figuras(id_jugador,id_partida, db)
-        cartas_figuras = [{"id": 1, "figura": 1},{"id": 2, "figura": 2}, {"id": 3, "figura": 3}]
+        cartas_movimientos = obtener_cartas_movimientos(id_partida, db)
+        cartas_figuras = obtener_cartas_figuras(id_partida, db)
         fichas = obtener_fichas(id_partida, db)
-        orden = self.obtener_id_jugadores(id_partida, db)
-        resultado = {
+        orden = obtener_id_jugadores(id_partida, db)
+        response = {
             "type": "IniciarPartida",
             "fichas": fichas, 
             "orden": orden,
             "cartasMovimiento": cartas_movimientos,  
             "cartasFigura": cartas_figuras   
         } 
-        return resultado
+        return response
     
-    
-    '''''
-    def pasar_turno(self, id_partida: int, db: Session):  
+    def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
         partida = self.obtener_partida(id_partida,db)  
         tablero = partida.tablero
-        turno_actual = tablero.turno
+        turno_actual = id_jugador
 
         id_jugadores = [jugador.id_jugador for jugador in partida.jugadores]
         cantidad_jugadores = len(id_jugadores)
@@ -226,14 +166,14 @@ class PartidaService:
 
         db.commit()
         
-        return PasarTurnoResponse(id_turno = tablero.turno)      
-    ''' 
+        return tablero.turno    
+
    
 
     async def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
     
         try:
-            print(f"Attempting to remove player {id_jugador} from game {id_partida}")
+            # print(f"Attempting to remove player {id_jugador} from game {id_partida}")
 
             partida = self.obtener_partida(id_partida, db)
             if not partida:
@@ -247,8 +187,8 @@ class PartidaService:
             if not jugador_partida:
                 raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no está en la partida {id_partida}")
 
-            cantidad_jugadores = self.obtener_cantidad_jugadores(id_partida, db)
-            print(f"Cantidad de jugadores: {cantidad_jugadores}")
+            cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
+            # print(f"Cantidad de jugadores: {cantidad_jugadores}")
 
             if partida.activa:
                 if cantidad_jugadores == 2:
@@ -265,7 +205,7 @@ class PartidaService:
 
             jugador.jugando = False
             db.commit()
-            print(f"Successfully removed player {id_jugador} from game {id_partida}")
+            # print(f"Successfully removed player {id_jugador} from game {id_partida}")
             return {"message": f"Jugador {id_jugador} ha abandonado la partida {id_partida}"}
 
         except SQLAlchemyError as e:

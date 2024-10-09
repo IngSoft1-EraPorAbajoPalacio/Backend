@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from app.schema.partida_schema import * 
 from app.services.partida_service import partida_service
+from app.services.jugador_service import *
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager import manager
@@ -12,11 +13,19 @@ import logging
 router = APIRouter()
 
 @router.get("/partidas/{id}", response_model=PartidaResponse)
-def obtener_partida(id: int, db: Session = Depends(crear_session)):
+def obtener_partida(id_partida: int, db: Session = Depends(crear_session)):
     try:
-        return partida_service.obtener_partida_particular(id, db)
+        partida = partida_service.obtener_partida(id_partida, db)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))    
+    
+    return PartidaResponse(
+        id_partida=str(id_partida),
+        nombre_partida=partida.nombre,
+        cant_min_jugadores= partida.min,
+        cant_max_jugadores= partida.max
+    )    
+
 
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
 async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_session)):
@@ -40,7 +49,7 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
         response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
-        jugadores = partida_service.obtener_jugadores(int(idPartida), db)
+        jugadores = obtener_jugadores(int(idPartida), db)
 
         lista_jugadores = [
             JugadorSchema(id=j.id, nombre=j.nickname) for j in jugadores
@@ -52,34 +61,42 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
         await manager.broadcast(jugador_unido_message.model_dump())
         return response
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))    
+    return response
 
 
 @router.get("/partidas", response_model=List[PartidaResponse])
 async def listar_partidas(db: Session = Depends(crear_session)):
-    return partida_service.listar_partidas(db)
-
+    partidas = partida_service.obtener_partidas(db)
+    return [
+            PartidaResponse(
+                id_partida=str(partida.id),
+                nombre_partida=partida.nombre,
+                cant_min_jugadores=partida.min, 
+                cant_max_jugadores=partida.max
+            ) for partida in partidas
+        ] 
 
 @router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=IniciarPartidaResponse)
 async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
-        print(response)
         await manager.broadcast(response)
-        return IniciarPartidaResponse(id_partida=str(id_partida))
+        print(response)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))     
+    return IniciarPartidaResponse(idPartida=str(id_partida))
+
     
-'''''
-@router.patch("/partida/{idPartida}", response_model=PasarTurnoResponse)
-async def pasar_turno(id_partida: int, db: Session = Depends(crear_session)):
+@router.patch("/partida/{id_partida}/jugador/{id_jugador}", status_code=202)
+async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
-        response = partida_service.pasar_turno(id_partida, db)
-        await manager.pasar_turno(str(id_partida))
-        return response
+        sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
+        await manager.broadcast({"type": "PasarTurno", "turno": sigTurno})
+        return
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-'''''
+
 
 @router.delete("/partida/{idPartida}/jugador/{idJugador}")
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):

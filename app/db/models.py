@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum, ForeignKey
-from typing import List, Optional
+from sqlalchemy import String, Boolean, Enum, ForeignKey
+from typing import List
 from enum import Enum as PyEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column, declarative_base
 
@@ -9,8 +9,6 @@ class Jugador(Base) :
    
     __tablename__ = "Jugadores"
 
-    id = Column(Integer, primary_key=True, autoincrement= True)
-    nickname = Column(String(255))
     partidas = relationship("Jugador_Partida", back_populates='jugador',cascade="all")
     
     id : Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -86,7 +84,7 @@ class Ficha(Base):
     x : Mapped[int] = mapped_column(nullable=False)
     y : Mapped[int] = mapped_column(nullable=False)
     color : Mapped[Color] = mapped_column(Enum(Color),nullable=False)
-    id_tablero : Mapped[int] = mapped_column(ForeignKey('Tableros.id')) 
+    id_tablero : Mapped[int] = mapped_column(ForeignKey('Tableros.id_partida')) 
     
     #relaciones
     relacion_tablero : Mapped['Tablero'] = relationship(back_populates='fichas')
@@ -95,7 +93,7 @@ class Ficha(Base):
 Figura = PyEnum("Figura", ["1","2","3","4","5","6","7",
                            "8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25"])
 
-Movimiento = PyEnum("Movimiento", ["mov1","mov2","mov3","mov4","mov5","mov6","mov7"])
+Movimiento = PyEnum("Movimiento", ["1","2","3","4","5","6","7"])
 
 
 class Figuras(Base):
@@ -117,6 +115,7 @@ class CartasFigura(Base):
     id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'))
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE')) 
     carta_fig : Mapped[int]  = mapped_column(ForeignKey('Figuras.id'))
+    en_mano : Mapped[Boolean] = mapped_column(Boolean,nullable=False)
 
     #relaciones
     jugador_fig: Mapped["Jugador"] = relationship(back_populates='cartas_de_figuras')
@@ -142,7 +141,8 @@ class CartaMovimientos(Base):
     id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) 
     id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'))
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE'))
-    carta_mov : Mapped[int] = mapped_column(ForeignKey('Movimientos.id'))    
+    carta_mov : Mapped[int] = mapped_column(ForeignKey('Movimientos.id'))   
+    en_mano : Mapped[Boolean] = mapped_column(Boolean,nullable=False) 
 
     #relaciones
     jugador_mov: Mapped["Jugador"] = relationship(back_populates='cartas_de_movimientos')
