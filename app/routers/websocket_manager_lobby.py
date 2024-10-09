@@ -2,14 +2,14 @@ from fastapi import WebSocket
 from typing import List,Dict
 
 class ConnectionManagerLobby:
-    def _init_(self):
+    def __init__(self):
         self.active_connections: Dict[int,List[WebSocket]] = {}
 
     async def connect(self, idPartida:int, websocket: WebSocket):
         await websocket.accept()
         if idPartida not in self.active_connections:
             self.active_connections[idPartida] = []
-        self.active_connections[idPartida].append(websocket) 
+        self.active_connections[idPartida].append(websocket)
 
 
     async def disconnect(self, idPartida:int, websocket: WebSocket):

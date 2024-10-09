@@ -155,7 +155,7 @@ async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
             data = await websocket.receive_text()
     except WebSocketDisconnect as e:
         await manager_lobby.disconnect(int(idPartida),websocket)
-    
+          
         
 @router.websocket("/ws/game/{idPartida}")
 async def websocket_endpoint_game(websocket: WebSocket, idPartida: int):

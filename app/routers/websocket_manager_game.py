@@ -2,7 +2,7 @@ from fastapi import WebSocket
 from typing import List,Dict
 
 class ConnectionManagerGame:
-    def _init_(self):
+    def __init__(self):
         self.active_connections: Dict[int,List[WebSocket]] = {}
 
     async def connect(self, idPartida:int, websocket: WebSocket):
@@ -25,5 +25,5 @@ class ConnectionManagerGame:
             for conexion in self.active_connections[idPartida]:
                 await conexion.send_json(message)
                 
-                
+                      
 manager_game = ConnectionManagerGame()
