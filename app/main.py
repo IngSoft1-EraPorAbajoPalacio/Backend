@@ -5,10 +5,6 @@ from app.db.models import *
 from app.routers import partida
 from fastapi.middleware.cors import CORSMiddleware
 
-
-#Base.metadata.drop_all(bind=engine)  # Elimina todas las tablas
-Base.metadata.create_all(bind=engine) # Crea todas las tablas
-
 app = FastAPI(title="El Switcher")
 
 app.include_router(partida.router)
@@ -27,3 +23,11 @@ app.add_middleware(
 def root() :
     return RedirectResponse(url='/docs/')   
 
+
+@app.on_event("startup")
+def startup_event():
+    Base.metadata.create_all(bind=engine) # Crea todas las tablas
+
+@app.on_event("shutdown")
+def shutdown_event():
+    Base.metadata.drop_all(bind=engine) # Elimina todas las tablas
