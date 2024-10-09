@@ -51,6 +51,7 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
         response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
+        print(response)
         jugadores = obtener_jugadores(int(idPartida), db)
 
         lista_jugadores = [
@@ -83,7 +84,7 @@ async def listar_partidas(db: Session = Depends(crear_session)):
 async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
-        await manager.broadcast(response)
+        await manager_lobby.broadcast(id_partida,response)
         print(response)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))     
@@ -94,7 +95,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
-        await manager.broadcast({"type": "PasarTurno", "turno": sigTurno})
+        await manager_game.broadcast(id_partida,{"type": "PasarTurno", "turno": sigTurno})
         return
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -140,23 +141,21 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
     except WebSocketDisconnect as e :
-        print(str(e))
+        await manager.eliminar_lista(websocket)
     except RuntimeError as e:
         print(str(e))
     
 
 @router.websocket("/ws/lobby/{idPartida}")
-async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: int):
-    await manager_lobby.connect(idPartida,websocket)
-    print("SE INICIO LA CONEXION DEL LOBY")
+async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
+    await manager_lobby.connect(int(idPartida),websocket)
+    print("SE INICIO LA CONEXION DEL LOBBY")
     try:
         while True:
             data = await websocket.receive_text()
     except WebSocketDisconnect as e:
-        print(str(e))
-    finally:
-        await manager_lobby.disconnect(idPartida,websocket)    
-        
+        await manager_lobby.disconnect(int(idPartida),websocket)
+    
         
 @router.websocket("/ws/game/{idPartida}")
 async def websocket_endpoint_game(websocket: WebSocket, idPartida: int):
@@ -166,6 +165,4 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int):
         while True:
             data = await websocket.receive_text()
     except WebSocketDisconnect as e:
-        print(str(e))
-    finally:
         await manager_game.disconnect(idPartida,websocket)    
