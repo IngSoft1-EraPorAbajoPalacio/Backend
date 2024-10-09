@@ -5,6 +5,8 @@ from app.services.jugador_service import *
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager import manager
+from app.routers.websocket_manager_game import manager_game
+from app.routers.websocket_manager_lobby import manager_lobby
 
 from typing import List
 
@@ -99,6 +101,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
     
+        
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -111,3 +114,28 @@ async def websocket_endpoint(websocket: WebSocket):
     except RuntimeError as e:
         print(str(e))
     
+
+@router.websocket("/ws/lobby/{idPartida}")
+async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: int):
+    await manager_lobby.connect(idPartida,websocket)
+    print("SE INICIO LA CONEXION DEL LOBY")
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect as e:
+        print(str(e))
+    finally:
+        await manager_lobby.disconnect(idPartida,websocket)    
+        
+        
+@router.websocket("/ws/game/{idPartida}")
+async def websocket_endpoint_game(websocket: WebSocket, idPartida: int):
+    await manager_game.connect(idPartida,websocket)
+    print("SE INICIO LA CONEXION DEL GAME")
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect as e:
+        print(str(e))
+    finally:
+        await manager_game.disconnect(idPartida,websocket)    
