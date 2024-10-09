@@ -70,7 +70,7 @@ def test_menos_de_dos_jugadores_max():
         cant_max_jugadores=1
     )
     response = client.post("/partida", json=partida_data.model_dump())
-    assert response.status_code == 422
+    assert response.status_code == 400
 
 @pytest.mark.integration_test
 def test_min_mayor_que_max_jugadores():
@@ -81,4 +81,4 @@ def test_min_mayor_que_max_jugadores():
         cant_max_jugadores=2
     )
     response = client.post("/partida", json=partida_data.model_dump())
-    assert response.status_code == 422
+    assert response.status_code == 400
