@@ -5,7 +5,6 @@ from app.db.base import engine
 from app.db.models import *
 from app.services.partida_service import PartidaService
 from app.schema.partida_schema import *
-from typing import List
 
 from app.main import app  
 
@@ -52,6 +51,7 @@ async def test_listar_partidas(partida_service: PartidaService, partida_1, parti
         # Verificar que las partidas devueltas son las correctas
         partidas = session.query(Partida).all()
         for partida, partida_json in zip(partidas, partidas_json):
+            assert partida.activa is False
             assert partida.nombre == partida_json["nombre_partida"]
             assert partida.min == partida_json["cant_min_jugadores"]
             assert partida.max == partida_json["cant_max_jugadores"]
