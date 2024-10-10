@@ -18,11 +18,17 @@ def crear_tablero(id_partida: int, db: Session):
         db.commit()
         
         
-def repartir_fichas(id_partida : int , db:Session)  :
+def repartir_fichas(id_partida: int, db: Session):
     posiciones = []
+    colores = {"Rojo": 0, "Verde": 0, "Azul": 0, "Amarillo": 0}
+    max_colores = 9
     for x in range(TAMANO_TABLERO):
         for y in range(TAMANO_TABLERO):
-            posiciones.append(Ficha(x=x, y=y,color= random.choice(list(Color)),id_tablero = id_partida))            
+            colores_disponibles = [color for color, count in colores.items() if count < max_colores]
+            chosen_color = random.choice(colores_disponibles)
+            colores[chosen_color] += 1
+            posiciones.append(Ficha(x=x, y=y, color=chosen_color, id_tablero=id_partida))
+
     db.add_all(posiciones)
     db.commit()
     
