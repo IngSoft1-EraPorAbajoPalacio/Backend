@@ -228,7 +228,6 @@ class PartidaService:
             if not partida:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
 
-            # Eliminar las cartas de figuras asociadas a la partida
             db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
 
             # Eliminar las cartas de movimientos asociadas a la partida
