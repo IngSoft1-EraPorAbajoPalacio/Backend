@@ -80,6 +80,9 @@ class PartidaService:
         if len(partida.jugadores) >= partida.max:
             raise HTTPException(status_code=404, detail="La partida está llena")
         
+        if(self.esta_iniciada(id_partida, db)):
+            raise HTTPException(status_code=404, detail=f"No se puede unir a una partida en progreso")
+
         jugador_a_unirse = crear_jugador(nombre=nombre_jugador, db=db)
         agregar_jugador = Jugador_Partida(
             id_jugador=jugador_a_unirse.id,
