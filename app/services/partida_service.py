@@ -18,7 +18,7 @@ class PartidaService:
         
         
     def obtener_partidas(self, db: Session):
-        partidas = db.query(Partida).all()
+        partidas = db.query(Partida).filter(Partida.activa == False).all()
         if not partidas:
             return []
         return partidas 
