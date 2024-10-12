@@ -7,7 +7,7 @@ from sqlalchemy.exc import *
 from app.services.jugador_service import *
 from app.services.ficha_service import * 
 from app.services.cartas_service import *
-from app.schema.websocket_schema import EliminarPartidaDataSchema, EliminarPartidaSchema
+from app.schema.websocket_schema import EliminarPartidaDataSchema, EliminarPartidaSchema, WebSocketMessageType
 from app.routers.websocket_manager import manager
 
 class PartidaService:
@@ -202,21 +202,19 @@ class PartidaService:
 
             if partida.activa:
                 if cantidad_jugadores == 2:
-                    await self.eliminar_partida(id_partida, db)  # Elimina partida si quedan 2 jugadores y uno abandona
-                    return {"partida_eliminada": True}                    
+                    await self.eliminar_partida(id_partida, db)
                 else:
                     db.delete(jugador_partida)
+                    db.commit()
             else:
                 if cantidad_jugadores > 1 and id_jugador != partida.id_owner:
                     db.delete(jugador_partida)
                 else:
                     await self.eliminar_partida(id_partida, db)  # Elimina si el owner abandona antes de comenzar
-                    return {"partida_eliminada": True}
 
             jugador.jugando = False
             db.commit()
             # print(f"Successfully removed player {id_jugador} from game {id_partida}")
-            return {"message": f"Jugador {id_jugador} ha abandonado la partida {id_partida}"}
 
         except SQLAlchemyError as e:
             db.rollback()
