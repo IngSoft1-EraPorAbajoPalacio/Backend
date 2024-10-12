@@ -111,16 +111,16 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                         idPartida=id_partida
                     )
                 )
-            await manager.broadcast(eliminar_partida_message.dict())
-        else:
-            abandonar_partida_message = AbandonarPartidaSchema(
-                type=WebSocketMessageType.ABANDONAR_PARTIDA,
-                data=AbandonarPartidaDataSchema(
-                    idPartida=id_partida,
-                    idJugador=id_jugador
-                )
+                await manager.broadcast(eliminar_partida_message.dict())
+        
+        abandonar_partida_message = AbandonarPartidaSchema(
+            type=WebSocketMessageType.ABANDONAR_PARTIDA,
+            data=AbandonarPartidaDataSchema(
+                idPartida=id_partida,
+                idJugador=id_jugador
             )
-            await manager.broadcast(abandonar_partida_message.dict())  
+        )
+        await manager.broadcast(abandonar_partida_message.dict())  
         await partida_service.abandonar_partida(id_partida, id_jugador, db)      
     except HTTPException as he:
         logging.error(f"HTTP exception in abandonar_partida route: {str(he)}")
