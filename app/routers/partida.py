@@ -139,7 +139,7 @@ async def websocket_endpoint(websocket: WebSocket):
     print("SE INICIO CONEXION")
     try:
         while True:
-            data = await websocket.receive_text()
+            await websocket.receive_text()
     except WebSocketDisconnect as e :
         await manager.eliminar_lista(websocket)
     except RuntimeError as e:
@@ -152,8 +152,8 @@ async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
     print("SE INICIO LA CONEXION DEL LOBBY")
     try:
         while True:
-            data = await websocket.receive_text()
-    except WebSocketDisconnect as e:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
         await manager_lobby.disconnect(int(idPartida),websocket)
           
         
@@ -163,6 +163,6 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int):
     print("SE INICIO LA CONEXION DEL GAME")
     try:
         while True:
-            data = await websocket.receive_text()
-    except WebSocketDisconnect as e:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
         await manager_game.disconnect(idPartida,websocket)    
