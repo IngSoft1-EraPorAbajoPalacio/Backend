@@ -18,7 +18,7 @@ class JuegoService:
             # Mover dos pasos en diagonal
             return abs(x1 - x2) == 2 and abs(y1 - y2) == 2
         
-        elif movimiento == 1:
+        elif movimiento == 2:
             # Mover dos pasos horizontalmente o verticalmente
             return (abs(x1 - x2) == 2 and y1 == y2) or (abs(y1 - y2) == 2 and x1 == x2)
         
@@ -31,12 +31,18 @@ class JuegoService:
             return abs(x1 - x2) == 1 and abs(y1 - y2) == 1
         
         elif movimiento == 5:
+            if(x2 > x1):
+                x1, x2 = x2, x1
+                y1, y2 = y2, y1
             # Mover en forma de L hacia la izquierda
-            return (abs(x1 - x2) == 2 and abs(y1 - y2) == 1 and x2 < x1) or (abs(x1 - x2) == 1 and abs(y1 - y2) == 2 and y2 < y1)
-        
+            return (x1 - x2 == 1 and y1 - y2 == 2) or (x1 - x2 == 2 and y1 - y2 == -1)
+
         elif movimiento == 6:
+            if(x1 > x2):
+                x1, x2 = x2, x1
+                y1, y2 = y2, y1
             # Mover en forma de L hacia la derecha
-            return (abs(x1 - x2) == 2 and abs(y1 - y2) == 1 and x2 > x1) or (abs(x1 - x2) == 1 and abs(y1 - y2) == 2 and y2 > y1)
+            return (x1 - x2 == -1 and y1 - y2 == 2) or (x1 - x2 == -2 and y1 - y2 == -1)
         
         elif movimiento == 7:
             # Mover cuatro pasos horizontalmente o verticalmente
@@ -58,7 +64,7 @@ class JuegoService:
             raise HTTPException(status_code=404, detail="No es tu turno")
         
         tablero = partida.tablero
-        carta_movimiento = db.query(Movimientos).filter(Movimientos.id == movimiento.idCarta).first()
+        carta_movimiento = db.query(Movimientos).filter(Movimientos.id == movimiento.idCarta).first().mov.value
 
         posicion_inicial = (movimiento.posiciones[0].x, movimiento.posiciones[0].y)
         posicion_final = (movimiento.posiciones[1].x, movimiento.posiciones[1].y)
@@ -71,18 +77,18 @@ class JuegoService:
         if not self.validar_movimiento(carta_movimiento, posicion_inicial, posicion_final):
             raise HTTPException(status_code=400, detail="Movimiento inválido")
         
-        # Aplicar el movimiento
+        # Cambiar las posiciones de las fichas
         ficha_inicial = db.query(Ficha).filter_by(id_tablero=tablero.id, x=posicion_inicial[0], y=posicion_inicial[1]).first()
         ficha_final = db.query(Ficha).filter_by(id_tablero=tablero.id, x=posicion_final[0], y=posicion_final[1]).first()
 
-        # Cambiar las posiciones de las fichas
         ficha_inicial.x, ficha_final.x = ficha_final.x, ficha_inicial.x
-        ficha_inicial.y, ficha_final.y = ficha_final.y, ficha_inicial.y 
+        ficha_inicial.y, ficha_final.y = ficha_final.y, ficha_inicial.y
+        ficha_inicial.color, ficha_final.color = ficha_final.color, ficha_inicial.color
         
         db.commit()
         
         response = {"type": "MovimientoParcial", 
-                    "carta": {id, carta_movimiento}, 
+                    "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
                     "fichas": obtener_fichas(id_partida, db)}
         return response
 
