@@ -61,11 +61,10 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
             type=WebSocketMessageType.JUGADOR_UNIDO,
             ListaJugadores=lista_jugadores
         )
-        await manager.broadcast(jugador_unido_message.model_dump())
+        await manager_lobby.broadcast(int(idPartida), jugador_unido_message.model_dump())
         return response
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))    
-    return response
 
 
 @router.get("/partidas", response_model=List[PartidaResponse])
