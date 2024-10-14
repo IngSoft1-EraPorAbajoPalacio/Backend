@@ -50,7 +50,7 @@ async def test_crear_partida_ws():
                 expected_data = {
                     "type": "AgregarPartida",
                     "data": {
-                        "idPartida": "1",
+                        "idPartida": 1,
                         "nombrePartida": "partida_1",
                         "cantJugadoresMin": 2,
                         "cantJugadoresMax": 3
@@ -85,7 +85,7 @@ async def test_crear_partida_ws():
                 expected_data = {
                     "type": "AgregarPartida",
                     "data": {
-                        "idPartida": "2",
+                        "idPartida": 2,
                         "nombrePartida": "partida_2",
                         "cantJugadoresMin": 3,
                         "cantJugadoresMax": 4
