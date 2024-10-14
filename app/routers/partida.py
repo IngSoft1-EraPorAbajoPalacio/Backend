@@ -9,7 +9,7 @@ from app.routers.websocket_manager_game import manager_game
 from app.routers.websocket_manager_lobby import manager_lobby
 from app.schema.websocket_schema import * 
 from typing import List
-
+from app.services.encontrar_fig import encontrar_figuras #borrar antes de commit
 import logging
 
 router = APIRouter()
@@ -152,6 +152,39 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
         logging.error(f"Unexpected error in abandonar_partida route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
+#No mergear en dev
+@router.get("/partida/{id_partida}/figuras", status_code=200)
+async def find_figuras(id_partida: int, db: Session = Depends(crear_session)):
+    try:
+        # Obtener la lista de tipos de figura que quieres buscar
+        # Por ahora, buscaremos todas las figuras (del 1 al 6)
+        lista_fig = list(range(1, 7))
+        
+        # Llamar a la función encontrar_figuras
+        figuras = encontrar_figuras(id_partida, lista_fig, db)
+        if figuras:
+            print("Figuras encontradas:")
+            for tipo, color, posiciones in figuras:
+                print(f"- {tipo} de color {color} en posiciones {posiciones}")
+        else:
+            print("No se encontraron figuras.")
+
+        # Formatear la respuesta
+        respuesta = []
+        for figura in figuras:
+            respuesta.append({
+                "tipo": figura[0],
+                "color": figura[1],
+                "posiciones": list(figura[2])
+            })
+        mensaje = FigurasEncontradasSchema(
+            type=WebSocketMessageType.FIGURAS_ENCONTRADAS,
+            data=FigurasEncontradasDataSchema(figuras=figuras)
+        )
+        await manager_game.broadcast(id_partida, mensaje.dict())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+# fin no mergear
 @router.get("/mensaje_finalizacion/partida/{idPartida}/ganador/{idGanador}/{nombreGanador}")
 async def test_finalizacion_ganador(idPartida:int, idGanador: int, nombreGanador: str):
     partida_ganador_message = FinalizarPartidaSchema(

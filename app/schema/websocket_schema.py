@@ -12,6 +12,7 @@ class WebSocketMessageType(str, Enum):
     MOVIMIENTO_PARCIAL = "MovimientoParcial"
     DESHACER_MOVIMIENTO = "DeshacerMovimiento"
     DESHACER_MOVIMIENTOS = "DeshacerMovimientos"
+    FIGURAS_ENCONTRADAS = "FigurasEncontradas"
     PARTIDA_FINALIZADA = "PartidaFinalizada"
     
 class JugadorSchema(BaseModel):
@@ -72,6 +73,21 @@ class DeshacerMovimientos(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
     posiciones: List[List[Posicion]]    
     cantMovimientosDesechos: int
+
+class Coordenada(BaseModel):
+    x: int
+    y: int
+
+class Figura(BaseModel):
+    tipoFig: int
+    coordenadas: List[Coordenada]
+
+class FigurasEncontradasDataSchema(BaseModel):
+    figuras: List[Figura]
+
+class FigurasEncontradasSchema(BaseModel):
+    type: Literal[WebSocketMessageType.FIGURAS_ENCONTRADAS]
+    data: FigurasEncontradasDataSchema
 
 class FinalizarPartidaDataSchema(BaseModel):
     idGanador: int
