@@ -7,14 +7,12 @@ from app.db.models import *
 from app.schema.partida_schema import *
 import random
 
-
 CANTIDAD_CARTAS_FIG = 50
 CANTIDAD_CARTAS_MOV = 49
 CARTAS_EN_MANO = 3
 
 cartas_figuras = [fig.name for fig in Figura]
 cartas_movimientos = [mov.name for mov in Movimiento]
-
 
 def inicializacion_figuras_db(db:Session):
     if db.query(Figuras).count() == 0:
@@ -24,7 +22,6 @@ def inicializacion_figuras_db(db:Session):
                 cartas.append(Figuras(fig = fig))
         db.add_all(cartas)
         db.commit()
-
     
 def inicializacion_movimientos_db(db:Session):
     if db.query(Movimientos).count() == 0:
@@ -36,8 +33,6 @@ def inicializacion_movimientos_db(db:Session):
         db.add_all(movimientos)
         db.commit()    
           
-            
-
 def repartir_cartas_figuras(id_partida : int,db:Session):    
     
     id_figuras = list(range(1,CANTIDAD_CARTAS_FIG+1))
@@ -67,9 +62,7 @@ def repartir_cartas_figuras(id_partida : int,db:Session):
 
     db.add_all(cartas_entregadas)
     db.commit()
-    
-    
-    
+     
 def repartir_cartas_movimientos(id_partida : int,db:Session):    
     
     id_movimientos = list(range(1,CANTIDAD_CARTAS_MOV+1))
@@ -99,24 +92,6 @@ def repartir_cartas_movimientos(id_partida : int,db:Session):
     db.add_all(cartas_entregadas)
     db.commit()    
     
-
-"""
-def obtener_cartas_figuras(self, id_jugador:int,id_partida:int, db: Session):   
-    jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-    cartas_figuras = []        
-    
-    for carta in jugador.cartas_de_figuras:
-        figura = carta.figura
-        cartas_figuras.append({
-            #"idJugador": id_jugador,
-            #"nombreJugador": jugador.nickname,
-            #"cartas": [{"id": figura.id, "figura": int(figura.fig.name)}]
-            "id": figura.id,
-            "figura": int(figura.fig.name)
-        })
-    return cartas_figuras
-"""
-
 def obtener_cartas_figuras(id_partida: int, db: Session):
     id_jugadores = obtener_id_jugadores(id_partida, db)
     resultado = []
@@ -148,19 +123,3 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
         })
         
     return resultado
-
-
-"""
-def obtener_cartas_movimientos(id_jugador: int, db: Session):
-    jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-    cartas_movimientos = []
-    for carta in jugador.cartas_de_movimientos:
-        movimiento = carta.movimiento
-        cartas_movimientos.append({
-            #"idJugador": id_jugador,
-            #"nombreJugador": jugador.nickname,
-            "id": movimiento.id,
-            "movimiento":movimiento.mov.name
-        })
-    return cartas_movimientos   
-"""
