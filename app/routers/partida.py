@@ -51,7 +51,6 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
         response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
-        print(response)
         jugadores = obtener_jugadores(int(idPartida), db)
 
         lista_jugadores = [
@@ -105,15 +104,6 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
     try:
         partida = partida_service.obtener_partida(id_partida, db)
         cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
-        if partida.activa:
-            if cantidad_jugadores == 2:
-                eliminar_partida_message = EliminarPartidaSchema(
-                    type=WebSocketMessageType.ELIMINAR_PARTIDA,
-                    data=EliminarPartidaDataSchema(
-                        idPartida=id_partida
-                    )
-                )
-                await manager.broadcast(eliminar_partida_message.dict())
         
         abandonar_partida_message = AbandonarPartidaSchema(
             type=WebSocketMessageType.ABANDONAR_PARTIDA,
@@ -122,7 +112,19 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                 idJugador=id_jugador
             )
         )
-        await manager.broadcast(abandonar_partida_message.dict())  
+
+        if partida.activa:
+            if cantidad_jugadores == 2:
+                eliminar_partida_message = EliminarPartidaSchema(
+                    type=WebSocketMessageType.ELIMINAR_PARTIDA,
+                    data=EliminarPartidaDataSchema( idPartida=id_partida )
+                )
+                await manager_game.broadcast(id_partida, eliminar_partida_message.dict())
+            else:
+                await manager_game.broadcast(id_partida, abandonar_partida_message.dict())
+        else:
+            await manager_lobby.broadcast(id_partida, abandonar_partida_message.dict())
+        
         await partida_service.abandonar_partida(id_partida, id_jugador, db)      
     except HTTPException as he:
         logging.error(f"HTTP exception in abandonar_partida route: {str(he)}")
