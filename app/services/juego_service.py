@@ -45,8 +45,8 @@ class JuegoService:
             return (x1 - x2 == -1 and y1 - y2 == 2) or (x1 - x2 == -2 and y1 - y2 == -1)
         
         elif movimiento == 7:
-            # Mover cuatro pasos horizontalmente o verticalmente
-            return (abs(x1 - x2) == 4 and y1 == y2) or (abs(y1 - y2) == 4 and x1 == x2)
+            # Mover una ficha con cualquiera de las cuatro que estén en los extremos de su misma fila o columna.
+            return (x1 == x2 and (y2 == 0 or y2 == 5)) or (y1 == y2 and (x2 == 0 or x2 == 5))
 
         else:
             return False
@@ -62,13 +62,20 @@ class JuegoService:
         jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
         if not jugador.jugando:
             raise HTTPException(status_code=404, detail="No es tu turno")
-        
+
+        if not db.query(CartaMovimientos).filter(CartaMovimientos.carta_mov == movimiento.idCarta).first().en_mano:
+            raise HTTPException(status_code=404, detail="La carta no está en tu mano")
+
         tablero = partida.tablero
         carta_movimiento = db.query(Movimientos).filter(Movimientos.id == movimiento.idCarta).first().mov.value
 
         posicion_inicial = (movimiento.posiciones[0].x, movimiento.posiciones[0].y)
         posicion_final = (movimiento.posiciones[1].x, movimiento.posiciones[1].y)
         
+        # Validar que las posiciones sean diferentes
+        if posicion_inicial == posicion_final:
+            raise HTTPException(status_code=400, detail="Las posiciones deben ser diferentes")
+
         # Validar que las posiciones estén dentro del tablero
         if not (0 <= posicion_inicial[0] < 6 and 0 <= posicion_inicial[1] < 6 and 0 <= posicion_final[0] < 6 and 0 <= posicion_final[1] < 6):
             raise HTTPException(status_code=400, detail="Posiciones fuera del tablero")
@@ -77,6 +84,9 @@ class JuegoService:
         if not self.validar_movimiento(carta_movimiento, posicion_inicial, posicion_final):
             raise HTTPException(status_code=400, detail="Movimiento inválido")
         
+        # Eliminar la carta de la mano del jugador
+        db.query(CartaMovimientos).filter(CartaMovimientos.carta_mov == movimiento.idCarta).first().en_mano = False
+
         # Cambiar las posiciones de las fichas
         ficha_inicial = db.query(Ficha).filter_by(id_tablero=tablero.id, x=posicion_inicial[0], y=posicion_inicial[1]).first()
         ficha_final = db.query(Ficha).filter_by(id_tablero=tablero.id, x=posicion_final[0], y=posicion_final[1]).first()
