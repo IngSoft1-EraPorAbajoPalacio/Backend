@@ -89,7 +89,7 @@ class JuegoService:
         
         response = {"type": "MovimientoParcial", 
                     "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
-                    "fichas": obtener_fichas(id_partida, db)}
+                    "fichas": [{"x": ficha_final.x, "y": ficha_final.y, "color": ficha_final.color.name}, {"x": ficha_inicial.x, "y": ficha_inicial.y, "color": ficha_inicial.color.name}]}
         return response
 
 juego_service = JuegoService()
