@@ -160,7 +160,7 @@ class JuegoService:
         return response
     
     
-    async def deshacer_movimiento(self, idPartida: int, idJugador: int, db: Session):
+    def deshacer_movimiento(self, idPartida: int, idJugador: int, db: Session):
         
         ultimo_movimiento_parcial = (
             db.query(MovimientosParciales)
@@ -175,9 +175,37 @@ class JuegoService:
         if ultimo_movimiento_parcial is None:
             raise HTTPException(status_code=404, detail=f"El jugador con id {idJugador} no realizo ningun movimiento ")
         
+        carta_movimiento = db.query(CartaMovimientos).filter(
+            CartaMovimientos.id_partida == idPartida,
+            CartaMovimientos.id_jugador == idJugador,
+            CartaMovimientos.carta_mov == ultimo_movimiento_parcial.movimiento
+        ).first()
         
+        carta_movimiento.en_mano = True
+      
         posiciones_actualizadas = switchear_fichas_tablero(ultimo_movimiento_parcial, db)
         
         return posiciones_actualizadas
+    
+    
+    
+    def deshacer_movimientos(self,idPartida: int, idJugador: int, db:Session):
+        
+        movimientos_parciales = (
+            db.query(MovimientosParciales).
+            filter(
+                MovimientosParciales.id_partida == idPartida,
+                MovimientosParciales.id_jugador == idJugador)
+            .all()
+        )
+        
+        cantidad_mov_parciales = len(movimientos_parciales)
+        
+        while (cantidad_mov_parciales > 0) :
+            self.deshacer_movimiento(idPartida, idJugador, db)
+            cantidad_mov_parciales-=1
+        
+        
+        return obtener_fichas(idPartida, db)  
 
 juego_service = JuegoService()
