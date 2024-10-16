@@ -77,3 +77,28 @@ def switchear_fichas_tablero(movimiento_parcial: MovimientosParciales , db: Sess
         db.commit()
     
         return obtener_fichas(movimiento_parcial.id_partida, db) 
+
+
+def obtener_id_movimientos_en_mano(id_partida: int, id_jugador: int, db: Session):
+    movimientos_en_mano = db.query(CartaMovimientos).filter(
+        CartaMovimientos.id_partida == id_partida,
+        CartaMovimientos.id_jugador == id_jugador,
+        CartaMovimientos.en_mano == True
+    ).all()
+    
+    id_movimientos = [mov.carta_mov for mov in movimientos_en_mano]
+
+    return id_movimientos
+
+
+def obtener_movimientos_en_mano(id_partida: int, id_jugador: int, db: Session):
+    movimientos_en_mano = db.query(CartaMovimientos).filter(
+        CartaMovimientos.id_partida == id_partida,
+        CartaMovimientos.id_jugador == id_jugador,
+        CartaMovimientos.en_mano == True
+    ).all()
+    
+    movimientos = [fila.movimiento.mov.value for fila in movimientos_en_mano]
+    
+    return movimientos
+    
