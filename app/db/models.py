@@ -151,7 +151,7 @@ class CartaMovimientos(Base):
 
 class MovimientosParciales(Base):
 
-    _tablename_ = "MovimientosParciales"
+    __tablename__ = "MovimientosParciales"
     
     id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) 
     id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'))
