@@ -149,7 +149,18 @@ class CartaMovimientos(Base):
     movimiento: Mapped["Movimientos"] = relationship(back_populates='cartas_de_movimiento')
 
 
+class MovimientosParciales(Base):
 
+    _tablename_ = "MovimientosParciales"
+    
+    id : Mapped[int]  = mapped_column(primary_key=True,autoincrement=True) 
+    id_partida : Mapped[int] = mapped_column(ForeignKey('Partidas.id',ondelete='CASCADE'))
+    id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE'))
+    movimiento : Mapped[int] = mapped_column(ForeignKey("Movimientos.id"))
+    x1 : Mapped[int] = mapped_column(nullable=False)
+    y1 : Mapped[int] = mapped_column(nullable=False)
+    x2 : Mapped[int] = mapped_column(nullable=False)
+    y2 : Mapped[int] = mapped_column(nullable=False)
     
 
 
