@@ -46,7 +46,7 @@ def movimiento_invalido():
     )
 
 @pytest.mark.asyncio
-async def test_jugar_movimiento(partida_service: PartidaService, partida_test, movimiento_request):
+async def test_jugar_movimiento(partida_service: PartidaService, partida_test):
     session = Session()
     try:
         partida_creada = await partida_service.crear_partida(partida_test, session)
@@ -56,6 +56,29 @@ async def test_jugar_movimiento(partida_service: PartidaService, partida_test, m
         assert response_inicio.status_code == 200
         session.commit()
         jugador = session.query(Tablero).filter(Tablero.id_partida == partida_creada.id_partida).first().turno
+
+        id_carta = session.query(Jugador).filter(Jugador.id == jugador).first().cartas_de_movimientos[0].carta_mov
+        movimiento = session.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == jugador).first().movimiento.mov.value
+
+        if movimiento == 1:
+            posiciones_ = [Posicion(x=0, y=0), Posicion(x=2, y=2)]
+        elif movimiento == 2:
+            posiciones_ = [Posicion(x=0, y=0), Posicion(x=2, y=0)]
+        elif movimiento == 3:
+            posiciones_ = [Posicion(x=0, y=0), Posicion(x=1, y=0)]
+        elif movimiento == 4:
+            posiciones_ = [Posicion(x=0, y=0), Posicion(x=1, y=1)]
+        elif movimiento == 5:
+            posiciones_ = [Posicion(x=0, y=0), Posicion(x=1, y=2)]
+        elif movimiento == 6:
+            posiciones_ = [Posicion(x=2, y=0), Posicion(x=1, y=2)]
+        elif movimiento == 7:
+            posiciones_ = [Posicion(x=3, y=0), Posicion(x=3, y=5)]
+
+        movimiento_request = JugarMovimientoRequest(
+            idCarta=id_carta,
+            posiciones=posiciones_
+        )
         
         # Realizar movimiento
         response = client.patch(
