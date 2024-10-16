@@ -7,6 +7,7 @@ from app.services.jugador_service import *
 from app.services.ficha_service import * 
 from app.services.cartas_service import *
 from app.services.partida_service import *
+from sqlalchemy import desc
 
 class JuegoService:
     def validar_movimiento(self, movimiento: int, posicion_1: tuple, posicion_2: tuple):
@@ -115,11 +116,68 @@ class JuegoService:
         
         db.commit()
         
+        response = {
+            "type": "MovimientoParcial",
+            "carta": {
+                "id": movimiento.idCarta,
+                "movimiento": carta_movimiento
+            },
+            "fichas": [
+                {
+                    "x": ficha2.x,
+                    "y": ficha2.y,
+                    "color": ficha2.color.name
+                },
+                {
+                    "x": ficha1.x,
+                    "y": ficha1.y,
+                    "color": ficha1.color.name
+                }
+            ]
+        }
+
+        
+        ficha1 = movimiento.posiciones[0]
+        ficha2 = movimiento.posiciones[1]
+        
+        fila_nueva = MovimientosParciales(
+            id_partida = id_partida, id_jugador = id_jugador,
+            movimiento = movimiento.idCarta,
+            x1 = ficha1.x,
+            y1 = ficha1.y,
+            x2 = ficha2.x,
+            y2= ficha2.y
+        )
+        
+        db.add(fila_nueva)
+        db.commit()
+             
         response = {"type": "MovimientoParcial", 
                     "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
                     "fichas": [{"x": ficha2.x, "y": ficha2.y, "color": ficha2.color.name}, 
                                {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
                     }
         return response
+    
+    
+    async def deshacer_movimiento(self, idPartida: int, idJugador: int, db: Session):
+        
+        ultimo_movimiento_parcial = (
+            db.query(MovimientosParciales)
+            .filter(
+                MovimientosParciales.id_partida == idPartida,
+                MovimientosParciales.id_jugador == idJugador
+            )
+            .order_by(desc(MovimientosParciales.id))
+            .first()
+        )
+        
+        if ultimo_movimiento_parcial is None:
+            raise HTTPException(status_code=404, detail=f"El jugador con id {idJugador} no realizo ningun movimiento ")
+        
+        
+        posiciones_actualizadas = switchear_fichas_tablero(ultimo_movimiento_parcial, db)
+        
+        return posiciones_actualizadas
 
 juego_service = JuegoService()
