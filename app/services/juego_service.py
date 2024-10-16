@@ -9,9 +9,9 @@ from app.services.cartas_service import *
 from app.services.partida_service import *
 
 class JuegoService:
-    def validar_movimiento(self, movimiento: int, posicion_inicial: tuple, posicion_final: tuple):
-        x1, y1 = posicion_inicial
-        x2, y2 = posicion_final
+    def validar_movimiento(self, movimiento: int, posicion_1: tuple, posicion_2: tuple):
+        x1, y1 = posicion_1
+        x2, y2 = posicion_2
 
         if movimiento == idMovimiento.mov_diagonal_doble:
             # Mover dos pasos en diagonal
@@ -62,41 +62,57 @@ class JuegoService:
         if not jugador.jugando:
             raise HTTPException(status_code=404, detail="No es tu turno")
 
-        if not db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).filter(CartaMovimientos.carta_mov == movimiento.idCarta).first().en_mano:
+        if not db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida, 
+                                                 CartaMovimientos.carta_mov == movimiento.idCarta).first().en_mano:
             raise HTTPException(status_code=404, detail=f"La carta {movimiento.idCarta} no está en tu mano")
 
         tablero = partida.tablero
         carta_movimiento = db.query(Movimientos).filter(Movimientos.id == movimiento.idCarta).first().mov.value
 
-        posicion_inicial = (movimiento.posiciones[0].x, movimiento.posiciones[0].y)
-        posicion_final = (movimiento.posiciones[1].x, movimiento.posiciones[1].y)
+        posicion_1 = (movimiento.posiciones[0].x, movimiento.posiciones[0].y)
+        posicion_2 = (movimiento.posiciones[1].x, movimiento.posiciones[1].y)
         
         # Validar que las posiciones sean diferentes
-        if posicion_inicial == posicion_final:
+        if posicion_1 == posicion_2:
             raise HTTPException(status_code=400, detail="Las posiciones deben ser diferentes")
 
         # Validar que las posiciones estén dentro del tablero
-        if not (0 <= posicion_inicial[0] < 6 and 0 <= posicion_inicial[1] < 6 and 0 <= posicion_final[0] < 6 and 0 <= posicion_final[1] < 6):
+        if not (0 <= posicion_1[0] < 6 and 0 <= posicion_1[1] < 6 and 0 <= posicion_2[0] < 6 and 0 <= posicion_2[1] < 6):
             raise HTTPException(status_code=400, detail="Posiciones fuera del tablero")
         
         # Validar el movimiento
-        if not self.validar_movimiento(carta_movimiento, posicion_inicial, posicion_final):
+        if not self.validar_movimiento(carta_movimiento, posicion_1, posicion_2):
             raise HTTPException(status_code=400, detail="Movimiento inválido")
         
         # Eliminar la carta de la mano del jugador
-        db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).filter(CartaMovimientos.carta_mov == movimiento.idCarta).first().en_mano = False
+        db.query(CartaMovimientos).filter(
+            CartaMovimientos.id_partida == id_partida,
+            CartaMovimientos.id_jugador == id_jugador,
+            CartaMovimientos.carta_mov == movimiento.idCarta
+        ).first().en_mano = False
 
         # Cambiar las posiciones de las fichas
-        ficha_inicial = db.query(Ficha).filter_by(id_tablero=tablero.id, x=posicion_inicial[0], y=posicion_inicial[1]).first()
-        ficha_final = db.query(Ficha).filter_by(id_tablero=tablero.id, x=posicion_final[0], y=posicion_final[1]).first()
+        ficha1 = db.query(Ficha).filter(
+                Ficha.id_tablero == tablero.id, 
+                Ficha.x == posicion_1[0],
+                Ficha.y == posicion_1[1]
+        ).first()
 
-        ficha_inicial.color, ficha_final.color = ficha_final.color, ficha_inicial.color
+        ficha2 = db.query(Ficha).filter(
+                Ficha.id_tablero == tablero.id, 
+                Ficha.x == posicion_2[0],
+                Ficha.y == posicion_2[1]
+        ).first()
+
+        ficha1.color, ficha2.color = ficha2.color, ficha1.color
         
         db.commit()
         
         response = {"type": "MovimientoParcial", 
                     "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
-                    "fichas": [{"x": ficha_final.x, "y": ficha_final.y, "color": ficha_final.color.name}, {"x": ficha_inicial.x, "y": ficha_inicial.y, "color": ficha_inicial.color.name}]}
+                    "fichas": [{"x": ficha2.x, "y": ficha2.y, "color": ficha2.color.name}, 
+                               {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
+                    }
         return response
 
 juego_service = JuegoService()

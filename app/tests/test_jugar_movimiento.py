@@ -123,8 +123,12 @@ async def test_jugar_movimientos(partida_service: PartidaService, partida_test, 
             session.query(Jugador).filter(Jugador.id == jugador).first().cartas_de_movimientos[0].en_mano = True
             session.query(Jugador).filter(Jugador.id == jugador).first().cartas_de_movimientos[0].movimiento.mov = mov.mov
             session.commit()
-            color_ficha_1 = session.query(Ficha).filter(Ficha.id_tablero == partida_creada.id_partida).filter(Ficha.x == movimiento.posiciones[0].x).filter(Ficha.y == movimiento.posiciones[0].y).first().color
-            color_ficha_2 = session.query(Ficha).filter(Ficha.id_tablero == partida_creada.id_partida).filter(Ficha.x == movimiento.posiciones[1].x).filter(Ficha.y == movimiento.posiciones[1].y).first().color
+            color_ficha_1 = session.query(Ficha).filter(Ficha.id_tablero == partida_creada.id_partida, 
+                                                        Ficha.x == movimiento.posiciones[0].x,
+                                                        Ficha.y == movimiento.posiciones[0].y).first().color
+            color_ficha_2 = session.query(Ficha).filter(Ficha.id_tablero == partida_creada.id_partida, 
+                                                        Ficha.x == movimiento.posiciones[1].x,
+                                                        Ficha.y == movimiento.posiciones[1].y).first().color
 
             # Realizar movimiento
             response = client.patch(
@@ -139,6 +143,14 @@ async def test_jugar_movimientos(partida_service: PartidaService, partida_test, 
                 {"x": movimiento.posiciones[1].x, "y": movimiento.posiciones[1].y, "color": color_ficha_1.name},
                 {"x": movimiento.posiciones[0].x, "y": movimiento.posiciones[0].y, "color": color_ficha_2.name}
             ]
+            session.commit()
+            assert session.query(Ficha).filter(Ficha.id_tablero == partida_creada.id_partida, 
+                                                        Ficha.x == movimiento.posiciones[0].x,
+                                                        Ficha.y == movimiento.posiciones[0].y).first().color == color_ficha_2
+
+            assert session.query(Ficha).filter(Ficha.id_tablero == partida_creada.id_partida, 
+                                                        Ficha.x == movimiento.posiciones[1].x,
+                                                        Ficha.y == movimiento.posiciones[1].y).first().color == color_ficha_1
 
     finally:
         session.close()
