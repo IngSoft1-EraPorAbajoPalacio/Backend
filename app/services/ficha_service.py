@@ -40,4 +40,35 @@ def obtener_fichas(id_partida: int, db:Session) :
         return lista_fichas   
        
                 
-            
+def switchear_fichas_tablero(movimiento_parcial: MovimientosParciales , db: Session):
+        
+        ficha1 = (
+            db.query(Ficha).
+            filter(
+                Ficha.id_tablero == movimiento_parcial.id_partida,
+                Ficha.x == movimiento_parcial.x1,
+                Ficha.y == movimiento_parcial.y1)
+            .first()
+        )
+        
+        ficha2 = (
+            db.query(Ficha)
+            .filter(
+                    Ficha.id_tablero == movimiento_parcial.id_partida,
+                    Ficha.x == movimiento_parcial.x2,
+                    Ficha.y == movimiento_parcial.y2)
+            .first()
+        )
+        
+        
+        ficha1_x, ficha1_y, ficha1_color = ficha1.x, ficha1.y, ficha1.color
+        
+        ficha1.x, ficha1.y, ficha1.color = movimiento_parcial.x2, movimiento_parcial.y2, ficha1_color
+        
+        ficha2.x, ficha2.y, ficha2.color = ficha1_x, ficha1_y, ficha1_color
+        
+        
+        db.delete(movimiento_parcial)
+        db.commit()
+    
+        return obtener_fichas(movimiento_parcial.id_partida, db) 
