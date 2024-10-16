@@ -38,35 +38,40 @@ def obtener_fichas(id_partida: int, db:Session) :
         fichas = partida.tablero.fichas
         lista_fichas =  [{"x": ficha.x, "y": ficha.y, "color": ficha.color.name } for ficha in fichas]
         return lista_fichas   
-       
+
+
+def obtener_ficha(id_partida: int, x: int, y: int, db: Session):
+    
+    ficha = (
+            db.query(Ficha).
+            filter(
+                Ficha.id_tablero == id_partida,
+                Ficha.x == x,
+                Ficha.y == y)
+            .first()
+        )
+    return ficha
+                
                 
 def switchear_fichas_tablero(movimiento_parcial: MovimientosParciales , db: Session):
         
-        ficha1 = (
-            db.query(Ficha).
-            filter(
-                Ficha.id_tablero == movimiento_parcial.id_partida,
-                Ficha.x == movimiento_parcial.x1,
-                Ficha.y == movimiento_parcial.y1)
-            .first()
+        ficha1 = obtener_ficha(
+            movimiento_parcial.id_partida, 
+            movimiento_parcial.x1, 
+            movimiento_parcial.y1, 
+            db
         )
         
-        ficha2 = (
-            db.query(Ficha)
-            .filter(
-                    Ficha.id_tablero == movimiento_parcial.id_partida,
-                    Ficha.x == movimiento_parcial.x2,
-                    Ficha.y == movimiento_parcial.y2)
-            .first()
+        ficha2 = obtener_ficha(
+            movimiento_parcial.id_partida,
+            movimiento_parcial.x2,
+            movimiento_parcial.y2,
+            db
         )
         
-        
-        ficha1_x, ficha1_y, ficha1_color = ficha1.x, ficha1.y, ficha1.color
-        
-        ficha1.x, ficha1.y, ficha1.color = movimiento_parcial.x2, movimiento_parcial.y2, ficha1_color
-        
-        ficha2.x, ficha2.y, ficha2.color = ficha1_x, ficha1_y, ficha1_color
-        
+        color_ficha1 = ficha1.color
+        ficha1.color = ficha2.color
+        ficha2.color = color_ficha1
         
         db.delete(movimiento_parcial)
         db.commit()
