@@ -11,6 +11,7 @@ from app.schema.websocket_schema import *
 from typing import List
 from app.services.encontrar_fig import encontrar_figuras #borrar antes de commit
 import logging
+import json
 
 router = APIRouter()
 
@@ -156,9 +157,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
 @router.get("/partida/{id_partida}/figuras", status_code=200)
 async def find_figuras(id_partida: int, db: Session = Depends(crear_session)):
     try:
-        # Obtener la lista de tipos de figura que quieres buscar
-        # Por ahora, buscaremos todas las figuras (del 1 al 6)
-        lista_fig = list(range(1, 7))
+        lista_fig = list(range(1, 25))
         
         # Llamar a la función encontrar_figuras
         figuras = encontrar_figuras(id_partida, lista_fig, db)
@@ -169,19 +168,19 @@ async def find_figuras(id_partida: int, db: Session = Depends(crear_session)):
         else:
             print("No se encontraron figuras.")
 
-        # Formatear la respuesta
-        respuesta = []
-        for figura in figuras:
-            respuesta.append({
-                "tipo": figura[0],
-                "color": figura[1],
-                "posiciones": list(figura[2])
-            })
-        mensaje = FigurasEncontradasSchema(
-            type=WebSocketMessageType.FIGURAS_ENCONTRADAS,
-            data=FigurasEncontradasDataSchema(figuras=figuras)
-        )
-        await manager_game.broadcast(id_partida, mensaje.dict())
+        figuras_data = {
+            "type": "DeclararFigura",
+            "figuras": {
+                "figura": [
+                    {
+                        "tipoFig": tipo,
+                        "coordenadas": list(map(list, posiciones)) 
+                    } for tipo, _, posiciones in figuras
+                ]
+            }
+        }
+        await manager_game.broadcast(id_partida, figuras_data)
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 # fin no mergear
