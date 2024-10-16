@@ -58,7 +58,6 @@ def es_figura_valida(posiciones, figNum :int ):
         return is_fig9(posiciones_normalizadas)
     elif figNum == 10:
         return is_fig10(posiciones_normalizadas)
-    """
     elif figNum == 11:
         return is_fig11(posiciones_normalizadas)
     elif figNum == 12:
@@ -89,10 +88,11 @@ def es_figura_valida(posiciones, figNum :int ):
         return is_fig24(posiciones_normalizadas)
     elif figNum == 25:
         return is_fig25(posiciones_normalizadas)
-    """
+
     return False
 
 def is_fig1(posiciones_normalizadas):
+    """3 verical y 3 horizontal en el medio hacia la derecha """
     rotaciones = [
         {(0, 0), (1, 0), (2, 0), (1, 1)},  # original
         {(0, 1), (1, 0), (1, 1), (1, 2)},  # rotada 90 grados
@@ -101,6 +101,7 @@ def is_fig1(posiciones_normalizadas):
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 def is_fig2(posiciones_normalizadas):
+    """2 horizontal y 3 horizontal uno abajo y uno a la derecha"""
     rotaciones = [
         {(0,0),(0,1),(1,1),(1,2),(1,3)},
         {(0,0),(1,0),(2,0),(2,1),(3,1)},
@@ -110,6 +111,7 @@ def is_fig2(posiciones_normalizadas):
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig3(posiciones_normalizadas):
+    """3 horizontal y dos horizontal arrbia desplazado uno a la derecha"""
     rotaciones =[
         {(0,2),(0,3),(0,1),(1,1),(1,2)},
         {(0,0),(1,0),(1,1),(2,1),(2,1),(3,1)},
@@ -120,6 +122,8 @@ def is_fig3(posiciones_normalizadas):
 
 
 def is_fig4(posiciones_normalizadas):
+    """escalera, uno, dos abajo desplazados uno derecha
+    y dos abajo desplazado derecha"""
     rotaciones =[
         {(0,0),(1,0),(1,1),(2,1),(2,2)},
         {(0,2),(1,1),(1,2),(2,1),(2,0)},
@@ -131,8 +135,9 @@ def is_fig4(posiciones_normalizadas):
 
 
 def is_fig5(posiciones_normalizadas):
+    """cinco en linea"""
     rotaciones =[
-        {(0,0),(0,1),(1,2),(0,3),(0,4)},
+        {(0,0),(0,1),(0,2),(0,3),(0,4)},
         {(0,0),(1,0),(2,0),(3,0),(4,0)}
     ]
     
@@ -140,6 +145,8 @@ def is_fig5(posiciones_normalizadas):
 
 
 def is_fig6(posiciones_normalizadas):
+    """ L simetrica (3 y 3)
+    """
     rotaciones =[
         {(0,0),(1,0),(2,0),(2,1),(2,2)},
         {(2,0),(2,1),(2,2),(1,2),(0,2)},
@@ -151,6 +158,7 @@ def is_fig6(posiciones_normalizadas):
 
 
 def is_fig7(posiciones_normalizadas):
+    """cuatro en linea + 1 abajo derecha"""
     rotaciones =[
         {(0,0),(0,1),(0,2),(0,3),(1,3)},
         {(0,0),(1,0),(2,0),(3,0),(0,1)},
@@ -162,6 +170,7 @@ def is_fig7(posiciones_normalizadas):
 
 
 def is_fig8(posiciones_normalizadas):
+    """cuatro en linea + uno arriba derecha"""
     rotaciones =[
         {(0,0),(0,2),(1,0),(1,1),(1,2)},
         {(0,0),(0,1),(1,1),(2,1),(3,1)},
@@ -188,52 +197,124 @@ def is_fig10(posiciones_normalizadas):
     ]
     
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
-"""
+
 def is_fig11(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(1,1),(1,2),(1,0),(2,1)},
+        {(0,1),(1,1),(1,2),(2,0),(2,1)},
+        {(0,1),(1,1),(1,0),(1,2),(2,2)},
+        {(0,1),(1,1),(0,2),(1,0),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig12(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(1,1),(1,0),(1,2),(2,2)},
+        {(0,1),(1,1),(0,2),(2,0),(2,1)},
+        
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig13(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(0,1),(0,2),(0,3),(1,2)},
+        {(0,0),(1,0),(1,1),(2,0),(3,0)},
+        {(0,1),(1,0),(1,1),(1,2),(1,3)},
+        {(0,1),(0,2),(1,1),(2,1),(2,0)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig14(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,2),(1,0),(1,1),(1,2),(1,3)},
+        {(1,1),(0,1),(1,1),(2,1),(3,1)},
+        {(0,0),(0,1),(0,2),(0,3),(1,1)},
+        {(0,0),(1,0),(2,0),(3,0),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig15(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,1),(0,2),(1,0),(1,1),(1,2)},
+        {(0,0),(0,1),(1,0),(1,1),(2,1)},
+        {(0,0),(0,1),(1,0),(1,1),(0,2)},
+        {(0,0),(1,0),(1,1),(2,0),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig16(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(0,2),(1,0),(1,1),(1,2)},
+        {(0,0),(0,1),(1,1),(2,0),(2,1)},
+        {(0,0),(0,1),(0,2),(1,0),(1,2)},
+        {(0,0),(0,1),(1,0),(2,0),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig17(posiciones_normalizadas):
-    return False
+    rotacion = {(0,1),(1,0),(1,1),(1,2),(2,1)}
+    return posiciones_normalizadas == rotacion 
 
 def is_fig18(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(0,1),(0,2),(1,1),(1,2)},
+        {(0,0),(0,1),(1,0),(1,1),(0,0)},
+        {(0,0),(0,1),(1,0),(1,1),(1,2)},
+        {(0,1),(1,0),(1,1),(2,0),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig19(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,1),(0,2),(1,0),(1,1)},
+        {(0,0),(1,0),(1,1),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig20(posiciones_normalizadas):
-    return False
+    rotacion = {(0,0),(0,1),(1,0),(1,1)}
+    return posiciones_normalizadas == rotacion
 
 def is_fig21(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(0,1),(1,1),(1,2)},
+        {(1,0),(0,1),(1,1),(2,0)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig22(posiciones_normalizadas):
-    return False
-
+    rotaciones ={
+        {(0,1),(1,0),(1,1),(1,2)},
+        {(0,1),(1,1),(1,0),(2,1)},
+        {(0,1),(0,0),(0,2),(1,1)},
+        {(0,0),(1,0),(2,0),(1,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 def is_fig23(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(0,1),(0,2),(1,2)},
+        {(0,1),(1,1),(2,1),(2,0)},
+        {(0,0),(1,1),(1,0),(1,2)},
+        {(0,0),(1,0),(2,0),(0,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig24(posiciones_normalizadas):
-    return False
+    rotaciones ={
+        {(0,0),(0,1),(0,2),(0,3)},
+        {(0,0),(1,0),(2,0),(3,0)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig25(posiciones_normalizadas):
-    return False
-"""
+    rotaciones ={
+        {(0,2),(1,0),(1,1),(1,2)},
+        {(0,0),(0,1),(1,1),(2,1)},
+        {(0,0),(1,0),(0,1),(0,2)},
+        {(0,0),(1,0),(2,0),(2,1)}
+    }
+    return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
+
 
 def obtener_grupo_adyacente(posicion, posiciones):
     """Obtener grupo adyacente de una posición"""
