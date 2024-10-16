@@ -24,3 +24,10 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer_movimiento", status_code=202) 
+async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
+    try:
+        resultado = await juego_service.deshacer_movimiento(idPartida, idJugador, db)
+        return resultado
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
