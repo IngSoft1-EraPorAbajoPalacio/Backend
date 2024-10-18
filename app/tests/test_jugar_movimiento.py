@@ -30,8 +30,8 @@ def movimiento_1():
     return JugarMovimientoRequest(
         idCarta=1,
         posiciones=[
-            Posicion(x=0, y=0),
-            Posicion(x=2, y=2)
+            Posicion(x=1, y=3),
+            Posicion(x=3, y=1)
         ]
     )
 
@@ -70,8 +70,8 @@ def movimiento_5():
     return JugarMovimientoRequest(
         idCarta=5,
         posiciones=[
-            Posicion(x=1, y=2),
-            Posicion(x=0, y=0)
+            Posicion(x=0, y=0),
+            Posicion(x=2, y=1)
         ]
     )
 
@@ -80,8 +80,8 @@ def movimiento_6():
     return JugarMovimientoRequest(
         idCarta=6,
         posiciones=[
-            Posicion(x=1, y=2),
-            Posicion(x=2, y=0)
+            Posicion(x=2, y=3),
+            Posicion(x=1, y=1)
         ]
     )
 
@@ -90,8 +90,8 @@ def movimiento_7():
     return JugarMovimientoRequest(
         idCarta=7,
         posiciones=[
-            Posicion(x=3, y=5),
-            Posicion(x=5, y=5)
+            Posicion(x=3, y=3),
+            Posicion(x=5, y=3)
         ]
     )
 
