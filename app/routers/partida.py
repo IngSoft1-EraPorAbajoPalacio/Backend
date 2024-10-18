@@ -1,3 +1,4 @@
+from operator import index
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from app.schema.partida_schema import * 
 from app.services.partida_service import partida_service
@@ -170,6 +171,7 @@ async def computar_y_enviar_figuras(id_partida: int, db: Session):
             "figuras": {
                 "figura": [
                     {
+                        "idFig": f"{tipo}_{index}",
                         "tipoFig": tipo,
                         "coordenadas": list(map(list, posiciones))
                     } for tipo, _, posiciones in figuras
