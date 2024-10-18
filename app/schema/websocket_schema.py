@@ -12,7 +12,7 @@ class WebSocketMessageType(str, Enum):
     MOVIMIENTO_PARCIAL = "MovimientoParcial"
     DESHACER_MOVIMIENTO = "DeshacerMovimiento"
     DESHACER_MOVIMIENTOS = "DeshacerMovimientos"
-    FIGURAS_ENCONTRADAS = "FigurasEncontradas"
+    FIGURAS_ENCONTRADAS = "DeclararFigura"
     PARTIDA_FINALIZADA = "PartidaFinalizada"
     
 class JugadorSchema(BaseModel):

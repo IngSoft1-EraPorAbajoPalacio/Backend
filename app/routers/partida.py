@@ -11,6 +11,7 @@ from app.schema.websocket_schema import *
 from typing import List
 from app.services.encontrar_fig import encontrar_figuras #borrar antes de commit
 import logging
+from app.services.cartas_service import obtener_figuras_en_juego
 import json
 
 router = APIRouter()
@@ -90,6 +91,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager_lobby.broadcast(id_partida,response)
         await manager.broadcast(eliminar_partida_message.model_dump())
+        await computar_y_enviar_figuras(id_partida, db)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))     
     return IniciarPartidaResponse(idPartida=str(id_partida))
@@ -153,37 +155,28 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
         logging.error(f"Unexpected error in abandonar_partida route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
-#No mergear en dev
-@router.get("/partida/{id_partida}/figuras", status_code=200)
-async def find_figuras(id_partida: int, db: Session = Depends(crear_session)):
+async def computar_y_enviar_figuras(id_partida: int, db: Session):
     try:
-        lista_fig = list(range(1, 25))
+        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
+        for figura in figuras_en_juego : print(figura)
+        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
         
-        # Llamar a la función encontrar_figuras
-        figuras = encontrar_figuras(id_partida, lista_fig, db)
-        if figuras:
-            print("Figuras encontradas:")
-            for tipo, color, posiciones in figuras:
-                print(f"- {tipo} de color {color} en posiciones {posiciones}")
-        else:
-            print("No se encontraron figuras.")
-
         figuras_data = {
             "type": "DeclararFigura",
             "figuras": {
                 "figura": [
                     {
                         "tipoFig": tipo,
-                        "coordenadas": list(map(list, posiciones)) 
+                        "coordenadas": list(map(list, posiciones))
                     } for tipo, _, posiciones in figuras
                 ]
             }
-        }
+        } 
         await manager_game.broadcast(id_partida, figuras_data)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-# fin no mergear
+        logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
+        
 @router.get("/mensaje_finalizacion/partida/{idPartida}/ganador/{idGanador}/{nombreGanador}")
 async def test_finalizacion_ganador(idPartida:int, idGanador: int, nombreGanador: str):
     partida_ganador_message = FinalizarPartidaSchema(
