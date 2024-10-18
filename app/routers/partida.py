@@ -12,7 +12,7 @@ from typing import List
 from app.services.encontrar_fig import encontrar_figuras #borrar antes de commit
 import logging
 from app.services.cartas_service import obtener_figuras_en_juego
-import json
+import json, asyncio
 
 router = APIRouter()
 
@@ -93,7 +93,10 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
         await manager.broadcast(eliminar_partida_message.model_dump())
         await computar_y_enviar_figuras(id_partida, db)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))     
+        raise HTTPException(status_code=404, detail=str(e)) 
+    # Sleep para asegurar que el socket message previo llegue primero
+    await asyncio.sleep(0.5)    
+    await computar_y_enviar_figuras(id_partida, db)
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
@@ -147,7 +150,8 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                await manager_lobby.broadcast(id_partida, abandonar_partida_message.model_dump()) #para que deje de mostrar al jugador en el lobby
 
         
-        await partida_service.abandonar_partida(id_partida, id_jugador, db)      
+        await partida_service.abandonar_partida(id_partida, id_jugador, db)   
+        await computar_y_enviar_figuras(id_partida, db)   
     except HTTPException as he:
         logging.error(f"HTTP exception in abandonar_partida route: {str(he)}")
         raise he
@@ -167,7 +171,7 @@ async def computar_y_enviar_figuras(id_partida: int, db: Session):
                 "figura": [
                     {
                         "tipoFig": tipo,
-                        "coordenadas": list(map(list, posiciones))
+                        "coordenadas": list(map(lambda pos: [pos[1], pos[0]], posiciones))
                     } for tipo, _, posiciones in figuras
                 ]
             }
