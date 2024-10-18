@@ -171,7 +171,7 @@ async def computar_y_enviar_figuras(id_partida: int, db: Session):
                 "figura": [
                     {
                         "tipoFig": tipo,
-                        "coordenadas": list(map(lambda pos: [pos[1], pos[0]], posiciones))
+                        "coordenadas": list(map(list, posiciones))
                     } for tipo, _, posiciones in figuras
                 ]
             }
