@@ -91,8 +91,8 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager_lobby.broadcast(id_partida,response)
-        await manager.broadcast(eliminar_partida_message.model_dump())
-        await computar_y_enviar_figuras(id_partida, db)
+        await manager.broadcast(eliminar_partida_message.dict())
+        print(response)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e)) 
     # Sleep para asegurar que el socket message previo llegue primero
