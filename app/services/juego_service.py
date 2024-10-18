@@ -31,11 +31,11 @@ class JuegoService:
         
         elif movimiento == idMovimiento.mov_L_izq:
             # Mover en forma de L hacia la izquierda
-            return (x2 - x1 == 1 and y2 - y1 == -2) or (x2 - x1 == -1 and y2 - y1 == 2) or (y2 - y1 == 1 and x2 - x1 == 2) or (y2 - y1 == -1 and x2 - x1 == -2),
+            return (x2 - x1 == 1 and y2 - y1 == -2) or (x2 - x1 == -1 and y2 - y1 == 2) or (y2 - y1 == 1 and x2 - x1 == 2) or (y2 - y1 == -1 and x2 - x1 == -2)
 
         elif movimiento == idMovimiento.mov_L_der:
             # Mover en forma de L hacia la derecha
-            return (x2 - x1 == 1 and y2 - y1 == 2) or (x2 - x1 == -1 and y2 - y1 == -2) or (y2 - y1 == 1 or x2 - x1 == -2) or (y2 - y1 == -1 and x2 - x1 == 2),
+            return (x2 - x1 == 1 and y2 - y1 == 2) or (x2 - x1 == -1 and y2 - y1 == -2) or (y2 - y1 == 1 or x2 - x1 == -2) or (y2 - y1 == -1 and x2 - x1 == 2)
         
         elif movimiento == idMovimiento.mov_lineal_lateral:
             # Mover una ficha con cualquiera de las cuatro que estén en los extremos de su misma fila o columna.
