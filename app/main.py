@@ -2,12 +2,13 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from app.db.base import engine
 from app.db.models import * 
-from app.routers import partida
+from app.routers import partida, juego
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="El Switcher")
 
 app.include_router(partida.router)
+app.include_router(juego.router)
 
 
 # Configure CORS

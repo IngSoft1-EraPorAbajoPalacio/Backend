@@ -8,6 +8,7 @@ class WebSocketMessageType(str, Enum):
     INICIAR_PARTIDA = "IniciarPartida"
     ABANDONAR_PARTIDA = "AbandonarPartida"
     ELIMINAR_PARTIDA = "PartidaEliminada"
+    MOVIMIENTO_PARCIAL = "MovimientoParcial"
     
 class JugadorSchema(BaseModel):
     id: int
@@ -31,6 +32,10 @@ class AbandonarPartidaDataSchema(BaseModel):
 class EliminarPartidaDataSchema(BaseModel):
     idPartida: int
 
+class MovimientoParcialDataSchema(BaseModel):
+    carta: dict
+    fichas: List[dict]
+
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
     ListaJugadores: List[JugadorSchema]
@@ -50,3 +55,7 @@ class AbandonarPartidaSchema(BaseModel):
 class EliminarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.ELIMINAR_PARTIDA] = WebSocketMessageType.ELIMINAR_PARTIDA
     data: EliminarPartidaDataSchema
+
+class MovimientoParcialSchema(BaseModel):
+    type: Literal[WebSocketMessageType.MOVIMIENTO_PARCIAL]
+    data: MovimientoParcialDataSchema
