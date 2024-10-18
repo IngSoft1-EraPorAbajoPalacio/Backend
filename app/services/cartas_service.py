@@ -1,3 +1,4 @@
+from sqlalchemy import select, distinct
 from app.schema.partida_schema import *
 from app.services.jugador_service import *
 from sqlalchemy.exc import *
@@ -107,6 +108,18 @@ def obtener_cartas_figuras(id_partida: int, db: Session):
         })
         
     return resultado
+
+def obtener_figuras_en_juego(id_partida: int, db: Session) -> List[int]:
+    """retorna lista de tipos (sin repeticion ) de figura en juego (cartas de figura visibles)"""
+    id_jugadores = obtener_id_jugadores(id_partida, db)
+    tipos_figura = []
+    
+    for id_jugador in id_jugadores:
+        figuras = db.query(CartasFigura).filter(CartasFigura.id_jugador == id_jugador, CartasFigura.en_mano == True).all()
+        cartas = [fig.figura.fig.value for fig in figuras if fig.figura]    
+        tipos_figura.extend(cartas)
+        
+    return list(set(tipos_figura))
 
 def obtener_cartas_movimientos(id_partida: int, db: Session):
     id_jugadores = obtener_id_jugadores(id_partida, db)

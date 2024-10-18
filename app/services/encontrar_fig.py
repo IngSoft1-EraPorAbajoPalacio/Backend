@@ -94,10 +94,10 @@ def es_figura_valida(posiciones, figNum :int ):
 def is_fig1(posiciones_normalizadas):
     """3 verical y 3 horizontal en el medio hacia la derecha """
     rotaciones = [
-        {(0, 0), (1, 0), (2, 0), (1, 1)},  # original
-        {(0, 1), (1, 0), (1, 1), (1, 2)},  # rotada 90 grados
-        {(1,0), (1,1), (2,1), (0,1)},  # rotada 180 grados
-        {(0,0), (0,1), (0,2), (1,1)}   # rotada 270 grados
+        {(0, 0), (1, 0), (2, 0), (1, 1), (1,2)},  # original
+        {(0, 1), (1, 1), (2, 0), (2, 1),(2,2) },  # rotada 90 grados
+        {(1,0), (0,2), (1,1), (1,2),(2,2)},  # rotada 180 grados
+        {(0,0), (0,1), (0,2), (1,1),(2,2)}   # rotada 270 grados
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 def is_fig2(posiciones_normalizadas):
@@ -376,7 +376,7 @@ def agrupar_fichas(lista_fichas):
     return grupos
 
 def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
-    """Encontrar las figuras de la listaFig en el tablero de la partidaID"""
+    """Encontrar las figuras de la listaFig en el tablero de la partida con id = id_partida"""
     tablero = obtener_fichas(id_partida, db)
     imprimir_tablero(tablero) #debugg
     grupos = agrupar_fichas(tablero)
@@ -396,7 +396,12 @@ def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
             for figNum in listaFig:  # Iteramos sobre la lista de tipos de figura
                 if es_figura_valida(grupo, figNum):
                     figuras.append((figNum, color, grupo))
-    """"
-    
-    """
+    #debugg
+    if figuras:
+        print("Figuras encontradas:")
+        for tipo, color, posiciones in figuras:
+            print(f"- {tipo} de color {color} en posiciones {posiciones}")
+    else:
+        print("No se encontraron figuras.")
+
     return figuras
