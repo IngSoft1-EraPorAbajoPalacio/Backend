@@ -149,9 +149,11 @@ class JuegoService:
             .order_by(desc(MovimientosParciales.id))
             .first()
         )
-        
+
         if ultimo_movimiento_parcial is None:
             raise HTTPException(status_code=404, detail=f"El jugador con id {idJugador} no realizo ningun movimiento ")
+                
+        movimiento = obtener_movimiento(ultimo_movimiento_parcial.movimiento, db)
         
         carta_movimiento = db.query(CartaMovimientos).filter(
             CartaMovimientos.id_partida == idPartida,
@@ -165,8 +167,10 @@ class JuegoService:
         
         resultado = {
             "idCarta": ultimo_movimiento_parcial.movimiento,
+            "movimiento": movimiento,
             "posiciones": posiciones_actualizadas
         }
+        
         print(resultado)
         
         return resultado
