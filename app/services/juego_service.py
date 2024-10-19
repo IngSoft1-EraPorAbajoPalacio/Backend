@@ -116,29 +116,11 @@ class JuegoService:
         
         db.commit()
         
-        response = {
-            "type": "MovimientoParcial",
-            "carta": {
-                "id": movimiento.idCarta,
-                "movimiento": carta_movimiento
-            },
-            "fichas": [
-                {
-                    "x": ficha2.x,
-                    "y": ficha2.y,
-                    "color": ficha2.color.name
-                },
-                {
-                    "x": ficha1.x,
-                    "y": ficha1.y,
-                    "color": ficha1.color.name
-                }
-            ]
-        }
-
-        
-        ficha1 = movimiento.posiciones[0]
-        ficha2 = movimiento.posiciones[1]
+        response = {"type": "MovimientoParcial", 
+                    "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
+                    "fichas": [{"x": ficha2.x, "y": ficha2.y, "color": ficha2.color.name}, 
+                               {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
+                    }
         
         fila_nueva = MovimientosParciales(
             id_partida = id_partida, id_jugador = id_jugador,
@@ -152,11 +134,6 @@ class JuegoService:
         db.add(fila_nueva)
         db.commit()
              
-        response = {"type": "MovimientoParcial", 
-                    "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
-                    "fichas": [{"x": ficha2.x, "y": ficha2.y, "color": ficha2.color.name}, 
-                               {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
-                    }
         return response
     
     
