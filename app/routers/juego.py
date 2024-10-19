@@ -24,19 +24,29 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer_movimiento", status_code=202) 
+@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimiento", status_code=202) 
 async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
         resultado = juego_service.deshacer_movimiento(idPartida, idJugador, db)
+        deshacer_movimiento_message = DeshacerMovimiento(
+            type= WebSocketMessageType.DESHACER_MOVIMIENTO ,
+            posiciones= resultado['posiciones']
+        )
+        await manager_game.broadcast(idPartida, deshacer_movimiento_message.model_dump())
         return resultado
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
     
     
-@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer_movimientos", status_code=202) 
+@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimientos", status_code=202) 
 async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
         resultado = juego_service.deshacer_movimientos(idPartida, idJugador, db)
+        deshacer_movimientos_message = DeshacerMovimientos(
+            type= WebSocketMessageType.DESHACER_MOVIMIENTOS,
+            posiciones= resultado['posiciones']
+        )
+        await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump())
         return resultado
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))    

@@ -121,6 +121,7 @@ class JuegoService:
                     "fichas": [{"x": ficha2.x, "y": ficha2.y, "color": ficha2.color.name}, 
                                {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
                     }
+        print(f"juego la carta con id {movimiento.idCarta}")
         
         fila_nueva = MovimientosParciales(
             id_partida = id_partida, id_jugador = id_jugador,
@@ -162,11 +163,20 @@ class JuegoService:
       
         posiciones_actualizadas = switchear_fichas_tablero(ultimo_movimiento_parcial, db)
         
-        return posiciones_actualizadas
+        resultado = {
+            "idCarta": ultimo_movimiento_parcial.movimiento,
+            "posiciones": posiciones_actualizadas
+        }
+        print(resultado)
+        
+        return resultado
     
     
     
     def deshacer_movimientos(self,idPartida: int, idJugador: int, db:Session):
+        
+        idMovimientos = []
+        posiciones = []
         
         movimientos_parciales = (
             db.query(MovimientosParciales).
@@ -179,10 +189,15 @@ class JuegoService:
         cantidad_mov_parciales = len(movimientos_parciales)
         
         while (cantidad_mov_parciales > 0) :
-            self.deshacer_movimiento(idPartida, idJugador, db)
+            movimiento_desecho = self.deshacer_movimiento(idPartida, idJugador, db)
+            idMovimientos.append(movimiento_desecho['idCarta'])
+            posiciones.append(movimiento_desecho['posiciones'])
             cantidad_mov_parciales-=1
         
-        
-        return obtener_fichas(idPartida, db)  
+        resultado = {
+            "idCartas": idMovimientos,
+            "posiciones": posiciones
+        }
+        return  resultado   
 
 juego_service = JuegoService()
