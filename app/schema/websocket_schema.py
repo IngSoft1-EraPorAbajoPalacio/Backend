@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Literal
 from enum import Enum
+from app.schema.juego_schema import Posicion
 
 class WebSocketMessageType(str, Enum):
     AGREGAR_PARTIDA = "AgregarPartida"
@@ -9,6 +10,8 @@ class WebSocketMessageType(str, Enum):
     ABANDONAR_PARTIDA = "AbandonarPartida"
     ELIMINAR_PARTIDA = "PartidaEliminada"
     MOVIMIENTO_PARCIAL = "MovimientoParcial"
+    DESHACER_MOVIMIENTO = "DeshacerMovimiento"
+    DESHACER_MOVIMIENTOS = "DeshacerMovimientos"
     
 class JugadorSchema(BaseModel):
     id: int
@@ -59,3 +62,11 @@ class EliminarPartidaSchema(BaseModel):
 class MovimientoParcialSchema(BaseModel):
     type: Literal[WebSocketMessageType.MOVIMIENTO_PARCIAL]
     data: MovimientoParcialDataSchema
+    
+class DeshacerMovimiento(BaseModel):
+    type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTO]
+    posiciones: List[Posicion]
+    
+class DeshacerMovimientos(BaseModel):
+    type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
+    posiciones: List[List[Posicion]]    
