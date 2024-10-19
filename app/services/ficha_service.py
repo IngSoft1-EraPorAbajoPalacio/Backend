@@ -2,6 +2,7 @@ from sqlalchemy.exc import *
 import random
 from sqlalchemy.orm import Session
 from app.db.models import *
+from app.schema.juego_schema import Posicion
 
 TAMANO_TABLERO = 6
 
@@ -75,8 +76,18 @@ def switchear_fichas_tablero(movimiento_parcial: MovimientosParciales , db: Sess
         
         db.delete(movimiento_parcial)
         db.commit()
-    
-        return obtener_fichas(movimiento_parcial.id_partida, db) 
+        
+        posiciones = [
+            Posicion(
+                x= ficha1.x,
+                y= ficha1.y
+            ),
+            Posicion(
+                x= ficha2.x,
+                y= ficha2.y
+            )
+        ]              
+        return posiciones 
 
 
 def obtener_id_movimientos_en_mano(id_partida: int, id_jugador: int, db: Session):
