@@ -24,7 +24,7 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimiento", status_code=202) 
+@router.patch("/partida/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimiento", status_code=202) 
 async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
         deshacer_movimiento = juego_service.deshacer_movimiento(idPartida, idJugador, db)
@@ -47,7 +47,7 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
         raise HTTPException(status_code=404, detail=str(e))
     
     
-@router.patch("/game/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimientos", status_code=202) 
+@router.patch("/partida/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimientos", status_code=202) 
 async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
         resultado = juego_service.deshacer_movimientos(idPartida, idJugador, db)
