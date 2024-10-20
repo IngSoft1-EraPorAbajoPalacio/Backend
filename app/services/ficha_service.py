@@ -115,5 +115,4 @@ def obtener_movimientos_en_mano(id_partida: int, id_jugador: int, db: Session):
     
 def obtener_movimiento(idCarta: int, db: Session):
     movimiento = db.query(Movimientos).filter(Movimientos.id == idCarta).first()
-    print(movimiento.mov.value)
     return movimiento.mov.value

@@ -88,9 +88,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager_lobby.broadcast(id_partida,response)
-        #para que en la lista del home se deje de mostrar la partida ya iniciada
         await manager.broadcast(eliminar_partida_message.dict())
-        print(response)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))     
     return IniciarPartidaResponse(idPartida=str(id_partida))
