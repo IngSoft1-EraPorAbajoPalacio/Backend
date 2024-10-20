@@ -19,7 +19,7 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
                 fichas=response["fichas"]
             )
         )
-        await manager_game.broadcast(idPartida, jugar_movimiento_message.dict())
+        await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())
         return response
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -62,3 +62,20 @@ async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Dep
         return { "cartas": resultado['cartas'] }
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))    
+
+@router.post("/partida/{idPartida}/jugador/{idJugador}/tablero/declarar-figura", status_code=202)
+async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFiguraRequest, db: Session = Depends(crear_session)):
+    try:
+        response = await juego_service.declarar_figura(idPartida, idJugador, request, db)
+        declarar_figura_message = DeclararFiguraSchema(
+            type=WebSocketMessageType.FIGURA_DECLARADA,
+            data=DeclararFiguraDataSchema(
+                cartaId=response["cartaId"],
+                fichas=response["fichas"]
+            )
+        )
+
+        await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
