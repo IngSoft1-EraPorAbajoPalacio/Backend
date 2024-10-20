@@ -5,6 +5,8 @@ from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager_game import manager_game
 from app.schema.websocket_schema import * 
+from app.routers.partida import computar_y_enviar_figuras
+import asyncio
 
 router = APIRouter()
 
@@ -20,6 +22,10 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
             )
         )
         await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())
+
+        # Sleep para asegurar que el socket message previo llegue primero
+        await asyncio.sleep(0.5)    
+        await computar_y_enviar_figuras(idPartida, db)
         return response
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -74,8 +80,11 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
                 fichas=response["fichas"]
             )
         )
+        await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())        
 
-        await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())
+        # Sleep para asegurar que el socket message previo llegue primero
+        await asyncio.sleep(0.5)    
+        await computar_y_enviar_figuras(idPartida, db)
         return response
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
