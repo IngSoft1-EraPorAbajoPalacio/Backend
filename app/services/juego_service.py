@@ -179,8 +179,8 @@ class JuegoService:
     
     def deshacer_movimientos(self,idPartida: int, idJugador: int, db:Session):
         
-        idMovimientos = []
-        posiciones = []
+        cartas =[]
+        posiciones =[]
         
         movimientos_parciales = (
             db.query(MovimientosParciales).
@@ -189,19 +189,30 @@ class JuegoService:
                 MovimientosParciales.id_jugador == idJugador)
             .all()
         )
+
+        print("Cantidad de movimientos parciales: ", len(movimientos_parciales))
         
         cantidad_mov_parciales = len(movimientos_parciales)
+        cantidad_mov_deshechos = len(movimientos_parciales)
         
         while (cantidad_mov_parciales > 0) :
             movimiento_desecho = self.deshacer_movimiento(idPartida, idJugador, db)
-            idMovimientos.append(movimiento_desecho['idCarta'])
+
+            cartas.append({
+                "id": movimiento_desecho['idCarta'],
+                "movimiento": movimiento_desecho['movimiento']
+            })
+
             posiciones.append(movimiento_desecho['posiciones'])
+
             cantidad_mov_parciales-=1
         
         resultado = {
-            "idCartas": idMovimientos,
+            "cartas": cartas,
+            "cantMovimientosDesechos": cantidad_mov_deshechos,
             "posiciones": posiciones
         }
+
         return  resultado   
 
 juego_service = JuegoService()

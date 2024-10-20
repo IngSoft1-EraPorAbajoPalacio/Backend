@@ -70,3 +70,4 @@ class DeshacerMovimiento(BaseModel):
 class DeshacerMovimientos(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
     posiciones: List[List[Posicion]]    
+    cantMovimientosDesechos: int

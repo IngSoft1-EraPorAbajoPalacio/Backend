@@ -50,12 +50,15 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
 @router.patch("/partida/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimientos", status_code=202) 
 async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
+        print("ENTRO A DESHACER MOVIMIENTOS")
         resultado = juego_service.deshacer_movimientos(idPartida, idJugador, db)
+        print(resultado)
         deshacer_movimientos_message = DeshacerMovimientos(
             type= WebSocketMessageType.DESHACER_MOVIMIENTOS,
-            posiciones= resultado['posiciones']
+            posiciones= resultado['posiciones'],
+            cantMovimientosDesechos= resultado['cantMovimientosDesechos']
         )
         await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump())
-        return resultado
+        return { "cartas": resultado['cartas'] }
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))    
