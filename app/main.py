@@ -4,12 +4,18 @@ from app.db.base import engine
 from app.db.models import * 
 from app.routers import partida, juego
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="El Switcher")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine) # Crea todas las tablas
+    yield
+    Base.metadata.drop_all(bind=engine) # Elimina todas las tablas
+    
+app = FastAPI(title="El Switcher", lifespan=lifespan)
 
 app.include_router(partida.router)
 app.include_router(juego.router)
-
 
 # Configure CORS
 app.add_middleware(
@@ -25,10 +31,5 @@ def root() :
     return RedirectResponse(url='/docs/')   
 
 
-@app.on_event("startup")
-def startup_event():
-    Base.metadata.create_all(bind=engine) # Crea todas las tablas
 
-@app.on_event("shutdown")
-def shutdown_event():
-    Base.metadata.drop_all(bind=engine) # Elimina todas las tablas
+    
