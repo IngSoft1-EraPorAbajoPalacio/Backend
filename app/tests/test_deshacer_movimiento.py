@@ -11,7 +11,6 @@ from app.services.juego_service import juego_service
 from app.services.ficha_service import *
 from app.schema.partida_schema import *
 from app.schema.juego_schema import *
-import asyncio
 
 Session = sessionmaker(bind=engine)
 
@@ -116,16 +115,16 @@ async def test_deshacer_movimiento(crear_session):
     
     db = crear_session
     
-    await partida_service.crear_partida(datos_partida, db)
-    await partida_service.unirse_partida("1", "j1", db)
-    await partida_service.unirse_partida("1", "j2", db)
-    partida_iniciada = await partida_service.iniciar_partida(1, 1, db)
+    data = await partida_service.crear_partida(datos_partida, db)
+    await partida_service.unirse_partida(data.id_partida, "j1", db)
+    await partida_service.unirse_partida(data.id_partida, "j2", db)
+    partida_iniciada = await partida_service.iniciar_partida(int(data.id_partida), int(data.id_jugador), db)
     
     tablero_inicial = partida_iniciada["fichas"]
     
-    id_movimientos_en_mano = obtener_id_movimientos_en_mano(1, 1, db)
+    id_movimientos_en_mano = obtener_id_movimientos_en_mano(int(data.id_partida), int(data.id_jugador), db)
     
-    movimientos_en_mano = obtener_movimientos_en_mano(1, 1, db)
+    movimientos_en_mano = obtener_movimientos_en_mano(int(data.id_partida), int(data.id_jugador), db)
     
     primer_id = id_movimientos_en_mano[0]
     print(f"el id de la carta de movimiento es : {primer_id}")
@@ -137,11 +136,11 @@ async def test_deshacer_movimiento(crear_session):
     jugar_mov = switch_case(primera_figura, primer_id)
     print(f"la jugada que voy a hacer es : {jugar_mov}")
 
-    await juego_service.jugar_movimiento(1, 1, jugar_mov, db)
+    await juego_service.jugar_movimiento(int(data.id_partida), int(data.id_jugador), jugar_mov, db)
 
-    fichas_actualizadas = juego_service.deshacer_movimiento(1, 1, db)
+    juego_service.deshacer_movimiento(int(data.id_partida), int(data.id_jugador), db)
 
-    assert tablero_inicial == fichas_actualizadas
+    assert tablero_inicial == obtener_fichas(int(data.id_partida), db)
     assert db.query(MovimientosParciales).count() == 0
 
 
@@ -157,16 +156,16 @@ async def test_deshacer_movimientos(crear_session):
     
     db = crear_session
     
-    await partida_service.crear_partida(datos_partida, db)
-    await partida_service.unirse_partida("2", "j3", db)
-    await partida_service.unirse_partida("2", "j4", db)
-    partida_iniciada = await partida_service.iniciar_partida(2, 4, db)
+    data = await partida_service.crear_partida(datos_partida, db)
+    await partida_service.unirse_partida(data.id_partida, "j3", db)
+    await partida_service.unirse_partida(data.id_partida, "j4", db)
+    partida_iniciada = await partida_service.iniciar_partida(int(data.id_partida), int(data.id_jugador), db)
     
     tablero_inicial = partida_iniciada["fichas"]
     
-    id_movimientos_en_mano = obtener_id_movimientos_en_mano(2, 4, db)
+    id_movimientos_en_mano = obtener_id_movimientos_en_mano(int(data.id_partida), int(data.id_jugador), db)
     
-    movimientos_en_mano = obtener_movimientos_en_mano(2, 4, db)
+    movimientos_en_mano = obtener_movimientos_en_mano(int(data.id_partida), int(data.id_jugador), db)
     
     for carta in range(3):
         primer_id = id_movimientos_en_mano[carta]
@@ -178,11 +177,11 @@ async def test_deshacer_movimientos(crear_session):
         jugar_mov = switch_case(primera_figura, primer_id)
         print(f"la jugada que voy a hacer es : {jugar_mov}")
 
-        await juego_service.jugar_movimiento(2, 4, jugar_mov, db)
+        await juego_service.jugar_movimiento(int(data.id_partida), int(data.id_jugador), jugar_mov, db)
 
-    fichas_actualizadas = juego_service.deshacer_movimientos(2, 4, db)
+    juego_service.deshacer_movimientos(int(data.id_partida), int(data.id_jugador), db)
 
-    assert tablero_inicial == fichas_actualizadas
+    assert tablero_inicial == obtener_fichas(int(data.id_partida), db)
     assert db.query(MovimientosParciales).count() == 0
 
 
