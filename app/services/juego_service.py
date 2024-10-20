@@ -121,8 +121,7 @@ class JuegoService:
                     "fichas": [{"x": ficha2.x, "y": ficha2.y, "color": ficha2.color.name}, 
                                {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
                     }
-        print(f"juego la carta con id {movimiento.idCarta}")
-        
+                
         fila_nueva = MovimientosParciales(
             id_partida = id_partida, id_jugador = id_jugador,
             movimiento = movimiento.idCarta,
@@ -170,9 +169,7 @@ class JuegoService:
             "movimiento": movimiento,
             "posiciones": posiciones_actualizadas
         }
-        
-        print(resultado)
-        
+                
         return resultado
     
     
@@ -189,8 +186,6 @@ class JuegoService:
                 MovimientosParciales.id_jugador == idJugador)
             .all()
         )
-
-        print("Cantidad de movimientos parciales: ", len(movimientos_parciales))
         
         cantidad_mov_parciales = len(movimientos_parciales)
         cantidad_mov_deshechos = len(movimientos_parciales)
