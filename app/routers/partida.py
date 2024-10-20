@@ -81,8 +81,15 @@ async def listar_partidas(db: Session = Depends(crear_session)):
 @router.post("/partida/{id_partida}/jugador/{id_jugador}", status_code=200, response_model=IniciarPartidaResponse)
 async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
+        eliminar_partida_message = EliminarPartidaSchema(
+                   type=WebSocketMessageType.ELIMINAR_PARTIDA,
+                   data=EliminarPartidaDataSchema( idPartida=id_partida )
+               )
+
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager_lobby.broadcast(id_partida,response)
+        #para que en la lista del home se deje de mostrar la partida ya iniciada
+        await manager.broadcast(eliminar_partida_message.dict())
         print(response)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))     
@@ -113,17 +120,31 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
             )
         )
 
+        eliminar_partida_message = EliminarPartidaSchema(
+                   type=WebSocketMessageType.ELIMINAR_PARTIDA,
+                   data=EliminarPartidaDataSchema( idPartida=id_partida )
+               )
+
         if partida.activa:
             if cantidad_jugadores == 2:
-                eliminar_partida_message = EliminarPartidaSchema(
-                    type=WebSocketMessageType.ELIMINAR_PARTIDA,
-                    data=EliminarPartidaDataSchema( idPartida=id_partida )
-                )
-                await manager_game.broadcast(id_partida, eliminar_partida_message.dict())
+               #ws para que si queda un jugador finalize el juego
+               await manager_game.broadcast(id_partida, eliminar_partida_message.dict())
+               #ws para que se deje de mostrar en el inicio si la partida terminó
+               await manager.broadcast(eliminar_partida_message.dict())
+
             else:
-                await manager_game.broadcast(id_partida, abandonar_partida_message.dict())
+               #ws para que se deje de mostrar jugador el juego
+               await manager_game.broadcast(id_partida, abandonar_partida_message.dict())
         else:
-            await manager_lobby.broadcast(id_partida, abandonar_partida_message.dict())
+            if id_jugador == partida.id_owner:
+               #ws para que los demas jugadores vuelvan al inicio si el host cancela la partida
+               await manager_lobby.broadcast(id_partida, eliminar_partida_message.dict())
+               #ws para que la partida se deje de mostrar en el inicio
+               await manager.broadcast(eliminar_partida_message.dict())
+            else:
+               #ws para que deje de mostrar al jugador en el lobby
+               await manager_lobby.broadcast(id_partida, abandonar_partida_message.dict()) #para que deje de mostrar al jugador en el lobby
+
         
         await partida_service.abandonar_partida(id_partida, id_jugador, db)      
     except HTTPException as he:
