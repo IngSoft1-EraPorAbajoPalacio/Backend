@@ -30,3 +30,7 @@ class idMovimiento(int, Enum):
     mov_L_izq = 5
     mov_L_der = 6
     mov_lineal_lateral = 7
+
+class DeclararFiguraRequest(BaseModel):
+    idCarta: int
+    fichas: List[Posicion]
