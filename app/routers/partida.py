@@ -152,6 +152,17 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
         logging.error(f"Unexpected error in abandonar_partida route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
+@router.get("/mensaje_finalizacion/partida/{idPartida}/ganador/{idGanador}/{nombreGanador}")
+async def test_finalizacion_ganador(idPartida:int, idGanador: int, nombreGanador: str):
+    partida_ganador_message = FinalizarPartidaSchema(
+        type=WebSocketMessageType.PARTIDA_FINALIZADA,
+        data=FinalizarPartidaDataSchema(
+            idGanador= idGanador,
+            nombreGanador= nombreGanador
+        )
+    )
+
+    await manager_game.broadcast(int(idPartida), partida_ganador_message.model_dump())
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
