@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.db.base import engine
-from app.db.models import Partida
+from app.db.models import *
 from app.services.partida_service import PartidaService
 from app.schema.partida_schema import CrearPartida, UnirsePartidaRequest
 from app.main import app
@@ -34,6 +34,10 @@ def nombre_jugador():
 async def test_unirse_partida(partida_service: PartidaService, partida_test, nombre_jugador):
     session = Session()
     try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+        
         partida_creada = await partida_service.crear_partida(partida_test, session)
 
         response = client.post(

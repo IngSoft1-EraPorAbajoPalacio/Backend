@@ -34,6 +34,10 @@ def nombre_jugador():
 async def test_iniciar_partida(partida_service: PartidaService, partida_test, nombre_jugador):
     session = Session()
     try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+        
         partida_creada = await partida_service.crear_partida(partida_test, session)
         await partida_service.unirse_partida(partida_creada.id_partida, nombre_jugador, session)
 

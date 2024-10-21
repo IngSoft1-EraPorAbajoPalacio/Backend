@@ -106,6 +106,10 @@ def switch_case(movimiento: int, id_movimiento):
 @pytest.mark.asyncio
 async def test_deshacer_movimiento(crear_session):
 
+    # Borrar las tablas de la base de datos
+    Base.metadata.drop_all(bind=engine) 
+    Base.metadata.create_all(bind=engine)
+
     datos_partida = CrearPartida(  
         nombre_host = "owner1",
         nombre_partida = "partida_test_1",
