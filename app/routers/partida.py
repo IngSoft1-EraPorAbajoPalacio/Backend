@@ -105,25 +105,31 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 @router.patch("/partida/{id_partida}/jugador/{id_jugador}", status_code=202)
 async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
-        print(f"en pasar turno me estas pasando como id partida : {id_partida}")
-        print(f"en pasar turno me estas pasando como id jugador : {id_jugador}")
-
+        
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
+        reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
+        reposicion_movimientos = reposicion_cartas_movimientos(id_partida, id_jugador, db)
         
-        reposicion = reposicion_cartas_figuras(id_partida, id_jugador, db)
-        
-        reposicion_msg = ReposicionCartas(
+        reposicion_fig = ReposicionCartasFiguras(
             type=WebSocketMessageType.REPOSICION_FIGURAS,
-            cartas = reposicion
+            cartas = reposicion_figuras
         )
         
-        #aca tendria que mandar a un solo jugador sus cartas de figuras
-        await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_msg.model_dump())
+        reposicion_mov = ReposicionCartasMovimientos(
+            type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
+            cartas = reposicion_movimientos
+        ) 
         
+        #se envia un mensajo a un solo jugador sus cartas de movimientos
+        await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
+        
+        #se envia a un mensaje a todos los jugadores de la partida la reposicion de figuras
+        await manager_game.broadcast(id_partida, reposicion_fig.model_dump())
+    
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
     
-        print("terminó pasar turno")
-        return reposicion_msg
+        return reposicion_cartas_figuras
+    
     except Exception as e:
         raise HTTPException(status_code=410, detail=str(e))
 
