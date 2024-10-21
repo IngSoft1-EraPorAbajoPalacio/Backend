@@ -139,7 +139,7 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
     return resultado
    
    
-def asignar_n_cartas(idPartida: int, idJugador: int, n: int, db: Session):
+def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
        
     resultado = []   
     
@@ -168,15 +168,64 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
         
     cartas_mov = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
                                                    CartasFigura.en_mano == True).all()
-
-    for mov in cartas_mov :
-        print(mov.figura.fig.value)
         
     en_mano = len(cartas_mov)
     
     cartas_a_asignar = max(0, 3 - en_mano)
     
-    return asignar_n_cartas(idPartida, idJugador, cartas_a_asignar, db)
+    return asignar_cartas_figuras(idPartida, idJugador, cartas_a_asignar, db)
             
+
+
+def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar: int, db: Session): 
+    
+    resultado = []   
+    
+    if cartas_a_asignar == 0:
+        return resultado 
+    
+    cartas_mov = db.query(CartaMovimientos).filter(
+        CartaMovimientos.id_partida == idPartida,
+        CartaMovimientos.id_jugador == idJugador,
+        CartaMovimientos.en_mano == False).limit(cartas_a_asignar).all()
+    
+    for mov in cartas_mov:
+        mov.en_mano = True
+        resultado.append(
+            {
+                "id": mov.carta_mov,
+                "movimiento": mov.movimiento.mov.value
+            }
+        )
+   
+    db.commit()
+
+    return resultado
+
+
+
+def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
+        
+    mov = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == idJugador,
+                                      CartaMovimientos.id_partida == idPartida,
+                                      CartaMovimientos.en_mano == True).all()
+    en_mano = len(mov)
+    
+    #significa que no forme ninguna figura, por lo tanto no retorno nada y llamo
+    #al endpoint deshacer_movimientos
+    #si no jugue ningun movimiento parcial , no pasa nada y se pasa el turno normal , y 
+    # si juegue un moviento parcial los deshace
+    
+    if mov == 3:
+        return []
+    
+    cartas_a_asignar = max(0, 3 - en_mano)
+        
+    return asignar_cartas_movimientos(idPartida, idJugador, cartas_a_asignar, db)
+        
+        
+        
+        
+    
     
     
