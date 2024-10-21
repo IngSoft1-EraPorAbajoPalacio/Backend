@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, De
 from app.schema.partida_schema import * 
 from app.services.partida_service import partida_service
 from app.services.jugador_service import *
+from app.services.cartas_service import *
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager import manager
@@ -39,7 +40,7 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
         agregar_partida_message = AgregarPartidaSchema(
             type=WebSocketMessageType.AGREGAR_PARTIDA,
             data=AgregarPartidaDataSchema(
-                idPartida=partida_creada.id_partida,
+                idPartida=int(partida_creada.id_partida),
                 nombrePartida=partida.nombre_partida,
                 cantJugadoresMin=partida.cant_min_jugadores,
                 cantJugadoresMax=partida.cant_max_jugadores
@@ -104,18 +105,38 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 @router.patch("/partida/{id_partida}/jugador/{id_jugador}", status_code=202)
 async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
+        print(f"en pasar turno me estas pasando como id partida : {id_partida}")
+        print(f"en pasar turno me estas pasando como id jugador : {id_jugador}")
+
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
-        await manager_game.broadcast(id_partida,{"type": "PasarTurno", "turno": sigTurno})
-        return
+        
+        reposicion = reposicion_cartas_figuras(id_partida, id_jugador, db)
+        
+        reposicion_msg = ReposicionCartas(
+            type=WebSocketMessageType.REPOSICION_FIGURAS,
+            cartas = reposicion
+        )
+        
+        #aca tendria que mandar a un solo jugador sus cartas de figuras
+        await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_msg.model_dump())
+        
+        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
+    
+        print("terminó pasar turno")
+        return reposicion_msg
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=410, detail=str(e))
 
 
 @router.delete("/partida/{id_partida}/jugador/{id_jugador}", status_code = 202)
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         partida = partida_service.obtener_partida(id_partida, db)
+        print(f"el id de la partidae es : {id_partida}")
         cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
+        print(f"la cantidad de jugadores de la partida es : {cantidad_jugadores}")
+        
+
         
         abandonar_partida_message = AbandonarPartidaSchema(
             type=WebSocketMessageType.ABANDONAR_PARTIDA,
@@ -153,6 +174,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
         
         await partida_service.abandonar_partida(id_partida, id_jugador, db)   
         await computar_y_enviar_figuras(id_partida, db)   
+    
     except HTTPException as he:
         logging.error(f"HTTP exception in abandonar_partida route: {str(he)}")
         raise he
@@ -207,12 +229,15 @@ async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
         await manager_lobby.disconnect(int(idPartida),websocket)
           
         
-@router.websocket("/ws/game/{idPartida}")
-async def websocket_endpoint_game(websocket: WebSocket, idPartida: int):
-    await manager_game.connect(idPartida,websocket)
+@router.websocket("/ws/game/{idPartida}/jugador/{idJugador}")
+async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugador: int):
+    await manager_game.connect(idPartida, idJugador, websocket)
+    print(f"se inicio la conexion con idpartida : {idPartida}")
+    print(f"se inicio la conexion con idjugador: {idJugador}")
     print("SE INICIO LA CONEXION DEL GAME")
+    print(manager_game.active_connections)
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        await manager_game.disconnect(idPartida,websocket)    
+        await manager_game.disconnect(idPartida, idJugador,websocket)    
