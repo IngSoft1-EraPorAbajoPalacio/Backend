@@ -172,6 +172,10 @@ class JuegoService:
             CartasFigura.id_jugador == id_jugador,
             CartasFigura.en_mano == True
         ).all()
+        
+        #esto es mio
+        db.query(MovimientosParciales).filter(MovimientosParciales.id_jugador == id_jugador).delete()
+        
         cartas = []
         for carta in cartas_en_mano:
             cartas.append({
