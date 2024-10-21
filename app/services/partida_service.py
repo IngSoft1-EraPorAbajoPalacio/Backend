@@ -123,7 +123,7 @@ class PartidaService:
         if partida.activa:
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} ya está iniciada")
 
-        crear_tablero(id_partida, db)
+        turno = crear_tablero(id_partida, db)
         repartir_fichas(id_partida, db)
         
         inicializacion_figuras_db(db)
@@ -145,6 +145,10 @@ class PartidaService:
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
         fichas = obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
+        orden.remove(turno)
+        random.shuffle(orden)
+        orden = [turno] + orden 
+        
         response = {
             "type": "IniciarPartida",
             "fichas": fichas, 
@@ -152,6 +156,7 @@ class PartidaService:
             "cartasMovimiento": cartas_movimientos,  
             "cartasFigura": cartas_figuras   
         } 
+
         return response
     
     def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
