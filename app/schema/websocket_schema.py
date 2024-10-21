@@ -13,7 +13,7 @@ class WebSocketMessageType(str, Enum):
     MOVIMIENTO_PARCIAL = "MovimientoParcial"
     DESHACER_MOVIMIENTO = "DeshacerMovimiento"
     DESHACER_MOVIMIENTOS = "DeshacerMovimientos"
-    FIGURA_DECLARADA = "FiguraDeclarada"
+    FIGURA_DECLARADA = "FiguraDescartar"
     PARTIDA_FINALIZADA = "PartidaFinalizada"
 
 class JugadorSchema(BaseModel):
@@ -44,7 +44,7 @@ class MovimientoParcialDataSchema(BaseModel):
 
 class DeclararFiguraDataSchema(BaseModel):
     cartaId: int
-    fichas: List[dict]
+    fichas: List[List[int]]
 
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
