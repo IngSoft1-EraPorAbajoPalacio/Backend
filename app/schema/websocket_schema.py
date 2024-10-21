@@ -43,7 +43,7 @@ class MovimientoParcialDataSchema(BaseModel):
     fichas: List[dict]
 
 class DeclararFiguraDataSchema(BaseModel):
-    cartaId: int
+    cartasFig: List[dict]
 
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
