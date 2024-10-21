@@ -28,6 +28,7 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
         await computar_y_enviar_figuras(idPartida, db)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+
 @router.patch("/partida/{idPartida}/jugador/{idJugador}/tablero/deshacer-movimiento", status_code=202) 
 async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
@@ -83,6 +84,5 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         # Sleep para asegurar que el socket message previo llegue primero
         await asyncio.sleep(0.5)    
         await computar_y_enviar_figuras(idPartida, db)
-        return response
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
