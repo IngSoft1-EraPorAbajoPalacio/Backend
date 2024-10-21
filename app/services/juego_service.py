@@ -166,10 +166,22 @@ class JuegoService:
             CartasFigura.carta_fig == figura.idCarta
         ).first().en_mano = False
 
+        # Cartas en mano
+        cartas_en_mano = db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.id_jugador == id_jugador,
+            CartasFigura.en_mano == True
+        ).all()
+        cartas = []
+        for carta in cartas_en_mano:
+            cartas.append({
+                "id": carta.carta_fig,
+                "figura": carta.figura.fig.value
+            })
         db.commit()
 
         response = {
-            "cartaId": figura.idCarta,
+            "cartasFig": cartas
         }
         return response
     
