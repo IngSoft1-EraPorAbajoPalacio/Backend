@@ -47,6 +47,8 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
             ]
         }
         await manager_game.broadcast(idPartida, deshacer_movimiento_message.model_dump())
+        await asyncio.sleep(0.5)    
+        await computar_y_enviar_figuras(idPartida, db)
         return resultado
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -64,6 +66,8 @@ async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Dep
                 cantMovimientosDesechos= resultado['cantMovimientosDesechos']
             )
             await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump())
+        await asyncio.sleep(0.5)    
+        await computar_y_enviar_figuras(idPartida, db)
         return { "cartas": resultado['cartas'] }
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))    
@@ -84,4 +88,6 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         await asyncio.sleep(0.5)    
         await computar_y_enviar_figuras(idPartida, db)
     except HTTPException as e:
+        await asyncio.sleep(0.5)    
+        await computar_y_enviar_figuras(idPartida, db)
         raise e
