@@ -152,20 +152,13 @@ class JuegoService:
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.carta_fig == figura.idCarta).first().en_mano:
             raise HTTPException(status_code=404, detail=f"La carta {figura.idCarta} no está en tu mano")
-        
+
         carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
-
+        
         # Validar la figura
-        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
-        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
-        fichas_set = {tuple(ficha) for ficha in figura.fichas}
-
-        for tipo, _, posiciones in figuras:
-            if tipo == carta_figura and fichas_set == posiciones:
-                break
-            else:
-                raise HTTPException(status_code=400, detail="Figura inválida")
-
+        if not figura.tipo_figura == carta_figura:
+            raise HTTPException(status_code=400, detail="Figura inválida")
+        
         # Eliminar la carta de la mano del jugador
         db.query(CartasFigura).filter(
             CartasFigura.id_partida == id_partida,
@@ -177,7 +170,6 @@ class JuegoService:
 
         response = {
             "cartaId": figura.idCarta,
-            "fichas": fichas_set
         }
         return response
     

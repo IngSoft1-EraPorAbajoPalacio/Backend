@@ -33,4 +33,4 @@ class idMovimiento(int, Enum):
 
 class DeclararFiguraRequest(BaseModel):
     idCarta: int
-    fichas: List[List[int]]
+    tipo_figura: int
