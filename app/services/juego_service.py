@@ -38,7 +38,7 @@ class JuegoService:
                 (y2 - y1 == 1  and x2 - x1 == -2) or 
                 (y2 - y1 == -1 and x2 - x1 == 2)
             )
-
+        
         elif movimiento == idMovimiento.mov_L_der:
             # Mover en forma de L hacia la derecha
             return (
@@ -47,7 +47,7 @@ class JuegoService:
                 (y2 - y1 == 1  and x2 - x1 == 2)  or 
                 (y2 - y1 == -1 and x2 - x1 == -2)
             )
-        
+
         elif movimiento == idMovimiento.mov_lineal_lateral:
             # Mover una ficha con cualquiera de las cuatro que estén en los extremos de su misma fila o columna.
             return (
