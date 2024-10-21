@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.models import *
 from app.schema.partida_schema import *
 import random
+from sqlalchemy import true
 
 CANTIDAD_CARTAS_FIG = 50
 CANTIDAD_CARTAS_MOV = 49
@@ -136,3 +137,46 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
         })
         
     return resultado
+   
+   
+def asignar_n_cartas(idPartida: int, idJugador: int, n: int, db: Session):
+       
+    resultado = []   
+    
+    if n == 0:
+        return resultado 
+    
+    cartas_fig = db.query(CartasFigura).filter(
+        CartasFigura.id_partida == idPartida,
+        CartasFigura.id_jugador == idJugador,
+        CartasFigura.en_mano == False).limit(n).all()
+    
+    for fig in cartas_fig:
+        fig.en_mano = True
+        resultado.append(
+            {
+                "id": fig.carta_fig,
+                "figura": fig.figura.fig.value
+            }
+        )
+   
+    db.commit()
+
+    return resultado
+    
+def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
+        
+    cartas_mov = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
+                                                   CartasFigura.en_mano == True).all()
+
+    for mov in cartas_mov :
+        print(mov.figura.fig.value)
+        
+    en_mano = len(cartas_mov)
+    
+    cartas_a_asignar = max(0, 3 - en_mano)
+    
+    return asignar_n_cartas(idPartida, idJugador, cartas_a_asignar, db)
+            
+    
+    
