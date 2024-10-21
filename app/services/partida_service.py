@@ -21,7 +21,6 @@ class PartidaService:
         return partidas 
     
     def obtener_partida(self, id_partida: int, db: Session):        
-        print(id_partida)
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
         if partida is None:
             raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}, error 1")
@@ -156,7 +155,15 @@ class PartidaService:
         return response
     
     def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
-        partida = self.obtener_partida(id_partida,db)  
+        
+        partida = self.obtener_partida(id_partida,db) 
+        if partida is None:
+            print("la partida no existe")
+            
+        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+        if jugador is None :
+            print(f"el jugador con id {id_jugador} no pertenece a la partida")
+                
         tablero = partida.tablero
         turno_actual = id_jugador
 
@@ -181,25 +188,66 @@ class PartidaService:
             if not jugador:
                 raise HTTPException(status_code=404, detail=f"No existe ningún jugador con id {id_jugador}")
 
-            jugador_partida = db.query(Jugador_Partida).filter_by(id_partida=id_partida, id_jugador=id_jugador).first()
-            if not jugador_partida:
-                raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no está en la partida {id_partida}")
+            #jugador_partida = db.query(Jugador_Partida).filter_by(id_partida=id_partida, id_jugador=id_jugador).first()
+            #if not jugador_partida:
+            #    raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no está en la partida {id_partida}")
+
+            jugador_partida = db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).all()
 
             cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
+            #id_jugadores = obtener_id_jugadores(id_partida, db)
 
             if partida.activa:
                 if cantidad_jugadores == 2:
-                    await self.eliminar_partida(id_partida, db)
+                    
+                    if (jugador_partida):
+                        for jp in jugador_partida:
+                            db.delete(jp)
+                    db.commit()        
+                    
+                    tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
+
+                    if tablero is None:
+                        raise HTTPException(status_code=404, detail=f"abandonar No existe tablero asociado a id : {id_partida}")
+
+                    db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
+
+                    # Eliminar los tableros  y las cartas asociadas a la partida
+                    db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
+                    db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
+                    db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
+                    
+                    #db.query(Jugador).filter(Jugador.id == id_jugadores[0],
+                    #                         Jugador.id == id_jugadores[1]).delete()
+                    
+                    jugadores = self.obtener_jugadores(id_partida, db)
+                    for jugador in jugadores:
+                        db.delete(jugador)
+                    
+                    db.delete(partida)
+                    
                 else:
-                    db.delete(jugador_partida)
-                    db.commit()
+                    db.query(Jugador_Partida).filter(Jugador_Partida.id_jugador == id_jugador,
+                                                     Jugador_Partida.id_partida == id_partida).delete()
+                    
+                    tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
+
+                    if tablero is None:
+                        raise HTTPException(status_code=404, detail=f"abandonar No existe tablero asociado a id : {id_partida}")
+
+                    db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                                  CartasFigura.id_jugador == id_jugador).delete()
+                    db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida,
+                                                      CartaMovimientos.id_jugador == id_jugador).delete()
+                    db.delete(jugador)
+
             else:
                 if cantidad_jugadores > 1 and id_jugador != partida.id_owner:
+                    db.delete(jugador)
                     db.delete(jugador_partida)
                 else:
                     await self.eliminar_partida(id_partida, db)  # Elimina si el owner abandona antes de comenzar
 
-            jugador.jugando = False
             db.commit()
 
         except SQLAlchemyError as e:
@@ -224,9 +272,16 @@ class PartidaService:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
 
             # Eliminar las fichas asociadas a los tableros de la partida
-            tableros = db.query(Tablero).filter(Tablero.id_partida == id_partida).all()
-            for tablero in tableros:
-                db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
+            #tableros = db.query(Tablero).filter(Tablero.id_partida == id_partida).all()
+            #for tablero in tableros:
+            #    db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
+            
+            tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
+            
+            if tablero is None:
+                raise HTTPException(status_code=404, detail=f"No existe tablero asociado a id : {id_partida}")
+            
+            db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
 
             # Eliminar los tableros  y las cartas asociadas a la partida
             db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
