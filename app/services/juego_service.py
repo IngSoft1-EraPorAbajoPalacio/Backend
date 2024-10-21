@@ -145,19 +145,19 @@ class JuegoService:
         if not partida_service.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
         
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
-        if not jugador.jugando:
-            raise HTTPException(status_code=404, detail="No es tu turno")
+        tablero = partida.tablero
+        if not tablero.turno == id_jugador:
+            raise HTTPException(status_code=430, detail="No es tu turno")
 
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.carta_fig == figura.idCarta).first().en_mano:
-            raise HTTPException(status_code=404, detail=f"La carta {figura.idCarta} no está en tu mano")
+            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en tu mano")
 
         carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
         
         # Validar la figura
         if not figura.tipo_figura == carta_figura:
-            raise HTTPException(status_code=400, detail="Figura inválida")
+            raise HTTPException(status_code=432, detail="Figura inválida")
         
         # Eliminar la carta de la mano del jugador
         db.query(CartasFigura).filter(
