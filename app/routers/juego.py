@@ -51,12 +51,14 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
 async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     try:
         resultado = juego_service.deshacer_movimientos(idPartida, idJugador, db)
-        deshacer_movimientos_message = DeshacerMovimientos(
-            type= WebSocketMessageType.DESHACER_MOVIMIENTOS,
-            posiciones= resultado['posiciones'],
-            cantMovimientosDesechos= resultado['cantMovimientosDesechos']
-        )
-        await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump())
+        
+        if(resultado['cantMovimientosDesechos'] != 0):
+            deshacer_movimientos_message = DeshacerMovimientos(
+                type= WebSocketMessageType.DESHACER_MOVIMIENTOS,
+                posiciones= resultado['posiciones'],
+                cantMovimientosDesechos= resultado['cantMovimientosDesechos']
+            )
+            await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump())
         return { "cartas": resultado['cartas'] }
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))    
