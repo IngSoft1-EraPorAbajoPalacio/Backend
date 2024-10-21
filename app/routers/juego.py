@@ -75,8 +75,7 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         declarar_figura_message = DeclararFiguraSchema(
             type=WebSocketMessageType.FIGURA_DECLARADA,
             data=DeclararFiguraDataSchema(
-                cartaId=response["cartaId"],
-                fichas=response["fichas"]
+                cartaId=response["cartaId"]
             )
         )
         await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())        
