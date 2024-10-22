@@ -35,8 +35,8 @@ def figura_valida():
 @pytest.fixture
 def figura_invalida():
     return DeclararFiguraRequest(
-        idCarta=999,
-        tipo_figura=1
+        idCarta=9,
+        tipo_figura=10
     )
 
 @pytest.mark.asyncio
@@ -51,7 +51,6 @@ async def test_declarar_figura(partida_service: PartidaService, partida_test, fi
         await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
         await partida_service.iniciar_partida(int(partida_creada.id_partida), int(partida_creada.id_jugador), session)
         session.commit()
-        jugador = session.query(Tablero).filter(Tablero.id_partida == partida_creada.id_partida).first().turno
 
         # Acomodo las fichas del tablero para la figura 9
         posiciones = []
@@ -77,9 +76,9 @@ async def test_declarar_figura(partida_service: PartidaService, partida_test, fi
 
         # Asigno figura 9 al jugador 
         figura = session.query(Figuras).filter(Figuras.id == figura_valida.idCarta).first()
-        session.query(Jugador).filter(Jugador.id == jugador).first().cartas_de_figuras[0].carta_fig = figura.id
-        session.query(Jugador).filter(Jugador.id == jugador).first().cartas_de_figuras[0].en_mano = True
-        session.query(Jugador).filter(Jugador.id == jugador).first().cartas_de_figuras[0].figura.fig = figura.fig
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].carta_fig = figura.id
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].en_mano = True
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].figura.fig = figura.fig
         session.commit()
 
         # Declarar figura
@@ -90,47 +89,62 @@ async def test_declarar_figura(partida_service: PartidaService, partida_test, fi
         print(f"Response: {response.json()}")
         assert response.status_code == 202
         session.commit()
-        assert session.query(CartasFigura).filter(CartasFigura.id_jugador == jugador).first().en_mano == False
+        assert session.query(CartasFigura).filter(
+            CartasFigura.id_jugador == partida_creada.id_jugador,
+            CartasFigura.carta_fig == figura.id
+        ).first().en_mano == False
+
     finally:
         session.close()
 
-# @pytest.mark.asyncio
-# async def test_declarar_figura_carta_invalida(partida_service: PartidaService, partida_test, figura_invalida):
-#     session = Session()
-#     try:
-#         partida_creada = await partida_service.crear_partida(partida_test, session)
-#         await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
-#         response_inicio = client.post(
-#             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
-#         assert response_inicio.status_code == 200
-#         session.commit()
-#         jugador = session.query(Tablero).filter(Tablero.id_partida == partida_creada.id_partida).first().turno
-        
-#         # Declarar figura
-#         response = client.post(
-#             f"/partida/{partida_creada.id_partida}/jugador/{jugador}/tablero/declarar-figura",
-#             json=figura_invalida.model_dump()
-#         )
-#         assert response.status_code == 404
-#     finally:
-#         session.close()
+@pytest.mark.asyncio
+async def test_declarar_figura_carta_invalida(partida_service: PartidaService, partida_test, figura_invalida):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+        await partida_service.iniciar_partida(int(partida_creada.id_partida), int(partida_creada.id_jugador), session)
+        session.commit()
 
-# @pytest.mark.asyncio
-# async def test_declarar_figura_jugador_invalido(partida_service: PartidaService, partida_test, figura_valida):
-#     session = Session()
-#     try:
-#         partida_creada = await partida_service.crear_partida(partida_test, session)
-#         await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
-#         response_inicio = client.post(
-#             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
-#         assert response_inicio.status_code == 200
-#         session.commit()
+        # Asigno figura 9 al jugador 
+        figura = session.query(Figuras).filter(Figuras.id == figura_invalida.idCarta).first()
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].carta_fig = figura.id
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].en_mano = True
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].figura.fig = figura.fig
+        session.commit()
+
+        # Declarar figura
+        response = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}/tablero/declarar-figura",
+            json=figura_invalida.model_dump()
+        )
+        print(f"Response: {response.json()}")
+        assert response.status_code == 432
+        session.commit()
+        assert session.query(CartasFigura).filter(
+            CartasFigura.id_jugador == partida_creada.id_jugador,
+            CartasFigura.carta_fig == figura.id
+        ).first().en_mano == True
+
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
+async def test_declarar_figura_jugador_invalido(partida_service: PartidaService, partida_test, figura_valida):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+        response_inicio = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
+        assert response_inicio.status_code == 200
+        session.commit()
         
-#         # Declarar figura
-#         response = client.post(
-#             f"/partida/{partida_creada.id_partida}/jugador/999/tablero/declarar-figura",
-#             json=figura_valida.model_dump()
-#         )
-#         assert response.status_code == 404
-#     finally:
-#         session.close()
+        # Declarar figura
+        response = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/999/tablero/declarar-figura",
+            json=figura_valida.model_dump()
+        )
+        assert response.status_code == 404
+    finally:
+        session.close()
