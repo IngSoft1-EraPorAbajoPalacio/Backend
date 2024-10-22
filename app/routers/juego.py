@@ -19,7 +19,7 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
                 fichas=response["fichas"]
             )
         )
-        await manager_game.broadcast(idPartida, jugar_movimiento_message.dict())
+        await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())
         return response
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))

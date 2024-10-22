@@ -109,6 +109,10 @@ def movimiento_invalido():
 async def test_jugar_movimientos(partida_service: PartidaService, partida_test, movimiento_1, movimiento_2, movimiento_3, movimiento_4, movimiento_5, movimiento_6, movimiento_7):
     session = Session()
     try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+        
         partida_creada = await partida_service.crear_partida(partida_test, session)
         await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
         response_inicio = client.post(

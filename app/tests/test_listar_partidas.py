@@ -35,6 +35,23 @@ def partida_2():
     )
 
 @pytest.mark.asyncio
+async def test_listar_partidas_vacia(partida_service: PartidaService):
+    session = Session()
+    try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+        
+        response = client.get("/partidas")
+        assert response.status_code == 200
+        partidas_json = response.json()
+
+        # Verificar que la lista de partidas está vacía
+        assert len(partidas_json) == 0
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
 async def test_listar_partidas(partida_service: PartidaService, partida_1, partida_2):
     session = Session()
     try:
@@ -45,37 +62,15 @@ async def test_listar_partidas(partida_service: PartidaService, partida_1, parti
         assert response.status_code == 200
         partidas_json = response.json()
 
-        N_partidas = session.query(Partida).count()
+        N_partidas = session.query(Partida).filter(Partida.activa == False).count()
         assert len(partidas_json) == N_partidas
     
         # Verificar que las partidas devueltas son las correctas
-        partidas = session.query(Partida).all()
+        partidas = session.query(Partida).filter(Partida.activa == False).all()
         for partida, partida_json in zip(partidas, partidas_json):
-            assert partida.activa is False
             assert partida.nombre == partida_json["nombre_partida"]
             assert partida.min == partida_json["cant_min_jugadores"]
             assert partida.max == partida_json["cant_max_jugadores"]
             assert partida.id == int(partida_json["id_partida"])
-    finally:
-        session.close()
-
-@pytest.mark.asyncio
-async def test_listar_partidas_vacia(partida_service: PartidaService):
-    session = Session()
-    try:
-        session.query(Ficha).delete()
-        session.query(CartaMovimientos).delete()
-        session.query(CartasFigura).delete()
-        session.query(Jugador_Partida).delete()
-        session.query(Tablero).delete()
-        session.query(Partida).delete()
-        session.commit()
-        
-        response = client.get("/partidas")
-        assert response.status_code == 200
-        partidas_json = response.json()
-
-        # Verificar que la lista de partidas está vacía
-        assert len(partidas_json) == 0
     finally:
         session.close()

@@ -14,6 +14,10 @@ client = TestClient(app)
 def test_crear_partida_bien():
     session = Session()
     try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+        
         N_partidas = session.query(Partida).count()
         partida_data = CrearPartida(
             nombre_host='Jugador1',

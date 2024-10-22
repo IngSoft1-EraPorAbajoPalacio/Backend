@@ -12,6 +12,7 @@ class WebSocketMessageType(str, Enum):
     MOVIMIENTO_PARCIAL = "MovimientoParcial"
     DESHACER_MOVIMIENTO = "DeshacerMovimiento"
     DESHACER_MOVIMIENTOS = "DeshacerMovimientos"
+    PARTIDA_FINALIZADA = "PartidaFinalizada"
     
 class JugadorSchema(BaseModel):
     id: int
@@ -71,3 +72,11 @@ class DeshacerMovimientos(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
     posiciones: List[List[Posicion]]    
     cantMovimientosDesechos: int
+
+class FinalizarPartidaDataSchema(BaseModel):
+    idGanador: int
+    nombreGanador: str
+
+class FinalizarPartidaSchema(BaseModel):
+    type: Literal[WebSocketMessageType.PARTIDA_FINALIZADA]
+    data: FinalizarPartidaDataSchema
