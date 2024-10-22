@@ -1,30 +1,7 @@
-from pydantic import BaseModel, Field, field_validator #field no me anda
+from pydantic import BaseModel, field_validator
 from typing import List
-from typing import Optional
 
-
-
-class CrearPartidaResponse(BaseModel):
-    id_partida: str
-    #nombre_partida: str
-    #esto agrego para devolver el id del jugador 
-    id_jugador : str =  None
-    
-
-
-class PartidaResponse(BaseModel):
-    id_partida: str
-    nombre_partida: str
-    #cant_jugadores: str
-    cant_min_jugadores: int
-    cant_max_jugadores: int
-         
-    
-    
-#class PartidasListResponse(BaseModel):
-#    partidas: List[PartidaListItem]
-
-
+#### INPUT SCHEMAS ###
 
 class CrearPartida(BaseModel):  
     nombre_host: str
@@ -59,15 +36,6 @@ class CrearPartida(BaseModel):
             raise ValueError('La cantidad máxima de jugadores no puede ser mayor a 4')
         return v
 
-    """
-    @field_validator('cant_max_jugadores')
-    def max_jugadores_mayor_que_min(cls, v, values):
-        if 'cant_min_jugadores' in info.data and v < info.data['cant_min_jugadores']:
-            raise ValueError('La cantidad máxima de jugadores debe ser mayor o igual a la cantidad mínima')
-        return v
-    """
-
-
 
 class UnirsePartidaRequest(BaseModel):
     nombreJugador: str
@@ -79,13 +47,29 @@ class UnirsePartidaRequest(BaseModel):
         return v
 
 
+### OUTPUT SCHEMAS ###
+
+class CrearPartidaResponse(BaseModel):
+    id_partida: str
+    nombre_partida: str
+    id_jugador: str     
+
+
+class PartidaResponse(BaseModel):
+    id_partida: str
+    nombre_partida: str
+    cant_min_jugadores: int
+    cant_max_jugadores: int
+         
+
+class JugadorListado(BaseModel):
+    id: str
+    nombre: str
+
 class UnirsePartidaResponse(BaseModel):
-    idJugador: int
+    idJugador: str
+    unidos: List[JugadorListado]
 
-
-#class IniciarPartida(UnirsePartidaRequest):
-#    id_partida : int
-    
 
 class IniciarPartidaResponse(BaseModel):
-    id_partida : str
+    idPartida : str

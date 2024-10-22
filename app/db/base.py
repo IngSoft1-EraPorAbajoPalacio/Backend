@@ -16,7 +16,7 @@ encoded_password = quote_plus(DB_PASSWORD)
 DATABASE_URL = f"mysql+mysqldb://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}"
 print(f"Database URL: {DATABASE_URL}")
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(bind=engine)
 

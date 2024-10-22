@@ -2,10 +2,9 @@ import pytest
 from sqlalchemy.orm import sessionmaker 
 from fastapi.testclient import TestClient
 from app.db.base import engine
-from app.db.models import Partida
+from app.db.models import *
 from app.services.partida_service import PartidaService
 from app.schema.partida_schema import *
-from typing import List
 
 from app.main import app  
 
@@ -35,20 +34,43 @@ def partida_2():
         cant_max_jugadores=4
     )
 
-
-@pytest.mark.integration_test
-def test_listar_partidas(partida_service: PartidaService, partida_1, partida_2):
+@pytest.mark.asyncio
+async def test_listar_partidas_vacia(partida_service: PartidaService):
     session = Session()
+    try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+        
+        response = client.get("/partidas")
+        assert response.status_code == 200
+        partidas_json = response.json()
 
-    # Crear algunas partidas de prueba
-    partida_service.crear_partida(partida_1, session)
-    partida_service.crear_partida(partida_2, session)
+        # Verificar que la lista de partidas está vacía
+        assert len(partidas_json) == 0
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
+async def test_listar_partidas(partida_service: PartidaService, partida_1, partida_2):
+    session = Session()
+    try:
+        await partida_service.crear_partida(partida_1, session)
+        await partida_service.crear_partida(partida_2, session)
+        
+        response = client.get("/partidas")
+        assert response.status_code == 200
+        partidas_json = response.json()
+
+        N_partidas = session.query(Partida).filter(Partida.activa == False).count()
+        assert len(partidas_json) == N_partidas
     
-    # Hacer una solicitud GET al endpoint
-    response = client.get("/partidas")
-    assert response.status_code == 200
-    partidas_json = response.json()
-
-    N_partidas = session.query(Partida).count()
-    assert len(partidas_json) == N_partidas
- 
+        # Verificar que las partidas devueltas son las correctas
+        partidas = session.query(Partida).filter(Partida.activa == False).all()
+        for partida, partida_json in zip(partidas, partidas_json):
+            assert partida.nombre == partida_json["nombre_partida"]
+            assert partida.min == partida_json["cant_min_jugadores"]
+            assert partida.max == partida_json["cant_max_jugadores"]
+            assert partida.id == int(partida_json["id_partida"])
+    finally:
+        session.close()
