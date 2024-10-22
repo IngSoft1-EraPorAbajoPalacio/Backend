@@ -109,12 +109,15 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
         reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
         reposicion_movimientos = reposicion_cartas_movimientos(id_partida, id_jugador, db)
-        
-        reposicion_fig = ReposicionCartasFiguras(
+                
+                      
+        declarar_figura_message = ReposicionCartasFiguras(
             type=WebSocketMessageType.REPOSICION_FIGURAS,
-            cartas = reposicion_figuras
+            data=DeclararFiguraLucas(
+                cartasFig= reposicion_figuras
+            )
         )
-        
+
         reposicion_mov = ReposicionCartasMovimientos(
             type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
             cartas = reposicion_movimientos
@@ -124,7 +127,7 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
         
         #se envia a un mensaje a todos los jugadores de la partida la reposicion de figuras
-        await manager_game.broadcast(id_partida, reposicion_fig.model_dump())
+        await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())
     
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
     

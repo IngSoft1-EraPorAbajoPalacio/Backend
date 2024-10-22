@@ -102,9 +102,16 @@ class DeclararFiguraSchema(BaseModel):
     type: Literal[WebSocketMessageType.FIGURA_DECLARADA]
     data: DeclararFiguraDataSchema
     
+    
+class DeclararFiguraLucas(BaseModel):
+    cartasFig: List[dict]
+
+    
 class ReposicionCartasFiguras(BaseModel):
     type : Literal[WebSocketMessageType.REPOSICION_FIGURAS]
-    cartas: List[dict]
+    data: DeclararFiguraLucas
+
+
 
 class ReposicionCartasMovimientos(BaseModel):
     type : Literal[WebSocketMessageType.REPOSICION_MOVIMIENTOS]
