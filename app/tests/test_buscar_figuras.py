@@ -724,7 +724,51 @@ def test_encontrar_figuras(mock_db):
             "numero_de_test": 15,
             "expected_count": 4,
             "figura_esperada": 16
+        },
+        {
+            "db_mock":[
+                {"x": 0, "y": 0, "color": "Verde"},
+                {"x": 0, "y": 1, "color": "Verde"},
+                {"x": 0, "y": 2, "color": "Rojo"},
+                {"x": 0, "y": 3, "color": "Rojo"},
+                {"x": 0, "y": 4, "color": "Rojo"},
+                {"x": 0, "y": 5, "color": "Rojo"},
+                {"x": 1, "y": 0, "color": "Verde"},
+                {"x": 1, "y": 1, "color": "Verde"},
+                {"x": 1, "y": 2, "color": "Rojo"},
+                {"x": 1, "y": 3, "color": "Rojo"},
+                {"x": 1, "y": 4, "color": "Rojo"},
+                {"x": 1, "y": 5, "color": "Rojo"},
+                {"x": 2, "y": 0, "color": "Rojo"},
+                {"x": 2, "y": 1, "color": "Rojo"},
+                {"x": 2, "y": 2, "color": "Rojo"},
+                {"x": 2, "y": 3, "color": "Rojo"},
+                {"x": 2, "y": 4, "color": "Rojo"},
+                {"x": 2, "y": 5, "color": "Rojo"},
+                {"x": 3, "y": 0, "color": "Rojo"},
+                {"x": 3, "y": 1, "color": "Rojo"},
+                {"x": 3, "y": 2, "color": "Rojo"},
+                {"x": 3, "y": 3, "color": "Rojo"},
+                {"x": 3, "y": 4, "color": "Rojo"},
+                {"x": 3, "y": 5, "color": "Rojo"},
+                {"x": 4, "y": 0, "color": "Rojo"},
+                {"x": 4, "y": 1, "color": "Rojo"},
+                {"x": 4, "y": 2, "color": "Rojo"},
+                {"x": 4, "y": 3, "color": "Rojo"},
+                {"x": 4, "y": 4, "color": "Rojo"},
+                {"x": 4, "y": 5, "color": "Rojo"},
+                {"x": 5, "y": 0, "color": "Rojo"},
+                {"x": 5, "y": 1, "color": "Rojo"},
+                {"x": 5, "y": 2, "color": "Rojo"},
+                {"x": 5, "y": 3, "color": "Rojo"},
+                {"x": 5, "y": 4, "color": "Rojo"},
+                {"x": 5, "y": 5, "color": "Rojo"}
+            ],
+            "numero_de_test": 16,
+            "expected_count": 1,
+            "figura_esperada": 20
         }
+
     ]
 
     for case in test_cases:
