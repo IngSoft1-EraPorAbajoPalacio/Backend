@@ -110,28 +110,27 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
         reposicion_movimientos = reposicion_cartas_movimientos(id_partida, id_jugador, db)
                 
-                      
-        declarar_figura_message = ReposicionCartasFiguras(
-            type=WebSocketMessageType.REPOSICION_FIGURAS,
-            data=DeclararFiguraLucas(
+        
+        declarar_figura_message = ReposicionFiguras(
+            type= WebSocketMessageType.REPOSICION_FIGURAS,
+            data= DeclararFiguraDataSchema(
                 cartasFig= reposicion_figuras
             )
         )
-
+    
         reposicion_mov = ReposicionCartasMovimientos(
             type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
             cartas = reposicion_movimientos
         ) 
         
-        #se envia un mensajo a un solo jugador sus cartas de movimientos
         await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
         
-        #se envia a un mensaje a todos los jugadores de la partida la reposicion de figuras
         await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())
     
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
-    
-        return reposicion_cartas_figuras
+        
+        await computar_y_enviar_figuras(id_partida, db)
+
     
     except Exception as e:
         raise HTTPException(status_code=410, detail=str(e))
@@ -141,12 +140,8 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
         partida = partida_service.obtener_partida(id_partida, db)
-        print(f"el id de la partidae es : {id_partida}")
         cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
-        print(f"la cantidad de jugadores de la partida es : {cantidad_jugadores}")
-        
-
-        
+                
         abandonar_partida_message = AbandonarPartidaSchema(
             type=WebSocketMessageType.ABANDONAR_PARTIDA,
             data=AbandonarPartidaDataSchema(
