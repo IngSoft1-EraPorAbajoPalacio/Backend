@@ -40,3 +40,12 @@ test-all:
 	coverage run --source=$(SOURCE_DIR) -m pytest
 	coverage report -m
 
+clean:
+	rm -rf .coverage
+	rm -rf $(SOURCE_DIR)/__pycache__
+	rm -rf $(SOURCE_DIR)/routers/__pycache__
+	rm -rf $(SOURCE_DIR)/schema/__pycache__
+	rm -rf $(SOURCE_DIR)/services/__pycache__
+	rm -rf $(SOURCE_DIR)/tests/__pycache__
+	rm -rf .pytest_cache
+	rm -rf .mypy
