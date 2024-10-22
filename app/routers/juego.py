@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import APIRouter, HTTPException, Depends
 from app.routers.partida import computar_y_enviar_figuras
 from app.schema.juego_schema import * 
@@ -7,8 +6,6 @@ from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager_game import manager_game
 from app.schema.websocket_schema import * 
-from app.routers.partida import computar_y_enviar_figuras
-import asyncio
 
 router = APIRouter()
 
@@ -23,10 +20,7 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
                 fichas=response["fichas"]
             )
         )
-        await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())
-
-        # Sleep para asegurar que el socket message previo llegue primero
-        await asyncio.sleep(0.5)    
+        await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())    
         await computar_y_enviar_figuras(idPartida, db)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -49,8 +43,8 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
             ]
         }
         await manager_game.broadcast(idPartida, deshacer_movimiento_message.model_dump())
-        await asyncio.sleep(0.5)    
         await computar_y_enviar_figuras(idPartida, db)
+        
         return resultado
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -67,8 +61,7 @@ async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Dep
                 posiciones= resultado['posiciones'],
                 cantMovimientosDesechos= resultado['cantMovimientosDesechos']
             )
-            await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump())
-        await asyncio.sleep(0.5)    
+            await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump()) 
         await computar_y_enviar_figuras(idPartida, db)
         return { "cartas": resultado['cartas'] }
     except Exception as e:
@@ -84,12 +77,8 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
                 cartasFig=response["cartasFig"]
             )
         )
-        await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())        
-
-        # Sleep para asegurar que el socket message previo llegue primero
-        await asyncio.sleep(0.5)    
+        await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
         await computar_y_enviar_figuras(idPartida, db)
-    except HTTPException as e:
-        await asyncio.sleep(0.5)    
+    except HTTPException as e:    
         await computar_y_enviar_figuras(idPartida, db)
         raise e

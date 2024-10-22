@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.models import *
 from app.schema.partida_schema import *
 import random
+from sqlalchemy import true
 
 CANTIDAD_CARTAS_FIG = 50
 CANTIDAD_CARTAS_MOV = 49
@@ -133,6 +134,124 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
             "idJugador": id_jugador,
             "nombreJugador": jugador.nickname,
             "cartas": cartas
+        })  
+    return resultado
+   
+   
+def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
+       
+    resultado = []   
+    
+    if n == 0:
+        return resultado 
+    
+    cartas_fig = db.query(CartasFigura).filter(
+        CartasFigura.id_partida == idPartida,
+        CartasFigura.id_jugador == idJugador,
+        CartasFigura.en_mano == False).limit(n).all()
+    
+    for fig in cartas_fig:
+        fig.en_mano = True
+        resultado.append(
+            {
+                "id": fig.carta_fig,
+                "figura": fig.figura.fig.value
+            }
+        )
+   
+    response = {
+        "cartasFig": resultado
+    }    
+    
+    db.commit()
+
+    return response
+
+    
+def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
+    
+    resultado = []   
+        
+    cartas_mov = db.query(CartasFigura).filter(
+        CartasFigura.id_jugador == idJugador,
+        CartasFigura.en_mano == True
+    ).all()
+    
+    for mov in cartas_mov :
+        resultado.append({
+            "id": mov.carta_fig,
+            "figura": mov.figura.fig.value
         })
         
+    en_mano = len(cartas_mov)
+    cartas_a_asignar = max(0, CARTAS_EN_MANO - en_mano)
+         
+    if cartas_a_asignar == 0:
+        return resultado 
+    
+    cartas_fig = db.query(CartasFigura).filter(
+        CartasFigura.id_partida == idPartida,
+        CartasFigura.id_jugador == idJugador,
+        CartasFigura.en_mano == False
+    ).limit(cartas_a_asignar).all()
+    
+    for fig in cartas_fig:
+        fig.en_mano = True
+        resultado.append(
+            {
+                "id": fig.carta_fig,
+                "figura": fig.figura.fig.value
+            }
+        )   
+        
+    db.commit()
+
+    return resultado     
+    
+
+def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar: int, db: Session): 
+    
+    resultado = []   
+    
+    if cartas_a_asignar == 0:
+        return resultado 
+    
+    cartas_mov = db.query(CartaMovimientos).filter(
+        CartaMovimientos.id_partida == idPartida,
+        CartaMovimientos.id_jugador == idJugador,
+        CartaMovimientos.en_mano == False
+    ).limit(cartas_a_asignar).all()
+    
+    for mov in cartas_mov:
+        mov.en_mano = True
+        resultado.append(
+            {
+                "id": mov.carta_mov,
+                "movimiento": mov.movimiento.mov.value
+            }
+        )
+   
+    db.commit()
+
     return resultado
+
+def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
+        
+    mov = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == idJugador,
+                                      CartaMovimientos.id_partida == idPartida,
+                                      CartaMovimientos.en_mano == True).all()
+    en_mano = len(mov)
+    
+    if mov == 3:
+        return []
+    
+    cartas_a_asignar = max(0, 3 - en_mano)
+        
+    return asignar_cartas_movimientos(idPartida, idJugador, cartas_a_asignar, db)
+        
+        
+        
+        
+    
+    
+    

@@ -1,8 +1,7 @@
 import logging
 from collections import defaultdict
 from app.services.ficha_service import fichas_service
-import random
-from typing import List, Set, Tuple
+from typing import List, Set
 from sqlalchemy.orm import Session
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -151,10 +150,10 @@ def is_fig6(posiciones_normalizadas):
     rotaciones =[
         {(0,0),(1,0),(2,0),(2,1),(2,2)},
         {(2,0),(2,1),(2,2),(1,2),(0,2)},
-        {(0,0),(1,0),(0,2),(1,2),(2,2)},
+        {(0,0),(0,1),(0,2),(1,2),(2,2)},
         {(0,0),(0,1),(0,2),(1,0),(2,0)}
     ]
-    
+        
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 
@@ -173,7 +172,7 @@ def is_fig7(posiciones_normalizadas):
 def is_fig8(posiciones_normalizadas):
     """cuatro en linea + uno arriba derecha"""
     rotaciones =[
-        {(0,0),(0,2),(1,0),(1,1),(1,2)},
+        {(1,0),(1,1),(1,2),(1,3),(0,3)},
         {(0,0),(0,1),(1,1),(2,1),(3,1)},
         {(0,0),(0,1),(0,2),(0,3),(1,0)},
         {(0,0),(1,0),(2,0),(3,0),(3,1)}
@@ -347,24 +346,10 @@ def obtener_grupos_adyacentes(posiciones):
     
     return grupos_adyacentes
 
-
-def imprimir_grupos_adyacentes(grupos):
-    """Imprimir los grupos de fichas adyacentes (debug)"""
-    for color, posiciones in grupos.items():
-        print(f"Color {color}:")
-        visitadas = set()
-        for pos in posiciones:
-            if pos not in visitadas:
-                grupo_adyacente = obtener_grupo_adyacente(pos, posiciones)
-                visitadas.update(grupo_adyacente)
-                print(f"Grupo adyacente en {grupo_adyacente}")
-        print()
-
 def son_vecinas(pos1, pos2):
     """Verifica si dos posiciones son ortogonalmente adjacentes """
     return (abs(pos1[0] - pos2[0]) == 1 and pos1[1] == pos2[1]) or \
            (abs(pos1[1] - pos2[1]) == 1 and pos1[0] == pos2[0])
-
 
 def agrupar_fichas(lista_fichas):
     """Agrupar fichas por color directamente desde la lista de fichas"""
@@ -379,30 +364,17 @@ def agrupar_fichas(lista_fichas):
 def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
     """Encontrar las figuras de la listaFig en el tablero de la partida con id = id_partida"""
     tablero = fichas_service.obtener_fichas(id_partida, db)
-    imprimir_tablero(tablero) #debugg
     grupos = agrupar_fichas(tablero)
     figuras = []
     
     for color, posiciones in grupos.items():
         # Dividimos en grupos adyacentes
         grupos_adyacentes = obtener_grupos_adyacentes(posiciones)
-        #debug
-        logger.debug(f"Color {color}:")
-        for i, grupo in enumerate(grupos_adyacentes, 1):
-            logger.debug(f"  Grupo adyacente {i}: {grupo}")
-        logger.debug("\n")
-        #fin debug
+
         # Verificamos figuras en cada grupo adyacente
         for grupo in grupos_adyacentes:
             for figNum in listaFig:  # Iteramos sobre la lista de tipos de figura
                 if es_figura_valida(grupo, figNum):
                     figuras.append((figNum, color, grupo))
-    #debugg
-    if figuras:
-        logger.debug("Figuras encontradas:")
-        for tipo, color, posiciones in figuras:
-            logger.debug(f"- {tipo} de color {color} en posiciones {posiciones}")
-    else:
-        logger.debug("No se encontraron figuras.")
 
     return figuras

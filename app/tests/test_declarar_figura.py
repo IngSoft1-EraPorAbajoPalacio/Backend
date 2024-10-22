@@ -89,11 +89,10 @@ async def test_declarar_figura(partida_service: PartidaService, partida_test, fi
         print(f"Response: {response.json()}")
         assert response.status_code == 202
         session.commit()
-        assert session.query(CartasFigura).filter(
+        cf = session.query(CartasFigura).filter(
             CartasFigura.id_jugador == partida_creada.id_jugador,
-            CartasFigura.carta_fig == figura.id
-        ).first().en_mano == False
-
+            CartasFigura.carta_fig == figura.id).first()
+        assert cf == None
     finally:
         session.close()
 
