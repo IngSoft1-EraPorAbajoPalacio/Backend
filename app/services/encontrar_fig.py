@@ -150,10 +150,10 @@ def is_fig6(posiciones_normalizadas):
     rotaciones =[
         {(0,0),(1,0),(2,0),(2,1),(2,2)},
         {(2,0),(2,1),(2,2),(1,2),(0,2)},
-        {(0,0),(1,0),(0,2),(1,2),(2,2)},
+        {(0,0),(0,1),(0,2),(1,2),(2,2)},
         {(0,0),(0,1),(0,2),(1,0),(2,0)}
     ]
-    
+        
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 
