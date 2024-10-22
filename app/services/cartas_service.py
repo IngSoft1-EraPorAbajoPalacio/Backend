@@ -170,9 +170,13 @@ def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
 
     
 def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
+    resultado = []   
         
     cartas_mov = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
                                                    CartasFigura.en_mano == True).all()
+    
+    for mov in cartas_mov :
+        resultado.append(mov)
         
     en_mano = len(cartas_mov)
     
@@ -180,7 +184,7 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
     
     #figuras =  asignar_cartas_figuras(idPartida, idJugador, cartas_a_asignar, db)
      
-    resultado = []   
+       
     
     if cartas_a_asignar == 0:
         return resultado 
@@ -197,8 +201,9 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
                 "id": fig.carta_fig,
                 "figura": fig.figura.fig.value
             }
-        )
-   
+        )   
+
+        
     db.commit()
 
     return resultado
