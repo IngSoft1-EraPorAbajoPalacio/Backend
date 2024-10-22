@@ -170,22 +170,24 @@ def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
 
     
 def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
+    
     resultado = []   
         
     cartas_mov = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
                                                    CartasFigura.en_mano == True).all()
     
     for mov in cartas_mov :
-        resultado.append(mov)
+        resultado.append({
+            "id": mov.carta_fig,
+            "figura": mov.figura.fig.value
+        })
         
     en_mano = len(cartas_mov)
     
     cartas_a_asignar = max(0, 3 - en_mano)
-    
-    #figuras =  asignar_cartas_figuras(idPartida, idJugador, cartas_a_asignar, db)
-     
-       
-    
+         
+    print(f"cartas a asignar: {cartas_a_asignar} ")       
+
     if cartas_a_asignar == 0:
         return resultado 
     
@@ -202,14 +204,10 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
                 "figura": fig.figura.fig.value
             }
         )   
-
         
     db.commit()
 
-    return resultado
-     
-     
-     
+    return resultado     
     
 
 def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar: int, db: Session): 
@@ -245,11 +243,6 @@ def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
                                       CartaMovimientos.id_partida == idPartida,
                                       CartaMovimientos.en_mano == True).all()
     en_mano = len(mov)
-    
-    #significa que no forme ninguna figura, por lo tanto no retorno nada y llamo
-    #al endpoint deshacer_movimientos
-    #si no jugue ningun movimiento parcial , no pasa nada y se pasa el turno normal , y 
-    # si juegue un moviento parcial los deshace
     
     if mov == 3:
         return []
