@@ -1,10 +1,14 @@
+import asyncio
 from fastapi import APIRouter, HTTPException, Depends
+from app.routers.partida import computar_y_enviar_figuras
 from app.schema.juego_schema import * 
 from app.services.juego_service import juego_service 
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
 from app.routers.websocket_manager_game import manager_game
 from app.schema.websocket_schema import * 
+from app.routers.partida import computar_y_enviar_figuras
+import asyncio
 from app.routers.partida import computar_y_enviar_figuras
 import asyncio
 
@@ -22,7 +26,9 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
             )
         )
         await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())
-  
+
+        # Sleep para asegurar que el socket message previo llegue primero
+        await asyncio.sleep(0.5)    
         await computar_y_enviar_figuras(idPartida, db)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))

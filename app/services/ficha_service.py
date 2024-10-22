@@ -32,14 +32,15 @@ def repartir_fichas(id_partida: int, db: Session):
 
     db.add_all(posiciones)
     db.commit()
-    
-       
-def obtener_fichas(id_partida: int, db:Session) :
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        fichas = partida.tablero.fichas
-        lista_fichas =  [{"x": ficha.x, "y": ficha.y, "color": ficha.color.name } for ficha in fichas]
-        return lista_fichas   
 
+class FichaService:     
+    @staticmethod   
+    def obtener_fichas(id_partida: int, db:Session) :
+            partida = db.query(Partida).filter(Partida.id == id_partida).first()
+            fichas = partida.tablero.fichas
+            lista_fichas =  [{"x": ficha.x, "y": ficha.y, "color": ficha.color.name } for ficha in fichas]
+            return lista_fichas   
+#clase para tests, lo correcto seria meter todas las funciones de este archivo aca adentro
 
 def obtener_ficha(id_partida: int, x: int, y: int, db: Session):
     
@@ -116,3 +117,5 @@ def obtener_movimientos_en_mano(id_partida: int, id_jugador: int, db: Session):
 def obtener_movimiento(idCarta: int, db: Session):
     movimiento = db.query(Movimientos).filter(Movimientos.id == idCarta).first()
     return movimiento.mov.value
+
+fichas_service = FichaService()

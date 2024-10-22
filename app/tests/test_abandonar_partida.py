@@ -29,6 +29,10 @@ def partida_service():
 async def test_abandonar_partida_exitoso(partida_service: PartidaService, partida_test):
     session = Session()
     try:
+        # Borrar las tablas de la base de datos
+        Base.metadata.drop_all(bind=engine) 
+        Base.metadata.create_all(bind=engine)
+
         partida_creada = await partida_service.crear_partida(partida_test, session)
         await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
         await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 3', session)
@@ -37,11 +41,10 @@ async def test_abandonar_partida_exitoso(partida_service: PartidaService, partid
         assert response_inicio.status_code == 200
 
         # Abandonar la partida
-        response = client.post(
+        response = client.delete(
              f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
         assert response.status_code == 202
-
-        assert response.json() == {"detail": f"Jugador {partida_creada.id_jugador} ha abandonado la partida {partida_creada.id_partida}"}
+        session.commit()
 
         # Verificar que la relación Jugador_Partida ha sido eliminada
         relacion_abandonada = session.query(Jugador_Partida).filter(
@@ -54,5 +57,68 @@ async def test_abandonar_partida_exitoso(partida_service: PartidaService, partid
         partida_existente = session.query(Partida).filter(Partida.id == partida_creada.id_partida).first()
         assert partida_existente is not None
 
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
+async def test_abandonar_partida_creador_lobby(partida_service: PartidaService, partida_test):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 3', session)
+        response = client.delete(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
+        assert response.status_code == 202
+        session.commit()
+        partida_borrada = session.query(Partida).filter(Partida.id == partida_creada.id_partida).first()
+        assert partida_borrada is None
+
+        session.commit()
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
+async def test_abandonar_partida_jugador_no_encontrado(partida_service: PartidaService, partida_test):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
+        response_inicio = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
+        assert response_inicio.status_code == 200
+        session.commit()
+        # Intentar abandonar la partida con un jugador no existente
+        response = client.delete(
+            f"/partida/{partida_creada.id_partida}/jugador/999")
+        assert response.status_code == 404
+    finally:
+        session.close()
+        
+@pytest.mark.asyncio
+async def test_abandonar_partida_no_existente(partida_service: PartidaService):
+    session = Session()
+    try:
+        # Intentar abandonar una partida que no existe
+        response = client.delete("/partida/999/jugador/1")
+        assert response.status_code == 404
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
+async def test_abandonar_partida_no_participante(partida_service: PartidaService, partida_test):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
+        response_inicio = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
+        assert response_inicio.status_code == 200
+        session.commit()
+
+        # Intentar abandonar la partida con un jugador que no es participante
+        response = client.delete(
+            f"/partida/{partida_creada.id_partida}/jugador/999")
+        assert response.status_code == 404
     finally:
         session.close()

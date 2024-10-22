@@ -106,6 +106,10 @@ def switch_case(movimiento: int, id_movimiento):
 @pytest.mark.asyncio
 async def test_deshacer_movimiento(crear_session):
 
+    # Borrar las tablas de la base de datos
+    Base.metadata.drop_all(bind=engine) 
+    Base.metadata.create_all(bind=engine)
+
     datos_partida = CrearPartida(  
         nombre_host = "owner1",
         nombre_partida = "partida_test_1",
@@ -140,7 +144,7 @@ async def test_deshacer_movimiento(crear_session):
 
     juego_service.deshacer_movimiento(int(data.id_partida), int(data.id_jugador), db)
 
-    assert tablero_inicial == obtener_fichas(int(data.id_partida), db)
+    assert tablero_inicial == fichas_service.obtener_fichas(int(data.id_partida), db)
     assert db.query(MovimientosParciales).count() == 0
 
 
@@ -181,7 +185,7 @@ async def test_deshacer_movimientos(crear_session):
 
     juego_service.deshacer_movimientos(int(data.id_partida), int(data.id_jugador), db)
 
-    assert tablero_inicial == obtener_fichas(int(data.id_partida), db)
+    assert tablero_inicial == fichas_service.obtener_fichas(int(data.id_partida), db)
     assert db.query(MovimientosParciales).count() == 0
 
 
