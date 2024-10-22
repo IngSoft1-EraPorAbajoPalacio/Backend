@@ -14,6 +14,9 @@ install:
 	python -m pip install --upgrade pip
 	python3 -m pip install -r $(REQ_FILE)
 	python3 -m pip install mysqlclient
+	pip install coverage
+	pip install pytest
+	pip install pytest-asyncio
 
 mysql-start:
 	sudo systemctl start mysql
