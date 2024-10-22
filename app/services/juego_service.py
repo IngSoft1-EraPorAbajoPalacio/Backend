@@ -144,10 +144,6 @@ class JuegoService:
         
         if not partida_service.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
-        
-        #tablero = partida.tablero
-        #if not tablero.turno == id_jugador:
-        #    raise HTTPException(status_code=430, detail="No es tu turno")
 
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.carta_fig == figura.idCarta).first().en_mano:
@@ -164,7 +160,7 @@ class JuegoService:
             CartasFigura.id_partida == id_partida,
             CartasFigura.id_jugador == id_jugador,
             CartasFigura.carta_fig == figura.idCarta
-        ).first().en_mano = False
+        ).delete()
 
         # Cartas en mano
         cartas_en_mano = db.query(CartasFigura).filter(
@@ -173,7 +169,6 @@ class JuegoService:
             CartasFigura.en_mano == True
         ).all()
         
-        #esto es mio
         db.query(MovimientosParciales).filter(MovimientosParciales.id_jugador == id_jugador).delete()
         
         cartas = []
