@@ -91,7 +91,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager_lobby.broadcast(id_partida,response)
-        await manager.broadcast(eliminar_partida_message.dict())
+        await manager.broadcast(eliminar_partida_message.model_dump())
         print(response)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e)) 
