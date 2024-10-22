@@ -1,12 +1,12 @@
 import logging
 from collections import defaultdict
-from app.services.ficha_service import obtener_fichas
+from app.services.ficha_service import fichas_service
 import random
 from typing import List, Set, Tuple
 from sqlalchemy.orm import Session
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
+ 
 def imprimir_tablero(lista_fichas):
     """Imprimir el tablero a partir de la lista de fichas"""
     tablero = [[' ' for _ in range(6)] for _ in range(6)]  
@@ -98,23 +98,23 @@ def is_fig1(posiciones_normalizadas):
         {(0, 0), (1, 0), (2, 0), (1, 1), (1,2)},  # original
         {(0, 1), (1, 1), (2, 0), (2, 1),(2,2) },  # rotada 90 grados
         {(1,0), (0,2), (1,1), (1,2),(2,2)},  # rotada 180 grados
-        {(0,0), (0,1), (0,2), (1,1),(2,2)}   # rotada 270 grados
+        {(0,0), (0,1), (0,2), (1,1),(2,1)}   # rotada 270 grados
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 def is_fig2(posiciones_normalizadas):
     """2 horizontal y 3 horizontal uno abajo y uno a la derecha"""
     rotaciones = [
         {(0,0),(0,1),(1,1),(1,2),(1,3)},
-        {(0,0),(1,0),(2,0),(2,1),(3,1)},
-        {(1,0),(1,1),(0,2),(0,3),(1,2)},
-        {(0,0),(1,0),(1,1),(2,1),(3,1)}
+        {(0,1),(1,0),(1,1),(2,0),(3,0)},
+        {(0,0),(0,1),(0,2),(1,2),(1,3)},
+        {(0,1),(1,1),(2,1),(2,0),(3,0)}
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig3(posiciones_normalizadas):
     """3 horizontal y dos horizontal arrbia desplazado uno a la derecha"""
     rotaciones =[
-        {(0,2),(0,3),(0,1),(1,1),(1,2)},
+        {(0,2),(0,3),(1,0),(1,1),(1,2)},
         {(0,0),(1,0),(1,1),(2,1),(2,1),(3,1)},
         {(0,1),(0,2),(0,3),(1,0),(1,1)},
         {(0,0),(1,0),(2,0),(2,1),(3,1)}
@@ -273,7 +273,7 @@ def is_fig19(posiciones_normalizadas):
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig20(posiciones_normalizadas):
-    rotacion = [(0,0),(0,1),(1,0),(1,1)]
+    rotacion = {(0,0),(0,1),(1,0),(1,1)}
     return posiciones_normalizadas == rotacion
 
 def is_fig21(posiciones_normalizadas):
@@ -378,7 +378,7 @@ def agrupar_fichas(lista_fichas):
 
 def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
     """Encontrar las figuras de la listaFig en el tablero de la partida con id = id_partida"""
-    tablero = obtener_fichas(id_partida, db)
+    tablero = fichas_service.obtener_fichas(id_partida, db)
     imprimir_tablero(tablero) #debugg
     grupos = agrupar_fichas(tablero)
     figuras = []

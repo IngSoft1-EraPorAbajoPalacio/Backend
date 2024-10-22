@@ -144,7 +144,7 @@ class PartidaService:
         
         cartas_movimientos = obtener_cartas_movimientos(id_partida, db)
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
-        fichas = obtener_fichas(id_partida, db)
+        fichas = fichas_service.obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
         response = {
             "type": "IniciarPartida",
