@@ -47,7 +47,6 @@ class UnirsePartidaRequest(BaseModel):
         return v
 
 
-
 ### OUTPUT SCHEMAS ###
 
 class CrearPartidaResponse(BaseModel):

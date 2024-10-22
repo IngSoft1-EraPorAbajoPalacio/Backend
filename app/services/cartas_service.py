@@ -134,8 +134,7 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
             "idJugador": id_jugador,
             "nombreJugador": jugador.nickname,
             "cartas": cartas
-        })
-        
+        })  
     return resultado
    
    
@@ -173,8 +172,10 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
     
     resultado = []   
         
-    cartas_mov = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
-                                                   CartasFigura.en_mano == True).all()
+    cartas_mov = db.query(CartasFigura).filter(
+        CartasFigura.id_jugador == idJugador,
+        CartasFigura.en_mano == True
+    ).all()
     
     for mov in cartas_mov :
         resultado.append({
@@ -183,18 +184,16 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
         })
         
     en_mano = len(cartas_mov)
-    
-    cartas_a_asignar = max(0, 3 - en_mano)
+    cartas_a_asignar = max(0, CARTAS_EN_MANO - en_mano)
          
-    print(f"cartas a asignar: {cartas_a_asignar} ")       
-
     if cartas_a_asignar == 0:
         return resultado 
     
     cartas_fig = db.query(CartasFigura).filter(
         CartasFigura.id_partida == idPartida,
         CartasFigura.id_jugador == idJugador,
-        CartasFigura.en_mano == False).limit(cartas_a_asignar).all()
+        CartasFigura.en_mano == False
+    ).limit(cartas_a_asignar).all()
     
     for fig in cartas_fig:
         fig.en_mano = True
@@ -220,7 +219,8 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar
     cartas_mov = db.query(CartaMovimientos).filter(
         CartaMovimientos.id_partida == idPartida,
         CartaMovimientos.id_jugador == idJugador,
-        CartaMovimientos.en_mano == False).limit(cartas_a_asignar).all()
+        CartaMovimientos.en_mano == False
+    ).limit(cartas_a_asignar).all()
     
     for mov in cartas_mov:
         mov.en_mano = True
@@ -234,8 +234,6 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar
     db.commit()
 
     return resultado
-
-
 
 def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
         

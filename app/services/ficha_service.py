@@ -11,13 +11,13 @@ def crear_tablero(id_partida: int, db: Session):
         if not partida:
             return []
         id_jugadores = [jugador.id_jugador for jugador in partida.jugadores]        
-        tablero_nuevo = Tablero(id_partida = id_partida,
-                                color_prohibido=random.choice(list(Color)),
-                                turno = random.choice(id_jugadores) 
+        tablero_nuevo = Tablero(
+            id_partida = id_partida,
+            color_prohibido=random.choice(list(Color)),
+            turno = random.choice(id_jugadores) 
         )
         db.add(tablero_nuevo)
         db.commit()
-        
         
 def repartir_fichas(id_partida: int, db: Session):
     posiciones = []
@@ -40,7 +40,6 @@ class FichaService:
             fichas = partida.tablero.fichas
             lista_fichas =  [{"x": ficha.x, "y": ficha.y, "color": ficha.color.name } for ficha in fichas]
             return lista_fichas   
-#clase para tests, lo correcto seria meter todas las funciones de este archivo aca adentro
 
 def obtener_ficha(id_partida: int, x: int, y: int, db: Session):
     

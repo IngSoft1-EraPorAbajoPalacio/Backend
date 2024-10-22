@@ -183,7 +183,6 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
 async def computar_y_enviar_figuras(id_partida: int, db: Session):
     try:
         figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
-        for figura in figuras_en_juego : print(figura)
         figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
         
         figuras_data = {

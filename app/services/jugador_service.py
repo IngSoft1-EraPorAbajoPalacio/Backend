@@ -14,14 +14,12 @@ def crear_jugador(nombre: str,db: Session):
     except SQLAlchemyError as e :
         print(f"Ocurrió un error al crear el jugador : {e}")
                    
-
 def obtener_jugadores(id_partida:int,db : Session):
     partida = db.query(Partida).filter(Partida.id == id_partida).first()
     if partida is None:
         raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
     return [jugador.jugador for jugador in partida.jugadores]
          
-        
 def obtener_id_jugadores(id_partida:int,db : Session):
     partida = db.query(Partida).filter(Partida.id == id_partida).first()
     return [jugador.id_jugador for jugador in partida.jugadores]          

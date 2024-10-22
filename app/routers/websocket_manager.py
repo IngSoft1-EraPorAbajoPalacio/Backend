@@ -25,7 +25,6 @@ class ConnectionManager:
                 await self.disconnect(connection)
     
     async def eliminar_lista(self,socket:WebSocket):
-        self.active_connections.remove(socket)            
-                
+        self.active_connections.remove(socket)                    
                 
 manager = ConnectionManager()

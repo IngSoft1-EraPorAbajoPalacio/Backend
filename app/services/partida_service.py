@@ -153,7 +153,6 @@ class PartidaService:
             "cartasMovimiento": cartas_movimientos,  
             "cartasFigura": cartas_figuras   
         } 
-
         return response
     
     def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
@@ -190,14 +189,9 @@ class PartidaService:
             if not jugador:
                 raise HTTPException(status_code=404, detail=f"No existe ningún jugador con id {id_jugador}")
 
-            #jugador_partida = db.query(Jugador_Partida).filter_by(id_partida=id_partida, id_jugador=id_jugador).first()
-            #if not jugador_partida:
-            #    raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no está en la partida {id_partida}")
-
             jugador_partida = db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).all()
 
             cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
-            #id_jugadores = obtener_id_jugadores(id_partida, db)
 
             if partida.activa:
                 if cantidad_jugadores == 2:
@@ -218,9 +212,6 @@ class PartidaService:
                     db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
                     db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
                     db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
-                    
-                    #db.query(Jugador).filter(Jugador.id == id_jugadores[0],
-                    #                         Jugador.id == id_jugadores[1]).delete()
                     
                     jugadores = self.obtener_jugadores(id_partida, db)
                     for jugador in jugadores:
@@ -267,16 +258,10 @@ class PartidaService:
 
     async def eliminar_partida(self, id_partida: int, db: Session):
         try:
-            # Obtener la partida
             partida = db.query(Partida).filter(Partida.id == id_partida).first()
 
             if not partida:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
-
-            # Eliminar las fichas asociadas a los tableros de la partida
-            #tableros = db.query(Tablero).filter(Tablero.id_partida == id_partida).all()
-            #for tablero in tableros:
-            #    db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
             
             tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
             

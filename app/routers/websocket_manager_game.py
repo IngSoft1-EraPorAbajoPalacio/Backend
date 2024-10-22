@@ -11,7 +11,6 @@ class ConnectionManagerGame:
             self.active_connections[idPartida] = []
         self.active_connections[idPartida].append({idJugador : websocket}) 
 
-
     async def disconnect(self, idPartida:int, idJugador: int, websocket: WebSocket):
         if idPartida in self.active_connections:
             for socket in self.active_connections[idPartida]:
@@ -21,7 +20,6 @@ class ConnectionManagerGame:
             
         if not self.active_connections[idPartida]:
             del self.active_connections[idPartida]
-
 
     async def broadcast(self,idPartida:int, message: dict):
         if idPartida in self.active_connections:

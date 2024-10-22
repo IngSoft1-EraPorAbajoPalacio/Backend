@@ -144,11 +144,7 @@ class JuegoService:
         
         if not partida_service.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
-        
-        tablero = partida.tablero
-        # if not tablero.turno == id_jugador:
-        #     raise HTTPException(status_code=430, detail="No es tu turno")
-
+    
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.carta_fig == figura.idCarta).first().en_mano:
             raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en tu mano")
@@ -221,8 +217,6 @@ class JuegoService:
                 
         return resultado
     
-    
-    
     def deshacer_movimientos(self,idPartida: int, idJugador: int, db:Session):
         
         cartas =[]
@@ -248,7 +242,6 @@ class JuegoService:
             })
 
             posiciones.append(movimiento_desecho['posiciones'])
-
             cantidad_mov_parciales-=1
         
         resultado = {
@@ -256,7 +249,6 @@ class JuegoService:
             "cantMovimientosDesechos": cantidad_mov_deshechos,
             "posiciones": posiciones
         }
-
         return  resultado   
 
 juego_service = JuegoService()
