@@ -144,7 +144,7 @@ async def test_deshacer_movimiento(crear_session):
 
     juego_service.deshacer_movimiento(int(data.id_partida), int(data.id_jugador), db)
 
-    assert tablero_inicial == obtener_fichas(int(data.id_partida), db)
+    assert tablero_inicial == fichas_service.obtener_fichas(int(data.id_partida), db)
     assert db.query(MovimientosParciales).count() == 0
 
 
@@ -185,7 +185,7 @@ async def test_deshacer_movimientos(crear_session):
 
     juego_service.deshacer_movimientos(int(data.id_partida), int(data.id_jugador), db)
 
-    assert tablero_inicial == obtener_fichas(int(data.id_partida), db)
+    assert tablero_inicial == fichas_service.obtener_fichas(int(data.id_partida), db)
     assert db.query(MovimientosParciales).count() == 0
 
 

@@ -92,7 +92,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
         await manager_lobby.broadcast(id_partida,response)
         await manager.broadcast(eliminar_partida_message.model_dump())
-        await computar_y_enviar_figuras(id_partida, db)
+        print(response)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e)) 
     # Sleep para asegurar que el socket message previo llegue primero
@@ -163,6 +163,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
 async def computar_y_enviar_figuras(id_partida: int, db: Session):
     try:
         figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
+        #figuras_en_juego = list(range(1,25))
         for figura in figuras_en_juego : print(figura)
         figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
         

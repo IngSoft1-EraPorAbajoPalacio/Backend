@@ -1,10 +1,12 @@
+import logging
 from collections import defaultdict
-from app.services.ficha_service import obtener_fichas
+from app.services.ficha_service import fichas_service
 import random
 from typing import List, Set, Tuple
 from sqlalchemy.orm import Session
-
-#debug borrar antes de merge 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+ 
 def imprimir_tablero(lista_fichas):
     """Imprimir el tablero a partir de la lista de fichas"""
     tablero = [[' ' for _ in range(6)] for _ in range(6)]  
@@ -23,9 +25,8 @@ def imprimir_tablero(lista_fichas):
             tablero[x][y] = "Y"  
 
     for fila in tablero:
-        print(' '.join(fila))
-    print()
-#fin 
+        logger.debug(' '.join(fila))
+    logger.debug("\n")
 
 def normalizar_posiciones(posiciones):
     """Normaliza posiciones para arrancar desde (0, 0)"""
@@ -97,23 +98,23 @@ def is_fig1(posiciones_normalizadas):
         {(0, 0), (1, 0), (2, 0), (1, 1), (1,2)},  # original
         {(0, 1), (1, 1), (2, 0), (2, 1),(2,2) },  # rotada 90 grados
         {(1,0), (0,2), (1,1), (1,2),(2,2)},  # rotada 180 grados
-        {(0,0), (0,1), (0,2), (1,1),(2,2)}   # rotada 270 grados
+        {(0,0), (0,1), (0,2), (1,1),(2,1)}   # rotada 270 grados
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 def is_fig2(posiciones_normalizadas):
     """2 horizontal y 3 horizontal uno abajo y uno a la derecha"""
     rotaciones = [
         {(0,0),(0,1),(1,1),(1,2),(1,3)},
-        {(0,0),(1,0),(2,0),(2,1),(3,1)},
-        {(1,0),(1,1),(0,2),(0,3),(1,2)},
-        {(0,0),(1,0),(1,1),(2,1),(3,1)}
+        {(0,1),(1,0),(1,1),(2,0),(3,0)},
+        {(0,0),(0,1),(0,2),(1,2),(1,3)},
+        {(0,1),(1,1),(2,1),(2,0),(3,0)}
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig3(posiciones_normalizadas):
     """3 horizontal y dos horizontal arrbia desplazado uno a la derecha"""
     rotaciones =[
-        {(0,2),(0,3),(0,1),(1,1),(1,2)},
+        {(0,2),(0,3),(1,0),(1,1),(1,2)},
         {(0,0),(1,0),(1,1),(2,1),(2,1),(3,1)},
         {(0,1),(0,2),(0,3),(1,0),(1,1)},
         {(0,0),(1,0),(2,0),(2,1),(3,1)}
@@ -272,7 +273,7 @@ def is_fig19(posiciones_normalizadas):
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig20(posiciones_normalizadas):
-    rotacion = [(0,0),(0,1),(1,0),(1,1)]
+    rotacion = {(0,0),(0,1),(1,0),(1,1)}
     return posiciones_normalizadas == rotacion
 
 def is_fig21(posiciones_normalizadas):
@@ -377,7 +378,7 @@ def agrupar_fichas(lista_fichas):
 
 def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
     """Encontrar las figuras de la listaFig en el tablero de la partida con id = id_partida"""
-    tablero = obtener_fichas(id_partida, db)
+    tablero = fichas_service.obtener_fichas(id_partida, db)
     imprimir_tablero(tablero) #debugg
     grupos = agrupar_fichas(tablero)
     figuras = []
@@ -386,10 +387,10 @@ def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
         # Dividimos en grupos adyacentes
         grupos_adyacentes = obtener_grupos_adyacentes(posiciones)
         #debug
-        print(f"Color {color}:")
+        logger.debug(f"Color {color}:")
         for i, grupo in enumerate(grupos_adyacentes, 1):
-            print(f"  Grupo adyacente {i}: {grupo}")
-        print()
+            logger.debug(f"  Grupo adyacente {i}: {grupo}")
+        logger.debug("\n")
         #fin debug
         # Verificamos figuras en cada grupo adyacente
         for grupo in grupos_adyacentes:
@@ -398,10 +399,10 @@ def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
                     figuras.append((figNum, color, grupo))
     #debugg
     if figuras:
-        print("Figuras encontradas:")
+        logger.debug("Figuras encontradas:")
         for tipo, color, posiciones in figuras:
-            print(f"- {tipo} de color {color} en posiciones {posiciones}")
+            logger.debug(f"- {tipo} de color {color} en posiciones {posiciones}")
     else:
-        print("No se encontraron figuras.")
+        logger.debug("No se encontraron figuras.")
 
     return figuras
