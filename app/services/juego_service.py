@@ -145,9 +145,9 @@ class JuegoService:
         if not partida_service.pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
         
-        tablero = partida.tablero
-        if not tablero.turno == id_jugador:
-            raise HTTPException(status_code=430, detail="No es tu turno")
+        #tablero = partida.tablero
+        #if not tablero.turno == id_jugador:
+        #    raise HTTPException(status_code=430, detail="No es tu turno")
 
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.carta_fig == figura.idCarta).first().en_mano:
