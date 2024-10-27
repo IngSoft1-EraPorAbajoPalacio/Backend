@@ -155,7 +155,7 @@ class JuegoService:
         if not figura.tipo_figura == carta_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
         
-        # Eliminar la carta de la mano del jugador
+        # Eliminar la carta de figura mano del jugador
         db.query(CartasFigura).filter(
             CartasFigura.id_partida == id_partida,
             CartasFigura.id_jugador == id_jugador,
@@ -168,6 +168,30 @@ class JuegoService:
             CartasFigura.id_jugador == id_jugador,
             CartasFigura.en_mano == True
         ).all()
+        
+        #veo si el jugador hizo movimientos parciales para armar la figura
+        # si hizo , los busco y los elimino , si no hizo alguno no pasa nada
+        
+        movimintos_parciales = db.query(MovimientosParciales).filter(
+            MovimientosParciales.id_jugador == id_jugador,
+            MovimientosParciales.id_partida == id_partida,
+        ).all()
+        
+        for mov in movimintos_parciales:
+            cm = db.query(CartaMovimientos).filter(
+                CartaMovimientos.id_jugador == id_jugador,
+                CartaMovimientos.id_partida == id_partida,
+                CartaMovimientos.carta_mov == mov.movimiento, 
+            ).first()
+            cm.en_mano = False
+        
+        
+        
+        if movimintos_parciales is not None:
+            for mov in movimintos_parciales:
+                db.delete(mov)
+                
+        
         cartas = []
         for carta in cartas_en_mano:
             cartas.append({
