@@ -10,7 +10,7 @@ from app.services.cartas_service import *
 
 class PartidaService:
     
-    def _init_(self):
+    def init(self):
         self.partidas_lobby = []
         self.partidas_iniciadas = []
         
@@ -236,8 +236,13 @@ class PartidaService:
 
             else:
                 if cantidad_jugadores > 1 and id_jugador != partida.id_owner:
+                    
+                    db.query(Jugador_Partida).filter(
+                        Jugador_Partida.id_jugador == id_jugador,
+                        Jugador_Partida.id_partida == id_partida
+                    ).delete()
+                    
                     db.delete(jugador)
-                    db.delete(jugador_partida)
                 else:
                     await self.eliminar_partida(id_partida, db)  # Elimina si el owner abandona antes de comenzar
 
@@ -262,13 +267,7 @@ class PartidaService:
 
             if not partida:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
-            
-            tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
-            
-            if tablero is None:
-                raise HTTPException(status_code=404, detail=f"No existe tablero asociado a id : {id_partida}")
-            
-            db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
+
 
             # Eliminar los tableros  y las cartas asociadas a la partida
             db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
@@ -278,6 +277,11 @@ class PartidaService:
             # Eliminar los jugadores asociados a la partida
             db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).delete()
 
+            partida = db.query(Partida).filter(Partida.id == id_partida).first()
+            jugadores = partida.jugadores
+            for jug in jugadores:
+                db.delete(jug)
+            
             # Finalmente, eliminar la partida
             db.delete(partida)
 
