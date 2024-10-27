@@ -105,25 +105,34 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 @router.patch("/partida/{id_partida}/jugador/{id_jugador}", status_code=202)
 async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
-        
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
         reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
         reposicion_movimientos = reposicion_cartas_movimientos(id_partida, id_jugador, db)
-                
+        
+        print(f"las cartas que repongo de figuras son : {reposicion_figuras}")
+        print(f"las cartas que repongo de movimientos son : {reposicion_movimientos}")
+                                                
         declarar_figura_message = ReposicionFiguras(
             type= WebSocketMessageType.REPOSICION_FIGURAS,
             data= DeclararFiguraDataSchema(
                 cartasFig= reposicion_figuras
             )
         )
-        reposicion_mov = ReposicionCartasMovimientos(
+        
+        declarar_movimiento_message = ReposicionCartasMovimientos(
             type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
-            cartas = reposicion_movimientos
+            data = DeclararMovimientoDataSchema(
+                cartas= reposicion_movimientos
+            )
         ) 
         
-        await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
+        print(declarar_figura_message)
+        print(declarar_movimiento_message)
+        
+        await manager_game.broadcast_personal(id_partida, id_jugador, declarar_movimiento_message.model_dump())
         await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
+        await asyncio.sleep(1)
         await computar_y_enviar_figuras(id_partida, db)
 
     except Exception as e:
