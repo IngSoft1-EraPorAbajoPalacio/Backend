@@ -16,7 +16,10 @@ class WebSocketMessageType(str, Enum):
     FIGURA_DECLARADA = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
-
+    
+    REPOSICION_FIGURA = "ReposicionFigura"
+    REPOSICION_MOVIMIENTO = "ReposicionMovimiento"
+    
 class JugadorSchema(BaseModel):
     id: int
     nombre: str
@@ -45,6 +48,10 @@ class MovimientoParcialDataSchema(BaseModel):
 
 class DeclararFiguraDataSchema(BaseModel):
     cartasFig: List[dict]
+    
+    
+class DeclararMovimientoDataSchema(BaseModel):
+    cartas: List[dict]
 
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
@@ -114,4 +121,10 @@ class ReposicionCartasFiguras(BaseModel):
 
 class ReposicionCartasMovimientos(BaseModel):
     type : Literal[WebSocketMessageType.REPOSICION_MOVIMIENTOS]
-    cartas: List[dict]
+    data: DeclararMovimientoDataSchema
+    
+"""  
+class Reposicion(BaseModel):
+    type : Literal[WebSocketMessageType.REPOSICION]
+    data: DeclararFiguraDataSchema
+"""
