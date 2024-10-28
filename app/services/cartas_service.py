@@ -8,6 +8,7 @@ from app.db.models import *
 from app.schema.partida_schema import *
 import random
 from sqlalchemy import true
+from sqlalchemy import func
 
 CANTIDAD_CARTAS_FIG = 50
 CANTIDAD_CARTAS_MOV = 49
@@ -150,9 +151,9 @@ def asignar_cartas_figuras(idPartida: int, idJugador: int, reponer: int, db: Ses
         CartasFigura.id_jugador == idJugador,
         CartasFigura.en_mano == False).limit(reponer).all()
         
-    print("figuras recompuestas: ")    
-    for fig in cartas_fig:
-        print(f"id: {fig.carta_fig} , figura: {fig.figura.fig.value}") 
+    #print("figuras recompuestas: ")    
+    #for fig in cartas_fig:
+    #    print(f"id: {fig.carta_fig} , figura: {fig.figura.fig.value}") 
             
     
     for fig in cartas_fig:
@@ -178,10 +179,10 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
         CartasFigura.en_mano == True
     ).all()
     
-    print("figuras que tengo:")
+    #print("figuras que tengo:")
     
-    for mov in cartas_fig :
-        print(f"id: {mov.carta_fig}, figura: {mov.figura.fig.value} ") 
+    #for mov in cartas_fig :
+    #    print(f"id: {mov.carta_fig}, figura: {mov.figura.fig.value} ") 
         
 
     for mov in cartas_fig :
@@ -210,15 +211,15 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , reponer: int, db
         CartaMovimientos.id_partida == idPartida,
         CartaMovimientos.id_jugador == idJugador,
         CartaMovimientos.en_mano == False
-    ).limit(reponer).all()
+    ).order_by(func.random()).limit(reponer).all()
     
-    print("movimientos recompuestas: ")    
-    for mov in cartas_mov:
-        print(f"id: {mov.carta_mov} , figura: {mov.movimiento.mov.value}") 
+    #print("movimientos recompuestas: ")    
+    #for mov in cartas_mov:
+    #    print(f"id: {mov.carta_mov} , figura: {mov.movimiento.mov.value}") 
             
     
     for mov in cartas_mov:
-        mov.en_mano = True
+        #mov.en_mano = True
         resultado.append(
             {
                 "id": mov.carta_mov,
@@ -227,6 +228,9 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , reponer: int, db
         )
    
     db.commit()
+    
+    print("salgo aca")
+
 
     return resultado
 
@@ -240,10 +244,10 @@ def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
                                       CartaMovimientos.id_partida == idPartida,
                                       CartaMovimientos.en_mano == True).all()
     
-    print("movimientos que tengo:")
+    #print("movimientos que tengo:")
     
-    for mov in cartas_mov :
-        print(f"id: {mov.movimiento.id}, movimiento: {mov.movimiento.mov.value} ") 
+    #for mov in cartas_mov :
+    #    print(f"id: {mov.movimiento.id}, movimiento: {mov.movimiento.mov.value} ") 
             
     for mov in cartas_mov:
         resultado.append({
