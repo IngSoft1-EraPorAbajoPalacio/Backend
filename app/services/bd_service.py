@@ -327,11 +327,17 @@ class DB_Service:
         ficha1.color, ficha2.color = ficha2.color, ficha1.color
         db.commit()
         
-"""
+
     def cambiar_color_prohibido(self, id_partida: int,  color: Color , db: Session):
         tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
         tablero.color_prohibido = color
         db.commit()
-"""
+        
+    def obtener_color_prohibido(self, id_partida: int, db: Session):
+        tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
+        if tablero.color_prohibido is None :
+            return None
+        return tablero.color_prohibido.value
+        
         
 db_service = DB_Service()

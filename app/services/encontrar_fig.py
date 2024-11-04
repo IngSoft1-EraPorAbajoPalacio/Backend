@@ -4,7 +4,7 @@ from app.services.ficha_service import fichas_service
 from typing import List, Set
 from operator import index
 from app.services.cartas_service import obtener_figuras_en_juego
-
+from app.services.bd_service import *
 from sqlalchemy.orm import Session
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -371,6 +371,8 @@ def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
     figuras = []
     
     for color, posiciones in grupos.items():
+        if color == db_service.obtener_color_prohibido(id_partida, db):
+            continue
         # Dividimos en grupos adyacentes
         grupos_adyacentes = obtener_grupos_adyacentes(posiciones)
 

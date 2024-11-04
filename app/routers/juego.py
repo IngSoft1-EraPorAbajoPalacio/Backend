@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-#from app.routers.partida import computar_y_enviar_figuras
+from app.routers.partida import computar_y_enviar_figuras
 from app.services.encontrar_fig import computar_y_enviar_figuras
 from app.schema.juego_schema import * 
 from app.services.juego_service import juego_service 

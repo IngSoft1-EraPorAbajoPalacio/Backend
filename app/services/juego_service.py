@@ -10,6 +10,7 @@ from app.services.partida_service import *
 from app.services.encontrar_fig import *
 from sqlalchemy import desc
 from app.services.bd_service import db_service
+from app.db.models import Color
 
 class JuegoService:
     
@@ -134,6 +135,13 @@ class JuegoService:
         # Validar la figura
         if not figura.tipo_figura == carta_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
+        
+        #Cambio el color prohibido
+        print(f"lo que me pasa juli es : {figura.color}")
+        print(f"el tipo es : {type(figura.color)}")
+        color = Color(figura.color)
+        
+        db_service.cambiar_color_prohibido(id_partida, color, db)
         
         # Eliminar la carta de figura mano del jugador
         db_service.eliminar_carta_figura(id_partida, id_jugador, figura.idCarta, db)
