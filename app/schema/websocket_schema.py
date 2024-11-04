@@ -48,10 +48,9 @@ class MovimientoParcialDataSchema(BaseModel):
 
 class DeclararFiguraDataSchema(BaseModel):
     cartasFig: List[dict]
-    
-    
+
 class DeclararMovimientoDataSchema(BaseModel):
-    cartas: List[dict]
+    cartas: List[dict]    
 
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
@@ -85,6 +84,7 @@ class DeshacerMovimientos(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
     posiciones: List[List[Posicion]]    
     cantMovimientosDesechos: int
+    
     
 class Coordenada(BaseModel):
     x: int

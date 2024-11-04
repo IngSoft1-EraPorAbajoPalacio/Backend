@@ -110,6 +110,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
 @router.patch("/partida/{id_partida}/jugador/{id_jugador}", status_code=202)
 async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
     try:
+        
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
         reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
                                                 
@@ -135,6 +136,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
     try:
         partida = db_service.obtener_partida(id_partida, db)
         cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
+                
                 
         abandonar_partida_message = AbandonarPartidaSchema(
             type=WebSocketMessageType.ABANDONAR_PARTIDA,
