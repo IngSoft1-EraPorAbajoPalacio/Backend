@@ -99,8 +99,7 @@ class JuegoService:
         # Eliminar la carta de la mano del jugador
         db_service.eliminar_carta_movimiento(id_partida, id_jugador, movimiento.idCarta, db)
 
-        # Cambiar las posiciones de las fichas
-        
+        # Cambiar las posiciones de las fichas        
         ficha1 = db_service.obtener_ficha(tablero.id_partida, posicion_1[0], posicion_1[1], db)
   
         ficha2 = db_service.obtener_ficha(tablero.id_partida, posicion_2[0], posicion_2[1], db)

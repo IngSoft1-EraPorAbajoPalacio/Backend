@@ -154,7 +154,7 @@ class PartidaService:
                     if tablero is None:
                         raise HTTPException(status_code=404, detail=f"abandonar No existe tablero asociado a id : {id_partida}")
 
-                    db.query(Ficha).filter(Ficha.id_tablero == tablero.id).delete()
+                    db.query(Ficha).filter(Ficha.id_tablero == tablero.id_partida).delete()
 
                     # Eliminar los tableros  y las cartas asociadas a la partida
                     db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
@@ -216,6 +216,7 @@ class PartidaService:
 
             if not partida:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
+
             # Eliminar los jugadores asociados a la partida
             db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).delete()
 
