@@ -34,4 +34,3 @@ class idMovimiento(int, Enum):
 class DeclararFiguraRequest(BaseModel):
     idCarta: int
     tipo_figura: int
-    color: str
