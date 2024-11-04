@@ -9,7 +9,6 @@ class CrearPartida(BaseModel):
     cant_min_jugadores: int
     cant_max_jugadores: int
     
-
     @field_validator('nombre_host')
     def nombre_host_no_vacio(cls, v):
         if not v.strip():
@@ -34,8 +33,9 @@ class CrearPartida(BaseModel):
     def max_jugadores_valido(cls, v):
         if v > 4:
             raise ValueError('La cantidad máxima de jugadores no puede ser mayor a 4')
-        return v
-
+        elif v < 3:
+            raise ValueError('La cantidad máxima de jugadores no puede ser menor que 1')
+        return v    
 
 class UnirsePartidaRequest(BaseModel):
     nombreJugador: str

@@ -2,6 +2,9 @@ import logging
 from collections import defaultdict
 from app.services.ficha_service import fichas_service
 from typing import List, Set
+from operator import index
+from app.services.cartas_service import obtener_figuras_en_juego
+
 from sqlalchemy.orm import Session
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -378,3 +381,24 @@ def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
                     figuras.append((figNum, color, grupo))
 
     return figuras
+
+async def computar_y_enviar_figuras(id_partida: int, db: Session):
+    try:
+        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
+        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
+        
+        figuras_data = {
+            "type": "DeclararFigura",
+            "figuras": {
+                "figura": [
+                    {
+                        "idFig": f"{tipo}_{index}",
+                        "tipoFig": tipo,
+                        "coordenadas": list(map(lambda pos: [pos[1], pos[0]], posiciones))
+                    } for tipo, _, posiciones in figuras
+                ]
+            }
+        }
+        return figuras_data 
+    except Exception as e:
+        logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
