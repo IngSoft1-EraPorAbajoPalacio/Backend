@@ -147,39 +147,52 @@ class JuegoService:
     
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.carta_fig == figura.idCarta).first().en_mano:
-            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en tu mano")
+            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en ninguna mano")
 
-        carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
-        
         # Validar la figura
-        if not figura.tipo_figura == carta_figura:
+        carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
+        if not carta_figura == figura.tipo_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
-        
-        # Eliminar la carta de la mano del jugador
-        db.query(CartasFigura).filter(
-            CartasFigura.id_partida == id_partida,
-            CartasFigura.id_jugador == id_jugador,
-            CartasFigura.carta_fig == figura.idCarta
-        ).delete()
 
-        # Cartas en mano
-        cartas_en_mano = db.query(CartasFigura).filter(
-            CartasFigura.id_partida == id_partida,
-            CartasFigura.id_jugador == id_jugador,
-            CartasFigura.en_mano == True
-        ).all()
-        cartas = []
-        for carta in cartas_en_mano:
-            cartas.append({
-                "id": carta.carta_fig,
-                "figura": carta.figura.fig.value
-            })
-        db.commit()
+        carta_figura = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                                     CartasFigura.id_jugador == id_jugador,
+                                                     CartasFigura.carta_fig == figura.idCarta).first()
+        if carta_figura and carta_figura.en_mano:
+            # Jugar una figura propia
+            # Eliminar la carta de la mano del jugador
+            db.query(CartasFigura).filter(
+                CartasFigura.id_partida == id_partida,
+                CartasFigura.id_jugador == id_jugador,
+                CartasFigura.carta_fig == figura.idCarta
+            ).delete()
 
-        response = {
-            "cartasFig": cartas
-        }
-        return response
+            # Cartas en mano
+            cartas_en_mano = db.query(CartasFigura).filter(
+                CartasFigura.id_partida == id_partida,
+                CartasFigura.id_jugador == id_jugador,
+                CartasFigura.en_mano == True
+            ).all()
+            cartas = []
+            for carta in cartas_en_mano:
+                cartas.append({
+                    "id": carta.carta_fig,
+                    "figura": carta.figura.fig.value
+                })
+            db.commit()
+            response = {
+                "cartasFig": cartas,
+            }
+            return response
+        else:
+            # Bloquear una figura
+            id_jugador = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, 
+                                                       CartasFigura.carta_fig == figura.idCarta).first().id_jugador
+            response = {
+                "idCarta": figura.idCarta,
+                "idJugador": id_jugador,
+                "cartasFig": []
+            }
+            return response
     
     
     def deshacer_movimiento(self, idPartida: int, idJugador: int, db: Session):
