@@ -102,13 +102,13 @@ class JuegoService:
 
         # Cambiar las posiciones de las fichas
         ficha1 = db.query(Ficha).filter(
-                Ficha.id_tablero == tablero.id, 
+                Ficha.id_tablero == tablero.id_partida, 
                 Ficha.x == posicion_1[0],
                 Ficha.y == posicion_1[1]
         ).first()
 
         ficha2 = db.query(Ficha).filter(
-                Ficha.id_tablero == tablero.id, 
+                Ficha.id_tablero == tablero.id_partida, 
                 Ficha.x == posicion_2[0],
                 Ficha.y == posicion_2[1]
         ).first()
