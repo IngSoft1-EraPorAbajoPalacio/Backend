@@ -301,9 +301,22 @@ class DB_Service:
                 Ficha.y == y
         ).first()
         
+    def obtener_color_prohibido(self, id_partida: int, db: Session):
+        """
+        Se obtiene el color prohibido del tablero relacionado a la partida con id : id_partida.
+        En caso de no existir color prohibido, devuelvo None
+        """
+        tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
+        if tablero.color_prohibido :
+            return tablero.color_prohibido.value
         
     def swapear_color_fichas(self, ficha1: Ficha, ficha2: Ficha, db: Session):
         ficha1.color, ficha2.color = ficha2.color, ficha1.color
+        db.commit()
+        
+    def cambiar_color_prohibido(self, id_partida: int,  color: Color , db: Session):
+        tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
+        tablero.color_prohibido = color
         db.commit()
     
         
