@@ -1,4 +1,3 @@
-from sqlalchemy import select, distinct
 from app.schema.partida_schema import *
 from app.services.jugador_service import *
 from sqlalchemy.exc import *
@@ -7,7 +6,6 @@ from sqlalchemy.orm import Session
 from app.db.models import *
 from app.schema.partida_schema import *
 import random
-from sqlalchemy import true
 from sqlalchemy import func
 from app.services.bd_service import db_service
 
@@ -16,7 +14,7 @@ CANTIDAD_CARTAS_MOV = 49
 CARTAS_EN_MANO = 3
 
 ID_FIGURAS = list(range(1, CANTIDAD_CARTAS_FIG+1))
-ID_MOVIMIENTOS = list(range(1,CANTIDAD_CARTAS_MOV+1))
+ID_MOVIMIENTOS = list(range(1, CANTIDAD_CARTAS_MOV+1))
 
 cartas_figuras = [fig.name for fig in Figura]
 cartas_movimientos = [mov.name for mov in Movimiento]
@@ -61,7 +59,8 @@ def repartir_cartas_figuras(id_partida : int,db:Session):
     j = 1
     for i in range(len(id_figuras)):
         jugador = jugadores[i % cantidad_jugadores]
-        cartaFigura = CartasFigura(id_partida= id_partida , id_jugador= jugador.id, carta_fig=id_figuras[i],en_mano=False)
+        cartaFigura = CartasFigura(id_partida= id_partida , id_jugador= jugador.id,
+                                   carta_fig=id_figuras[i],en_mano=False)
         if (j <= iteracion_cartas_en_mano):
             cartaFigura.en_mano = True
             j+=1
@@ -88,7 +87,8 @@ def repartir_cartas_movimientos(id_partida : int,db:Session):
     iteracion_cartas_en_mano = CARTAS_EN_MANO * cantidad_jugadores
     for i in (range(len(id_movimientos))):
         jugador = jugadores[i % cantidad_jugadores]
-        cartaMovimiento = CartaMovimientos(id_partida= id_partida,id_jugador=jugador.id, carta_mov = id_movimientos[i], en_mano=False)
+        cartaMovimiento = CartaMovimientos(id_partida=id_partida, id_jugador=jugador.id,
+                                           carta_mov = id_movimientos[i], en_mano=False)
         if (j <= iteracion_cartas_en_mano):
             cartaMovimiento.en_mano = True
             j+=1
@@ -213,24 +213,4 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , reponer: int, db
     db.commit()
     
     return resultado
-
-
-def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
-        
-    resultado = []    
-        
-    cartas_mov = db_service.obtener_movimientos_en_mano(idPartida, idJugador, db)
-    
-    for mov in cartas_mov:
-        resultado.append({
-            "id": mov.movimiento.id,
-            "movimiento": mov.movimiento.mov.value         
-        })
-    
-    en_mano = len(cartas_mov)
-    
-    reponer = max(0, CARTAS_EN_MANO - en_mano)
-        
-    repuestas =  asignar_cartas_movimientos(idPartida, idJugador, reponer, db)
-    
-    return resultado + repuestas       
+ 

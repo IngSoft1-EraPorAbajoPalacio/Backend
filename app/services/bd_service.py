@@ -72,11 +72,9 @@ class DB_Service:
         """
         partida = self.obtener_partida(id_partida, db)
         id_jugadores= [jugador.id_jugador for jugador in partida.jugadores]  
-        #id_jugadores = obtener_id_jugadores(id_partida, db)
 
         tablero_nuevo = Tablero(
             id_partida = id_partida,
-            #color_prohibido=random.choice(list(Color)),
             turno = random.choice(id_jugadores) 
         )
         db.add(tablero_nuevo)
@@ -281,6 +279,7 @@ class DB_Service:
             CartasFigura.carta_fig == id_figura
         ).delete()
         db.commit()
+        
     def obtener_figura(self, id_figura: int, db: Session):
         """
         Devuelve la figura con el id: id_figura
@@ -289,7 +288,6 @@ class DB_Service:
     
     
     ########## QUERIES RELACIONADAS A FICHAS ##########
-    
     
     def obtener_ficha(self, id_partida: int, x: int, y: int, db: Session):
         """
@@ -303,33 +301,10 @@ class DB_Service:
                 Ficha.y == y
         ).first()
         
-    def obtener_color(self, id_partida: int, id_jugador: int, figura: int, db: Session):
-        """    
-        figura representa el valor en si de la figura.
-        Se asume que la carta de figura le pertenece al jugador con id: id_jugador.
-        figura = db.query(Figuras).filter(Figuras.id == figura).first()
-        cartas_figura = figura.cartas_de_figura
-        for fig in cartas_figura:
-            print(fig.id)
-            print(fig.color)
-            print(fig.id_jugador)
-            print(fig.id_partida)
-            if fig.id_jugador == id_jugador and fig.id_partida == id_partida:
-                return fig.color.value
-        #print(f"el color es : {mio[0]}")
-        #return mio[0]       
-        """
-        
         
     def swapear_color_fichas(self, ficha1: Ficha, ficha2: Ficha, db: Session):
         ficha1.color, ficha2.color = ficha2.color, ficha1.color
         db.commit()
-        
-"""
-    def cambiar_color_prohibido(self, id_partida: int,  color: Color , db: Session):
-        tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
-        tablero.color_prohibido = color
-        db.commit()
-"""
+    
         
 db_service = DB_Service()
