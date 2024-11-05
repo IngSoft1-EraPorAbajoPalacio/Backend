@@ -307,8 +307,9 @@ class DB_Service:
         En caso de no existir color prohibido, devuelvo None
         """
         tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
-        if tablero.color_prohibido :
-            return tablero.color_prohibido.value
+        if tablero.color_prohibido is None:
+            return None
+        return tablero.color_prohibido.value
         
     def swapear_color_fichas(self, ficha1: Ficha, ficha2: Ficha, db: Session):
         ficha1.color, ficha2.color = ficha2.color, ficha1.color

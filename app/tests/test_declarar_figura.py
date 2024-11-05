@@ -29,14 +29,16 @@ def partida_test():
 def figura_valida():
     return DeclararFiguraRequest(
         idCarta=9,
-        tipo_figura=9
+        tipo_figura=9,
+        color="Azul"
     )
 
 @pytest.fixture
 def figura_invalida():
     return DeclararFiguraRequest(
         idCarta=9,
-        tipo_figura=10
+        tipo_figura=10,
+        color="Azul"
     )
 
 @pytest.mark.asyncio

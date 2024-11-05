@@ -6,6 +6,7 @@ from app.services.cartas_service import obtener_figuras_en_juego
 from operator import index
 from sqlalchemy.orm import Session
 from app.services.bd_service import *
+from app.services.bd_service import *
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
  
@@ -364,7 +365,7 @@ def agrupar_fichas(lista_fichas):
         grupos[color].append((x, y))  # Agrupa por color y almacena las posiciones
     return grupos
 
-def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
+def  encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
     """Encontrar las figuras de la listaFig en el tablero de la partida con id = id_partida"""
     tablero = fichas_service.obtener_fichas(id_partida, db)
     grupos = agrupar_fichas(tablero)
