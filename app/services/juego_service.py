@@ -196,7 +196,7 @@ class JuegoService:
         movimientos = db_service.obtener_movimientos_en_mano(idPartida, idJugador, db)
         
         movimientos_en_mano = len(movimientos)
-        print(f"movimientos_en_mano : {movimientos_en_mano}")
+       # print(f"movimientos_en_mano : {movimientos_en_mano}")
         
         movimientos_parciales = db_service.obtener_movimientos_parciales(idPartida, idJugador, db)
                 
@@ -215,7 +215,7 @@ class JuegoService:
             cantidad_mov_parciales-=1
         
 
-        movimientos_parciales_devueltos = len(cartas)
+        #movimientos_parciales_devueltos = len(cartas)
 
         #print(f"movimientos parciales devueltos : {movimientos_parciales_devueltos}")
         
@@ -223,7 +223,7 @@ class JuegoService:
         #print(f"movimientos a devolver : {movimientos_a_devolver}")
         
         asignacion = asignar_cartas_movimientos(idPartida, idJugador, movimientos_a_devolver, db)
-        print(f"las cartas de movimientos que voy a devolver son : {asignacion}")
+        #print(f"las cartas de movimientos que voy a devolver son : {asignacion}")
         
         while len(cartas) != movimientos_a_devolver:            
             movimiento = db_service.obtener_movimiento(idPartida, idJugador, asignacion[0]['id'], db)
@@ -239,7 +239,7 @@ class JuegoService:
             "posiciones": posiciones
         }    
     
-        print(f"al final retorno : {resultado}")    
+       # print(f"al final retorno : {resultado}")    
         return  resultado   
 
 juego_service = JuegoService()
