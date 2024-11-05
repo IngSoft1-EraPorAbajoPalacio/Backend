@@ -7,39 +7,12 @@ from sqlalchemy.exc import *
 from app.services.jugador_service import *
 from app.services.ficha_service import * 
 from app.services.cartas_service import *
+from app.services.bd_service import *
 
 class PartidaService:
     
-    def init(self):
-        self.partidas_lobby = []
-        self.partidas_iniciadas = []
-        
-    def obtener_partidas(self, db: Session):
-        partidas = db.query(Partida).filter(Partida.activa == False).all()
-        if not partidas:
-            return []
-        return partidas 
-    
-    def obtener_partida(self, id_partida: int, db: Session):        
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        if partida is None:
-            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}, error 1")
-        return partida
-               
-    def obtener_jugadores(self, id_partida: int, db: Session):
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        if partida is None:
-            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
-        return [jugador.jugador for jugador in partida.jugadores]
-        
-    def esta_iniciada(self, id_partida: int, db: Session) -> bool:
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
-        return partida.activa  
-    
-    def pertenece(self, id_partida: int, id_jugador: int, db: Session) -> bool:
-        return id_jugador in obtener_id_jugadores(id_partida, db)
-    
     async def crear_partida(self, partida: CrearPartida, db: Session):
+        
         if(partida.cant_max_jugadores < 2):
             raise HTTPException(status_code=404, detail="La cantidad máxima de jugadores debe ser mayor o igual a 2")
         if(partida.cant_min_jugadores < 2):
@@ -47,25 +20,18 @@ class PartidaService:
         if(partida.cant_max_jugadores < partida.cant_min_jugadores):
             raise HTTPException(status_code=404, detail="La cantidad máxima de jugadores debe ser mayor o igual a la cantidad mínima de jugadores")
         
-        owner = crear_jugador(partida.nombre_host, db)
-        
-        partida_creada = Partida(
-            nombre=partida.nombre_partida,
-            min=partida.cant_min_jugadores,
-            max=partida.cant_max_jugadores,
-            id_owner=owner.id
-        )
-        db.add(partida_creada)
-        db.commit()
-        
         try:
-            jugador_partida = Jugador_Partida(
-                id_jugador=owner.id,
-                id_partida=partida_creada.id
+            owner = db_service.crear_jugador(partida.nombre_host, db)
+            partida_creada = db_service.crear_partida(
+                partida.nombre_partida,
+                partida.cant_min_jugadores,
+                partida.cant_max_jugadores,
+                owner.id,
+                db
             )
-                                
-            db.add(jugador_partida)
-            db.commit()
+
+            db_service.crear_jugador_partida(owner.id, partida_creada.id, db)
+    
         except SQLAlchemyError as e:
             db.rollback() 
             print(e)
@@ -77,25 +43,23 @@ class PartidaService:
         )                
                     
     async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:
-        partida = db.query(Partida).filter(Partida.id == id_partida).first()
         
+        partida = db_service.obtener_partida(int(id_partida), db)
+                
         if not partida:
             raise HTTPException(status_code=404, detail=f"No existe partida con id {id_partida}")
         
         if len(partida.jugadores) >= partida.max:
             raise HTTPException(status_code=404, detail="La partida está llena")
         
-        if(self.esta_iniciada(id_partida, db)):
+        if(db_service.partida_iniciada(int(id_partida), db)):
             raise HTTPException(status_code=404, detail=f"No se puede unir a una partida en progreso")
 
-        jugador_a_unirse = crear_jugador(nombre=nombre_jugador, db=db)
-        agregar_jugador = Jugador_Partida(
-            id_jugador=jugador_a_unirse.id,
-            id_partida=id_partida
-        )
+        jugador_a_unirse = crear_jugador(nombre_jugador, db)
+
         try:
-            db.add(agregar_jugador)
-            db.commit()
+            db_service.crear_jugador_partida(jugador_a_unirse.id, id_partida, db)      
+            
         except SQLAlchemyError as e:
             db.rollback()
             print(f"Error al unirse a la partida: {e}")
@@ -108,22 +72,21 @@ class PartidaService:
             ]
         )
 
+
     async def iniciar_partida(self, id_partida: int, id_jugador: int, db: Session):
-        if not self.pertenece(id_partida, id_jugador, db):
+        if not pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail=f"El jugador {id_jugador} no pertenece a la partida")
 
-        if not db.query(Partida).filter(Partida.id_owner == id_jugador).first():
+        if not db_service.obtener_partida_owner(id_jugador, db):
             raise HTTPException(status_code=404, detail="Solo el owner puede iniciar la partida")
 
         if obtener_cantidad_jugadores(id_partida, db) == 1:
             raise HTTPException(status_code=404, detail="No puedes iniciar la partida con menos de 2 jugadores")
 
-        partida = self.obtener_partida(id_partida, db)
-
-        if partida.activa:
+        if db_service.partida_iniciada(id_partida, db):
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} ya está iniciada")
 
-        crear_tablero(id_partida, db)
+        db_service.crear_tablero(id_partida, db)
         repartir_fichas(id_partida, db)
         
         inicializacion_figuras_db(db)
@@ -132,14 +95,8 @@ class PartidaService:
         repartir_cartas_movimientos(id_partida, db)
         repartir_cartas_figuras(id_partida, db)
 
-        partida.activa = True
-        db.commit()
-        
-        jugadores = obtener_jugadores(id_partida, db)
-        for jugador in jugadores:
-            jugador.jugando = True
-            
-        db.commit()        
+        db_service.setear_partida_activa(id_partida, db)
+        db_service.setear_jugadores_jugando(id_partida, db)  
         
         cartas_movimientos = obtener_cartas_movimientos(id_partida, db)
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
@@ -153,22 +110,26 @@ class PartidaService:
             "cartasMovimiento": cartas_movimientos,  
             "cartasFigura": cartas_figuras   
         } 
+        
         return response
+    
     
     def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
         
-        partida = self.obtener_partida(id_partida,db) 
+        partida = db_service.obtener_partida(id_partida,db) 
+        
         if partida is None:
             print("la partida no existe")
             
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+        jugador = db_service.obtener_jugador(id_jugador, db)
+        
         if jugador is None :
             print(f"el jugador con id {id_jugador} no pertenece a la partida")
                 
         tablero = partida.tablero
         turno_actual = id_jugador
 
-        id_jugadores = [jugador.id_jugador for jugador in partida.jugadores]
+        id_jugadores = obtener_id_jugadores(id_partida, db)
         cantidad_jugadores = len(id_jugadores)
         
         turno_nuevo = (id_jugadores.index(turno_actual) + 1) % cantidad_jugadores
@@ -181,11 +142,11 @@ class PartidaService:
     async def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
     
         try:
-            partida = self.obtener_partida(id_partida, db)
+            partida = db_service.obtener_partida(id_partida, db)
             if not partida:
                 raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
 
-            jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+            jugador = db_service.obtener_jugador(id_jugador, db)
             if not jugador:
                 raise HTTPException(status_code=404, detail=f"No existe ningún jugador con id {id_jugador}")
 
@@ -201,8 +162,7 @@ class PartidaService:
                             db.delete(jp)
                     db.commit()        
                     
-                    tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
-
+                    tablero = db_service.obtener_tablero(id_partida, db)
                     if tablero is None:
                         raise HTTPException(status_code=404, detail=f"abandonar No existe tablero asociado a id : {id_partida}")
 
@@ -213,7 +173,7 @@ class PartidaService:
                     db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
                     db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
                     
-                    jugadores = self.obtener_jugadores(id_partida, db)
+                    jugadores = obtener_jugadores(id_partida, db)
                     for jugador in jugadores:
                         db.delete(jugador)
                     
