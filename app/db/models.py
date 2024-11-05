@@ -59,7 +59,7 @@ class Jugador_Partida(Base) :
  
 
 colores = ["Rojo","Verde","Azul","Amarillo"] 
-Color = PyEnum("Color",colores)
+Color = PyEnum("Color",{color: color for color in colores})
 
 
 class Tablero(Base):
