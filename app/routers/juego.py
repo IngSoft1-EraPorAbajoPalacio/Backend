@@ -75,11 +75,13 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
     try:
         response = await juego_service.declarar_figura(idPartida, idJugador, request, db)
         declarar_figura_message = DeclararFiguraSchema(
-            type=WebSocketMessageType.FIGURA_DECLARADA,
-            data=DeclararFiguraDataSchema(
-                cartasFig=response["cartasFig"]
+            type=WebSocketMessageType.FIGURA_DESCARTAR,
+            data=DeclararFiguraColorProhibido(
+                cartasFig=response["cartasFig"],
+                colorProhibido=response["color_prohibido"]
             )
         )
+        
         await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
         await manager_game.broadcast(idPartida, figuras_data)
