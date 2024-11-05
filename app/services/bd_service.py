@@ -9,8 +9,6 @@ import random
 
 class DB_Service:
     
-    
-    
     ########## QUERIES RELACIONADAS A PARTIDAS ##########
     
     def crear_partida(self, nombre_partida: str, min_jugadores: int, max_jugadores: int,
@@ -42,7 +40,7 @@ class DB_Service:
         Obtengo el total de las partidas.
         En caso de no existir ninguna, devuelvo una lista vacía.
         """
-        return db.query(Partida).all()
+        return db.query(Partida).filter(Partida.activa == False).all()
     
     def obtener_partida_owner(self, id_jugador: int, db: Session):
         """
