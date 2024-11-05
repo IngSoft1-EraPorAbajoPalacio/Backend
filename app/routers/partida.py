@@ -1,5 +1,4 @@
-from operator import index
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from app.schema.partida_schema import * 
 from app.services.partida_service import partida_service
 from app.services.jugador_service import *
@@ -11,10 +10,8 @@ from app.routers.websocket_manager_game import manager_game
 from app.routers.websocket_manager_lobby import manager_lobby
 from app.schema.websocket_schema import * 
 from typing import List
-from app.services.encontrar_fig import encontrar_figuras
 import logging
 from app.services.encontrar_fig import computar_y_enviar_figuras
-from app.services.cartas_service import obtener_figuras_en_juego
 import  asyncio
 
 router = APIRouter()
@@ -32,7 +29,6 @@ def obtener_partida(id_partida: int, db: Session = Depends(crear_session)):
         cant_min_jugadores= partida.min,
         cant_max_jugadores= partida.max
     )    
-
 
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
 async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_session)):
@@ -179,27 +175,4 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
     except Exception as e:
         logging.error(f"Unexpected error in abandonar_partida route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
-
-"""
-async def computar_y_enviar_figuras(id_partida: int, db: Session):
-    try:
-        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
-        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
-        
-        figuras_data = {
-            "type": "DeclararFigura",
-            "figuras": {
-                "figura": [
-                    {
-                        "idFig": f"{tipo}_{index}",
-                        "tipoFig": tipo,
-                        "coordenadas": list(map(lambda pos: [pos[1], pos[0]], posiciones))
-                    } for tipo, _, posiciones in figuras
-                ]
-            }
-        } 
-        await manager_game.broadcast(id_partida, figuras_data)
-    except Exception as e:
-        logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
-"""
 

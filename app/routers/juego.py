@@ -45,7 +45,7 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
         }
         await manager_game.broadcast(idPartida, deshacer_movimiento_message.model_dump())
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
-        await manager_game.broadcast(id_partida, figuras_data)
+        await manager_game.broadcast(idPartida, figuras_data)
         
         return resultado
     except Exception as e:

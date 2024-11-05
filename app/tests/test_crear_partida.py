@@ -67,22 +67,20 @@ def test_identificador_unico():
 
 @pytest.mark.integration_test
 def test_menos_de_dos_jugadores_max():
-    partida_data = CrearPartida(
-        nombre_host='Jugador1',
-        nombre_partida='Partida Test',
-        cant_min_jugadores=2,
-        cant_max_jugadores=1
-    )
-    response = client.post("/partida", json=partida_data.model_dump())
-    assert response.status_code == 400
+    response = client.post("/partida", json={
+        "nombre_host":'Jugador1',
+        "nombre_partida":'Partida Test',
+        "cant_min_jugadores":2,
+        "cant_max_jugadores":1
+    })
+    assert response.status_code == 422
 
 @pytest.mark.integration_test
 def test_min_mayor_que_max_jugadores():
-    partida_data = CrearPartida(
-        nombre_host='Jugador1',
-        nombre_partida='Partida Test',
-        cant_min_jugadores=4,
-        cant_max_jugadores=2
-    )
-    response = client.post("/partida", json=partida_data.model_dump())
-    assert response.status_code == 400
+    response = client.post("/partida", json={
+        "nombre_host":'Jugador1',
+        "nombre_partida":'Partida Test',
+        "cant_min_jugadores":4,
+        "cant_max_jugadores":2
+    })
+    assert response.status_code == 422

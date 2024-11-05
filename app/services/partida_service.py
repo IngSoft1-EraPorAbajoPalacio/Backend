@@ -12,14 +12,7 @@ from app.services.bd_service import *
 class PartidaService:
     
     async def crear_partida(self, partida: CrearPartida, db: Session):
-        
-        if(partida.cant_max_jugadores < 2):
-            raise HTTPException(status_code=404, detail="La cantidad máxima de jugadores debe ser mayor o igual a 2")
-        if(partida.cant_min_jugadores < 2):
-            raise HTTPException(status_code=404, detail="La cantidad mínima de jugadores debe ser mayor o igual a 2")
-        if(partida.cant_max_jugadores < partida.cant_min_jugadores):
-            raise HTTPException(status_code=404, detail="La cantidad máxima de jugadores debe ser mayor o igual a la cantidad mínima de jugadores")
-        
+                
         try:
             owner = db_service.crear_jugador(partida.nombre_host, db)
             partida_creada = db_service.crear_partida(
