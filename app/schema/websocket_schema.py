@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Literal
 from enum import Enum
 from app.schema.juego_schema import Posicion
+from app.db.models import Color
 
 class WebSocketMessageType(str, Enum):
     AGREGAR_PARTIDA = "AgregarPartida"
@@ -13,7 +14,7 @@ class WebSocketMessageType(str, Enum):
     MOVIMIENTO_PARCIAL = "MovimientoParcial"
     DESHACER_MOVIMIENTO = "DeshacerMovimiento"
     DESHACER_MOVIMIENTOS = "DeshacerMovimientos"
-    FIGURA_DECLARADA = "FiguraDescartar"
+    FIGURA_DESCARTAR = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
 
@@ -98,9 +99,14 @@ class MovimientoParcialSchema(BaseModel):
     type: Literal[WebSocketMessageType.MOVIMIENTO_PARCIAL]
     data: MovimientoParcialDataSchema
 
+class DeclararFiguraColorProhibido(BaseModel):
+    cartasFig: List[dict]
+    colorProhibido : str
+
+
 class DeclararFiguraSchema(BaseModel):
-    type: Literal[WebSocketMessageType.FIGURA_DECLARADA]
-    data: DeclararFiguraDataSchema
+    type: Literal[WebSocketMessageType.FIGURA_DESCARTAR]
+    data: DeclararFiguraColorProhibido
     
     
 class ReposicionFiguras(BaseModel):
