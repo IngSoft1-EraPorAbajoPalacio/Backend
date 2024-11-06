@@ -16,6 +16,11 @@ class WebSocketMessageType(str, Enum):
     FIGURA_DECLARADA = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
+    MENSAJE_ENVIADO = "Mensaje"
+
+class MensajeSchema(BaseModel):
+    type: Literal[WebSocketMessageType.MENSAJE_ENVIADO]
+    mensaje: str
 
 class JugadorSchema(BaseModel):
     id: int
