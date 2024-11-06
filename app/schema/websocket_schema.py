@@ -16,6 +16,7 @@ class WebSocketMessageType(str, Enum):
     FIGURA_DECLARADA = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
+    BLOQUEAR_FIGURA = "FiguraBloqueada"
 
 class JugadorSchema(BaseModel):
     id: int
@@ -115,3 +116,11 @@ class ReposicionCartasFiguras(BaseModel):
 class ReposicionCartasMovimientos(BaseModel):
     type : Literal[WebSocketMessageType.REPOSICION_MOVIMIENTOS]
     cartas: List[dict]
+
+class BloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+
+class BloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.BLOQUEAR_FIGURA]
+    data: BloquearFiguraDataSchema
