@@ -71,7 +71,7 @@ async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Dep
 async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFiguraRequest, db: Session = Depends(crear_session)):
     try:
         response = await juego_service.declarar_figura(idPartida, idJugador, request, db)
-        if response["descartarCarta"] == True:
+        if response["completarFigura"] == "descartarFigura" or response["completarFigura"] == "desbloquearFigura":
             declarar_figura_message = DeclararFiguraSchema(
                 type=WebSocketMessageType.FIGURA_DECLARADA,
                 data=DeclararFiguraDataSchema(
@@ -79,7 +79,16 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
                 )
             )
             await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
-        elif response["descartarCarta"] == False:
+            if response["completarFigura"] == "desbloquearFigura":
+                desbloquear_figuras_message = DesbloquearFiguraSchema(
+                    type=WebSocketMessageType.DESBLOQUEAR_FIGURA,
+                    data=BloquearFiguraDataSchema(
+                        idCarta=response["idCarta"],
+                        idJugador=response["idJugador"]
+                    )
+                )
+                await manager_game.broadcast(idPartida, desbloquear_figuras_message.model_dump())
+        elif response["completarFigura"] == "bloquearFigura":
             bloquear_figuras_message = BloquearFiguraSchema(
                 type=WebSocketMessageType.BLOQUEAR_FIGURA,
                 data=BloquearFiguraDataSchema(

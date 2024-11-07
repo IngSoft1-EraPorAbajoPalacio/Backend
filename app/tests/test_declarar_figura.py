@@ -34,6 +34,13 @@ def figura_valida():
     )
 
 @pytest.fixture
+def figura_valida2():
+    return DeclararFiguraRequest(
+        idCarta=10,
+        tipo_figura=10
+    )
+
+@pytest.fixture
 def figura_invalida():
     return DeclararFiguraRequest(
         idCarta=9,
@@ -216,7 +223,7 @@ async def test_bloquear_una_figura_ya_bloqueada(partida_service: PartidaService,
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}/tablero/declarar-figura",
             json=json.loads(figura_valida.model_dump_json())
         )
-        assert response.status_code == 433
+        assert response.status_code == 434
 
     finally:
         session.close()
@@ -251,7 +258,56 @@ async def test_bloquear_2_figuras(partida_service: PartidaService, partida_test,
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}/tablero/declarar-figura",
             json=json.loads(figura_valida.model_dump_json())
         )
-        assert response.status_code == 435
+        assert response.status_code == 436
+
+    finally:
+        session.close()
+
+@pytest.mark.asyncio
+async def test_desbloquear_una_figura(partida_service: PartidaService, partida_test, figura_valida, figura_valida2):
+    session = Session()
+    try:
+        partida_creada = await partida_service.crear_partida(partida_test, session)
+        jugador2 = await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+        await partida_service.iniciar_partida(int(partida_creada.id_partida), int(partida_creada.id_jugador), session)
+        session.commit()
+
+        carta_figura = session.query(CartasFigura).filter(CartasFigura.id_jugador == partida_creada.id_jugador,
+                                                          CartasFigura.carta_fig == figura_valida.idCarta).first()
+        if carta_figura and carta_figura.en_mano == True:
+           session.query(CartasFigura).filter(CartasFigura.id_jugador == partida_creada.id_jugador,
+                                              CartasFigura.carta_fig == figura_valida.idCarta).delete()
+            
+        # Asigno figura 9 al jugador 2
+        figura = session.query(Figuras).filter(Figuras.id == figura_valida.idCarta).first()
+        figura2 = session.query(Figuras).filter(Figuras.id == figura_valida2.idCarta).first()
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].en_mano = True
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0].bloqueada = True
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[1].carta_fig = figura.id
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[1].figura.fig = figura.fig
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[1].en_mano = True
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[2].carta_fig = figura2.id
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[2].figura.fig = figura2.fig
+        session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[2].en_mano = True
+        session.commit()
+        carta1 = session.query(Jugador).filter(Jugador.id == partida_creada.id_jugador).first().cartas_de_figuras[0]
+        assert session.query(CartasFigura).filter(CartasFigura.id_jugador == partida_creada.id_jugador,
+                                                  CartasFigura.carta_fig == carta1.carta_fig).first().bloqueada == True
+        
+        # Desbloquear figura
+        response = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}/tablero/declarar-figura",
+            json=json.loads(figura_valida.model_dump_json())
+        )
+        assert response.status_code == 202
+        response2 = client.post(
+            f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}/tablero/declarar-figura",
+            json=json.loads(figura_valida2.model_dump_json())
+        )
+        assert response2.status_code == 202
+        session.commit()
+        assert session.query(CartasFigura).filter(CartasFigura.id_jugador == partida_creada.id_jugador,
+                                                  CartasFigura.carta_fig == carta1.carta_fig).first().bloqueada == False
 
     finally:
         session.close()

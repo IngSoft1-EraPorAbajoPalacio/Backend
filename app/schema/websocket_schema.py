@@ -17,6 +17,7 @@ class WebSocketMessageType(str, Enum):
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
     BLOQUEAR_FIGURA = "FiguraBloqueada"
+    DESBLOQUEAR_FIGURA = "FiguraDesbloqueada"
 
 class JugadorSchema(BaseModel):
     id: int
@@ -123,4 +124,8 @@ class BloquearFiguraDataSchema(BaseModel):
 
 class BloquearFiguraSchema(BaseModel):
     type: Literal[WebSocketMessageType.BLOQUEAR_FIGURA]
+    data: BloquearFiguraDataSchema
+
+class DesbloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.DESBLOQUEAR_FIGURA]
     data: BloquearFiguraDataSchema

@@ -59,6 +59,62 @@ class JuegoService:
         else:
             return False
 
+    def completar_figura(self, id_partida: int, id_jugador: int, figura: DeclararFiguraRequest, tipo: str, db: Session):
+        if tipo == "descartar":
+            # Eliminar la carta de la mano del jugador
+            db.query(CartasFigura).filter(
+                CartasFigura.id_partida == id_partida,
+                CartasFigura.id_jugador == id_jugador,
+                CartasFigura.carta_fig == figura.idCarta
+            ).delete()
+
+            # Cartas en mano
+            cartas_en_mano = db.query(CartasFigura).filter(
+                CartasFigura.id_partida == id_partida,
+                CartasFigura.id_jugador == id_jugador,
+                CartasFigura.en_mano == True
+            ).all()
+            cartas = []
+            for carta in cartas_en_mano:
+                cartas.append({
+                    "id": carta.carta_fig,
+                    "figura": carta.figura.fig.value
+                })
+
+            # Desbloquear la carta si es necesario    
+            carta_bloqueada = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == id_jugador,
+                                             CartasFigura.en_mano == True,
+                                             CartasFigura.bloqueada == True).first()
+            esta_bloqueado = carta_bloqueada.bloqueada if carta_bloqueada else False
+            cartas_en_mano = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                                           CartasFigura.id_jugador == id_jugador,
+                                                           CartasFigura.en_mano == True).count()
+            if esta_bloqueado and cartas_en_mano == 1:
+                carta_bloqueada.bloqueada = False
+                return {
+                    "completarFigura": "desbloquearFigura",
+                    "cartasFig": cartas,
+                    "idCarta": figura.idCarta,
+                    "idJugador": id_jugador
+                }
+            else:
+                return {
+                    "completarFigura": "descartarFigura",
+                    "cartasFig": cartas
+                }
+        elif tipo == "bloquear":
+            # Bloquear la carta
+            db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, 
+                                          CartasFigura.id_jugador == id_jugador,
+                                          CartasFigura.carta_fig == figura.idCarta).first().bloqueada = True
+            db.commit()
+            return {
+                "completarFigura": "bloquearFigura",
+                "idCarta": figura.idCarta,
+                "idJugador": id_jugador
+            }
+        
     async def jugar_movimiento(self, id_partida: int, id_jugador: int, movimiento: JugarMovimientoRequest, db: Session):
         partida = partida_service.obtener_partida(id_partida, db)
         if not partida.activa:
@@ -157,67 +213,41 @@ class JuegoService:
         carta_figura = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                                      CartasFigura.id_jugador == id_jugador,
                                                      CartasFigura.carta_fig == figura.idCarta).first()
+        esta_en_mano = carta_figura.en_mano if carta_figura else False
         
-        if carta_figura and carta_figura.en_mano:   # Jugar una figura propia
+        if esta_en_mano:
+            # Descartar una figura propia
             if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.id_jugador == id_jugador,
                                              CartasFigura.carta_fig == figura.idCarta).first().bloqueada:
-                raise HTTPException(status_code=433, detail="No podes descartar una figura bloqueada")
+                raise HTTPException(status_code=433, detail="No puedes descartar una figura bloqueada")
             
-            # Eliminar la carta de la mano del jugador
-            db.query(CartasFigura).filter(
-                CartasFigura.id_partida == id_partida,
-                CartasFigura.id_jugador == id_jugador,
-                CartasFigura.carta_fig == figura.idCarta
-            ).delete()
-
-            # Cartas en mano
-            cartas_en_mano = db.query(CartasFigura).filter(
-                CartasFigura.id_partida == id_partida,
-                CartasFigura.id_jugador == id_jugador,
-                CartasFigura.en_mano == True
-            ).all()
-            cartas = []
-            for carta in cartas_en_mano:
-                cartas.append({
-                    "id": carta.carta_fig,
-                    "figura": carta.figura.fig.value
-                })
+            # Descartar la carta y desbloquear si es necesario
+            response = self.completar_figura(id_partida, id_jugador, figura, "descartar", db)
             db.commit()
-            response = {
-                "descartarCarta": True,
-                "cartasFig": cartas
-            }
             return response
-        else:   # Bloquear una figura
+        else:   
+            # Bloquear una figura
             id_jugador = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, 
                                                        CartasFigura.carta_fig == figura.idCarta).first().id_jugador
             
             if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.id_jugador == id_jugador,
                                              CartasFigura.carta_fig == figura.idCarta).first().bloqueada:
-                raise HTTPException(status_code=433, detail="Figura ya bloqueada")
+                raise HTTPException(status_code=434, detail="Figura ya bloqueada")
             
             if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.id_jugador == id_jugador).count() == 1:
-                raise HTTPException(status_code=434, detail="No podes bloquear un jugador con una sola carta de figura")
+                raise HTTPException(status_code=435, detail="No puedes bloquear un jugador con una sola carta de figura")
 
             if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.id_jugador == id_jugador,
                                              CartasFigura.bloqueada == True).count() == 1:
-                raise HTTPException(status_code=435, detail="No podes bloquear 2 cartas de un mismo jugador")
+                raise HTTPException(status_code=436, detail="No puedes bloquear 2 cartas de un mismo jugador")
             
             # Bloquear la carta
-            db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, 
-                                          CartasFigura.id_jugador == id_jugador,
-                                          CartasFigura.carta_fig == figura.idCarta).first().bloqueada = True
+            response = self.completar_figura(id_partida, id_jugador, figura, "bloquear", db)
             db.commit()
-
-            response = {
-                "descartarCarta": False,
-                "idCarta": figura.idCarta,
-                "idJugador": id_jugador,
-            }
             return response
     
     
