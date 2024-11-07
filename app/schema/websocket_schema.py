@@ -47,9 +47,11 @@ class EliminarPartidaDataSchema(BaseModel):
 class MovimientoParcialDataSchema(BaseModel):
     carta: dict
     fichas: List[dict]
+    idJugador: int
 
 class DeclararFiguraDataSchema(BaseModel):
     cartasFig: List[dict]
+    idJugador: int
 
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
@@ -78,11 +80,13 @@ class MovimientoParcialSchema(BaseModel):
 class DeshacerMovimiento(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTO]
     posiciones: List[Posicion]
+    idJugador: int
     
 class DeshacerMovimientos(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
     posiciones: List[List[Posicion]]    
     cantMovimientosDesechos: int
+    idJugador: int
     
 class Coordenada(BaseModel):
     x: int

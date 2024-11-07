@@ -17,7 +17,8 @@ async def jugar_movimiento(idPartida: int, idJugador: int, request: JugarMovimie
             type=WebSocketMessageType.MOVIMIENTO_PARCIAL,
             data=MovimientoParcialDataSchema(
                 carta=response["carta"],
-                fichas=response["fichas"]
+                fichas=response["fichas"],
+                idJugador = idJugador
             )
         )
         await manager_game.broadcast(idPartida, jugar_movimiento_message.model_dump())    
@@ -31,7 +32,8 @@ async def deshacer_movimiento(idPartida: int, idJugador: int, db: Session = Depe
         deshacer_movimiento = juego_service.deshacer_movimiento(idPartida, idJugador, db)
         deshacer_movimiento_message = DeshacerMovimiento(
             type= WebSocketMessageType.DESHACER_MOVIMIENTO ,
-            posiciones= deshacer_movimiento['posiciones']
+            posiciones= deshacer_movimiento['posiciones'],
+            idJugador = idJugador
         )
         
         resultado = {
@@ -59,7 +61,8 @@ async def deshacer_movimientos(idPartida: int, idJugador: int, db: Session = Dep
             deshacer_movimientos_message = DeshacerMovimientos(
                 type= WebSocketMessageType.DESHACER_MOVIMIENTOS,
                 posiciones= resultado['posiciones'],
-                cantMovimientosDesechos= resultado['cantMovimientosDesechos']
+                cantMovimientosDesechos= resultado['cantMovimientosDesechos'],
+                idJugador= idJugador
             )
             await manager_game.broadcast(idPartida, deshacer_movimientos_message.model_dump()) 
         await computar_y_enviar_figuras(idPartida, db)
@@ -74,7 +77,8 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         declarar_figura_message = DeclararFiguraSchema(
             type=WebSocketMessageType.FIGURA_DECLARADA,
             data=DeclararFiguraDataSchema(
-                cartasFig=response["cartasFig"]
+                cartasFig=response["cartasFig"],
+                idJugador= idJugador
             )
         )
         await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
