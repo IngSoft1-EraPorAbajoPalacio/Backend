@@ -53,7 +53,8 @@ class PartidaService:
             nombre=partida.nombre_partida,
             min=partida.cant_min_jugadores,
             max=partida.cant_max_jugadores,
-            id_owner=owner.id
+            id_owner=owner.id,
+            contrasena=partida.contrasena
         )
         db.add(partida_creada)
         db.commit()

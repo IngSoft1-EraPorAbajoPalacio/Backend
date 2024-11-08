@@ -43,7 +43,8 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
                 idPartida=int(partida_creada.id_partida),
                 nombrePartida=partida.nombre_partida,
                 cantJugadoresMin=partida.cant_min_jugadores,
-                cantJugadoresMax=partida.cant_max_jugadores
+                cantJugadoresMax=partida.cant_max_jugadores,
+                privada=partida.contrasena is not ""
             )
         )
         await manager.broadcast(agregar_partida_message.model_dump())

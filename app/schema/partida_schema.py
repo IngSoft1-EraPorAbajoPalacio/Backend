@@ -8,6 +8,7 @@ class CrearPartida(BaseModel):
     nombre_partida: str
     cant_min_jugadores: int
     cant_max_jugadores: int
+    contrasena: str
     
 
     @field_validator('nombre_host')

@@ -26,6 +26,7 @@ class AgregarPartidaDataSchema(BaseModel):
     nombrePartida: str
     cantJugadoresMin: int
     cantJugadoresMax: int
+    privada: bool
 
 class IniciarPartidaDataSchema(BaseModel):
     jugadorInicial: str

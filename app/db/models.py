@@ -34,6 +34,7 @@ class Partida(Base):
     max : Mapped[int] = mapped_column(nullable=False)
     activa : Mapped[bool] = mapped_column(Boolean,default=False)
     id_owner : Mapped[int] = mapped_column(nullable=False)
+    contrasena : Mapped[str] = mapped_column(String(40), nullable=True)
     
     #relaciones
     jugadores : Mapped[List['Jugador_Partida']] = relationship(back_populates='partida', cascade="all")
