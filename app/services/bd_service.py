@@ -75,7 +75,8 @@ class DB_Service:
 
         tablero_nuevo = Tablero(
             id_partida = id_partida,
-            turno = random.choice(id_jugadores) 
+            turno = random.choice(id_jugadores) ,
+            color_prohibido = None,
         )
         db.add(tablero_nuevo)
         db.commit()
