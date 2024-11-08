@@ -247,7 +247,8 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugado
             tiempo=response["tiempo"],
             cartasMovimiento=response["cartasMovimiento"],
             cartasFigura=response["cartasFigura"],
-            cartasBloqueadas=response["cartasBloqueadas"]
+            cartasBloqueadas=response["cartasBloqueadas"],
+            cantMovimientosParciales=response["cantMovimientosParciales"]
         )
     )
 

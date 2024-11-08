@@ -37,6 +37,7 @@ class InicioConexionDataSchema(BaseModel):
     cartasMovimiento: List[dict]
     cartasFigura: List[dict]
     cartasBloqueadas: List[int]
+    cantMovimientosParciales: int
 
 class AbandonarPartidaDataSchema(BaseModel):
     idPartida: int

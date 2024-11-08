@@ -19,6 +19,13 @@ class JuegoService:
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
         fichas = fichas_service.obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
+        cantidad_movimientos_parciales = (
+            db.query(MovimientosParciales)
+            .filter(
+                MovimientosParciales.id_partida == id_partida,
+                MovimientosParciales.id_jugador == id_jugador
+            )
+        ).count()
         
         response = {
             "type": "InicioConexion",
@@ -30,7 +37,7 @@ class JuegoService:
             "cartasMovimiento": cartas_movimientos,
             "cartasFigura": cartas_figuras,
             "cartasBloqueadas": [], # Hay que cambiar cuando se implemente el bloqueo de cartas
-            "cantMovimientosParciales": 2 # Hay que cambiar cuando se implemente la cantidad de movimientos parciales jugados
+            "cantMovimientosParciales": cantidad_movimientos_parciales
         }
                 
         return response
