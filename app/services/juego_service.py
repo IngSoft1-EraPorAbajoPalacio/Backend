@@ -11,6 +11,41 @@ from app.services.encontrar_fig import *
 from sqlalchemy import desc
 
 class JuegoService:
+
+    def obtener_datos_partida(self, id_partida: int, id_jugador: int, db: Session):
+        
+        partida = partida_service.obtener_partida(id_partida, db)
+        
+        if not partida.activa:
+
+            ganador = partida_service.obtener_ganador(id_partida, db)
+            
+            response = {
+                "type": "FinConexion",
+                "idGanador": ganador.id,
+                "nombreGanador": ganador.nombre
+            }
+
+        else:
+            cartas_movimientos = obtener_cartas_movimientos_jugador(id_jugador, db)
+            cartas_figuras = obtener_cartas_figuras(id_partida, db)
+            fichas = fichas_service.obtener_fichas(id_partida, db)
+            orden = obtener_id_jugadores(id_partida, db)
+            
+            response = {
+                "type": "InicioConexion",
+                "fichas": fichas,
+                "orden": orden,
+                "turnoActual": partida.tablero.turno,
+                "colorProhibido": "Amarillo", # Hay que cambiar cuando se implemente el color prohibido
+                "tiempo": 200, # Hay que cambiar cuando se implemente el temporizador
+                "cartasMovimiento": cartas_movimientos,
+                "cartasFigura": cartas_figuras,
+                "cartasBloqueadas": [] # Hay que cambiar cuando se implemente el bloqueo de cartas
+            }
+            
+        return response
+
     def validar_movimiento(self, movimiento: int, posicion_1: tuple, posicion_2: tuple):
         x1, y1 = posicion_1
         x2, y2 = posicion_2

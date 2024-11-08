@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, De
 from app.schema.partida_schema import * 
 from app.services.partida_service import partida_service
 from app.services.jugador_service import *
+from app.services.juego_service import *
 from app.services.cartas_service import *
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
@@ -226,10 +227,33 @@ async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
           
         
 @router.websocket("/ws/game/{idPartida}/jugador/{idJugador}")
-async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugador: int):
+async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     await manager_game.connect(idPartida, idJugador, websocket)
+    
     print("SE INICIO LA CONEXION DEL GAME")
     print(manager_game.active_connections)
+    
+    # Obtiene los datos de la partida
+    response = juego_service.obtener_datos_partida(idPartida, idJugador, db)
+
+    # Crea un mensaje de inicio de conexión con los datos de la partida
+    conexion_message = InicioConexionSchema(
+        type=WebSocketMessageType.INICIO_CONEXION,
+        data=InicioConexionDataSchema(
+            fichas=response["fichas"],
+            orden=response["orden"],
+            turnoActual=response["turnoActual"],
+            colorProhibido=response["colorProhibido"],
+            tiempo=response["tiempo"],
+            cartasMovimiento=response["cartasMovimiento"],
+            cartasFigura=response["cartasFigura"],
+            cartasBloqueadas=response["cartasBloqueadas"]
+        )
+    )
+
+    # Envía el mensaje de inicio de conexión
+    await manager_game.broadcast_personal(idPartida, idJugador, conexion_message.dict())
+
     try:
         while True:
             await websocket.receive_text()
