@@ -17,6 +17,7 @@ class WebSocketMessageType(str, Enum):
     FIGURA_DESCARTAR = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
+    PARTIDA_FINALIZADA = "PartidaFinalizada"
 
 class JugadorSchema(BaseModel):
     id: int
@@ -121,3 +122,11 @@ class ReposicionCartasFiguras(BaseModel):
 class ReposicionCartasMovimientos(BaseModel):
     type : Literal[WebSocketMessageType.REPOSICION_MOVIMIENTOS]
     cartas: List[dict]
+    
+class FinalizarPartidaDataSchema(BaseModel):
+    idGanador: int
+    nombreGanador: str
+
+class FinalizarPartidaSchema(BaseModel):
+    type: Literal[WebSocketMessageType.PARTIDA_FINALIZADA]
+    data: FinalizarPartidaDataSchema    
