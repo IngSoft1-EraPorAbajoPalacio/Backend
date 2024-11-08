@@ -151,6 +151,8 @@ class PartidaService:
             if partida.activa:
                 if cantidad_jugadores == 2:
                     
+                    jugadores = obtener_jugadores(id_partida, db)
+                    
                     if (jugador_partida):
                         for jp in jugador_partida:
                             db.delete(jp)
@@ -167,9 +169,10 @@ class PartidaService:
                     db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
                     db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
                     
-                    jugadores = obtener_jugadores(id_partida, db)
+                    print(jugadores)
                     for jugador in jugadores:
                         db.delete(jugador)
+                    
                     
                     db.delete(partida)
                     
