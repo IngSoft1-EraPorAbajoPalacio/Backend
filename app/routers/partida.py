@@ -127,8 +127,10 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
 
 @router.delete("/partida/{id_partida}/jugador/{id_jugador}", status_code = 202)
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
-    try:
+    try:   
         partida = db_service.obtener_partida(id_partida, db)
+        if partida is None:
+            raise HTTPException(status_code=404, detail=f"No existe partida con id: {id_partida}")
         cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
                 
         abandonar_partida_message = AbandonarPartidaSchema(
@@ -164,7 +166,6 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                #ws para que deje de mostrar al jugador en el lobby
                await manager_lobby.broadcast(id_partida, abandonar_partida_message.model_dump()) #para que deje de mostrar al jugador en el lobby
 
-        
         await partida_service.abandonar_partida(id_partida, id_jugador, db)   
         figuras_data = await computar_y_enviar_figuras(id_partida, db)   
         await manager_game.broadcast(id_partida, figuras_data)

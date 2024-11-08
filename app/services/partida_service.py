@@ -132,7 +132,8 @@ class PartidaService:
         
         return tablero.turno       
 
-    async def abandonar_partida(self,id_partida:int,id_jugador:int,db:Session):
+
+    async def abandonar_partida(self, id_partida: int, id_jugador: int, db: Session):
     
         try:
             partida = db_service.obtener_partida(id_partida, db)
@@ -198,7 +199,6 @@ class PartidaService:
                     db.delete(jugador)
                 else:
                     await self.eliminar_partida(id_partida, db)  # Elimina si el owner abandona antes de comenzar
-
             db.commit()
 
         except SQLAlchemyError as e:
@@ -216,18 +216,18 @@ class PartidaService:
 
     async def eliminar_partida(self, id_partida: int, db: Session):
         try:
-            partida = db.query(Partida).filter(Partida.id == id_partida).first()
-
+            partida = db_service.obtener_partida(id_partida, db)
             if not partida:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
-
-            # Eliminar los jugadores asociados a la partida
+                        
+            # Eliminar los jugadores asociados a la Partida
             db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).delete()
-
-            jugadores = partida.jugadores
-            for jug in jugadores:
-                db.delete(jug.jugador)
-            
+                
+            #elimino la tabla jugadores
+            jugadores = obtener_jugadores(id_partida, db)
+            for jugador in jugadores:
+                db.delete(jugador)            
+                
             # Finalmente, eliminar la partida
             db.delete(partida)
 
