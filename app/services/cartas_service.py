@@ -116,7 +116,7 @@ def obtener_figuras_en_juego(id_partida: int, db: Session) -> List[int]:
     tipos_figura = []
     
     for id_jugador in id_jugadores:
-        figuras = db.query(CartasFigura).filter(CartasFigura.id_jugador == id_jugador, CartasFigura.en_mano == True).all()
+        figuras = db.query(CartasFigura).filter(CartasFigura.id_jugador == id_jugador, CartasFigura.en_mano == True, CartasFigura.bloqueada == False).all()
         cartas = [fig.figura.fig.value for fig in figuras if fig.figura]    
         tipos_figura.extend(cartas)
         
