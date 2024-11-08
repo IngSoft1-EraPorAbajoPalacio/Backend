@@ -114,7 +114,8 @@ async def test_deshacer_movimiento(crear_session):
         nombre_host = "owner1",
         nombre_partida = "partida_test_1",
         cant_min_jugadores = 2,
-        cant_max_jugadores = 4
+        cant_max_jugadores = 4,
+        contrasena=""
      )
     
     db = crear_session
@@ -155,7 +156,8 @@ async def test_deshacer_movimientos(crear_session):
         nombre_host = "owner2",
         nombre_partida = "partida_test_2",
         cant_min_jugadores = 2,
-        cant_max_jugadores = 4
+        cant_max_jugadores = 4,
+        contrasena=""
      )
     
     db = crear_session
