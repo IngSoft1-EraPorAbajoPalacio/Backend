@@ -35,7 +35,8 @@ async def test_crear_partida_ws():
                     "nombre_host": "lucas",
                     "nombre_partida": "partida_1",
                     "cant_min_jugadores": 2,
-                    "cant_max_jugadores": 3    
+                    "cant_max_jugadores": 3,
+                    "contrasena": " "    
                 })
 
                 assert response_1.status_code == 201                
@@ -71,7 +72,8 @@ async def test_crear_partida_ws():
                     "nombre_host": "mateo",
                     "nombre_partida": "partida_2",
                     "cant_min_jugadores": 3,
-                    "cant_max_jugadores": 4    
+                    "cant_max_jugadores": 4,
+                    "contrasena": ""     
                 })
                 assert response_2.status_code == 201
                 
@@ -88,7 +90,7 @@ async def test_crear_partida_ws():
                         "idPartida": 2,
                         "nombrePartida": "partida_2",
                         "cantJugadoresMin": 3,
-                        "cantJugadoresMax": 4
+                        "cantJugadoresMax": 4,
                     }
                 }
                 

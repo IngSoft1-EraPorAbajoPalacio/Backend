@@ -21,13 +21,15 @@ def partida_test():
         nombre_host='Jugador1',
         nombre_partida='Partida 1',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
 @pytest.fixture
 def nombre_jugador():
     return UnirsePartidaRequest(
-        nombreJugador='Jugador de prueba'
+        nombreJugador='Jugador de prueba',
+        contrasena=""
     )
 
 @pytest.mark.asyncio
@@ -68,7 +70,7 @@ async def test_unirse_partida_iniciada(partida_service: PartidaService, partida_
     session = Session()
     try:
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", "", session)
         response = client.post(
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
         assert response.status_code == 200
@@ -86,9 +88,9 @@ async def test_unirse_partida_llena(partida_service: PartidaService, partida_tes
     session = Session()
     try:
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
-        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 3", session)
-        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 4", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", "", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 3", "", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 4", "", session)
 
         response = client.post(
             f"/partida/{partida_creada.id_partida}/jugador",

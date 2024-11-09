@@ -21,13 +21,15 @@ def partida_test():
         nombre_host='Jugador1',
         nombre_partida='Partida 1',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
 @pytest.fixture
 def nombre_jugador():
     return UnirsePartidaRequest(
-        nombreJugador='Jugador de prueba'
+        nombreJugador='Jugador de prueba',
+        contrasena=""
     )
 
 @pytest.mark.asyncio
@@ -39,7 +41,7 @@ async def test_iniciar_partida(partida_service: PartidaService, partida_test, no
         Base.metadata.create_all(bind=engine)
         
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, nombre_jugador, session)
+        await partida_service.unirse_partida(partida_creada.id_partida, nombre_jugador, "", session)
 
         response = client.post(
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")

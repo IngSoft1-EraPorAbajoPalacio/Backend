@@ -18,7 +18,8 @@ def partida_test():
         nombre_host='Jugador1',
         nombre_partida='Partida 1',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
 @pytest.fixture
@@ -34,8 +35,8 @@ async def test_abandonar_partida_exitoso(partida_service: PartidaService, partid
         Base.metadata.create_all(bind=engine)
 
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
-        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 3', session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', "", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 3', "", session)
         response_inicio = client.post(
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
         assert response_inicio.status_code == 200
@@ -65,8 +66,8 @@ async def test_abandonar_partida_creador_lobby(partida_service: PartidaService, 
     session = Session()
     try:
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
-        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 3', session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', "", session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 3', "", session)
         response = client.delete(
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
         assert response.status_code == 202
@@ -83,7 +84,7 @@ async def test_abandonar_partida_jugador_no_encontrado(partida_service: PartidaS
     session = Session()
     try:
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', "", session)
         response_inicio = client.post(
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
         assert response_inicio.status_code == 200
@@ -110,7 +111,7 @@ async def test_abandonar_partida_no_participante(partida_service: PartidaService
     session = Session()
     try:
         partida_creada = await partida_service.crear_partida(partida_test, session)
-        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', session)
+        await partida_service.unirse_partida(partida_creada.id_partida, 'Jugador 2', "", session)
         response_inicio = client.post(
             f"/partida/{partida_creada.id_partida}/jugador/{partida_creada.id_jugador}")
         assert response_inicio.status_code == 200
