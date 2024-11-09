@@ -406,3 +406,24 @@ async def computar_y_enviar_figuras(id_partida: int, db: Session):
         return figuras_data
     except Exception as e:
         logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
+        
+def buscar_figuras_f5(id_partida: int, db: Session):
+    try:
+        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
+        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
+        
+        figuras_data = {
+            "type": "DeclararFigura",
+            "figuras": {
+                "figura": [
+                    {
+                        "idFig": f"{tipo}_{index}",
+                        "tipoFig": tipo,
+                        "coordenadas": [{"x": pos[1], "y": pos[0]} for pos in posiciones]
+                    } for tipo, _, posiciones in figuras
+                ]
+            }
+        } 
+        return figuras_data
+    except Exception as e:
+        logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")        
