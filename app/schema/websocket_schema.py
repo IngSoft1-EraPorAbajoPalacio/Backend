@@ -16,6 +16,7 @@ class WebSocketMessageType(str, Enum):
     FIGURA_DECLARADA = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
+    INICIO_CONEXION = "InicioConexion"
 
 class JugadorSchema(BaseModel):
     id: int
@@ -27,10 +28,16 @@ class AgregarPartidaDataSchema(BaseModel):
     cantJugadoresMin: int
     cantJugadoresMax: int
 
-class IniciarPartidaDataSchema(BaseModel):
-    jugadorInicial: str
-    listaJugadores: List[str]
-    cartas: List[str]
+class InicioConexionDataSchema(BaseModel):
+    fichas: List[dict]
+    orden: List[int]
+    turnoActual: int
+    colorProhibido: str
+    tiempo: int
+    cartasMovimiento: List[dict]
+    cartasFigura: List[dict]
+    cartasBloqueadas: List[int]
+    cantMovimientosParciales: int
 
 class AbandonarPartidaDataSchema(BaseModel):
     idPartida: int
@@ -56,7 +63,10 @@ class AgregarPartidaSchema(BaseModel):
 
 class IniciarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.INICIAR_PARTIDA]
-    data: IniciarPartidaDataSchema
+
+class InicioConexionSchema(BaseModel):
+    type: Literal[WebSocketMessageType.INICIO_CONEXION]
+    data: InicioConexionDataSchema
 
 class AbandonarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.ABANDONAR_PARTIDA]
