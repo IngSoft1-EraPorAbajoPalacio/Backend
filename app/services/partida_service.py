@@ -268,12 +268,19 @@ class PartidaService:
             if not partida:
                 raise HTTPException(status_code=404, detail="Partida no encontrada")
 
+
+            # Eliminar los tableros  y las cartas asociadas a la partida
+            db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
+            db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
+            db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
+
             # Eliminar los jugadores asociados a la partida
             db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).delete()
 
+            partida = db.query(Partida).filter(Partida.id == id_partida).first()
             jugadores = partida.jugadores
             for jug in jugadores:
-                db.delete(jug.jugador)
+                db.delete(jug)
             
             # Finalmente, eliminar la partida
             db.delete(partida)

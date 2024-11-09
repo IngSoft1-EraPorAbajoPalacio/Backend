@@ -8,6 +8,7 @@ from app.db.models import *
 from app.schema.partida_schema import *
 import random
 from sqlalchemy import true
+from sqlalchemy import func
 
 CANTIDAD_CARTAS_FIG = 50
 CANTIDAD_CARTAS_MOV = 49
@@ -137,18 +138,19 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
         })  
     return resultado
    
-   
-def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
+
+def asignar_cartas_figuras(idPartida: int, idJugador: int, reponer: int, db: Session):
        
-    resultado = []   
+    resultado = []  
     
-    if n == 0:
-        return resultado 
+    if reponer == 0:
+        return resultado
     
     cartas_fig = db.query(CartasFigura).filter(
         CartasFigura.id_partida == idPartida,
         CartasFigura.id_jugador == idJugador,
-        CartasFigura.en_mano == False).limit(n).all()
+        CartasFigura.en_mano == False).limit(reponer).all()
+        
     
     for fig in cartas_fig:
         fig.en_mano = True
@@ -158,72 +160,51 @@ def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
                 "figura": fig.figura.fig.value
             }
         )
-   
-    response = {
-        "cartasFig": resultado
-    }    
     
     db.commit()
 
-    return response
+    return resultado
 
     
 def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
     
     resultado = []   
         
-    cartas_mov = db.query(CartasFigura).filter(
+    cartas_fig = db.query(CartasFigura).filter(
         CartasFigura.id_jugador == idJugador,
         CartasFigura.en_mano == True
     ).all()
     
-    for mov in cartas_mov :
+
+    for mov in cartas_fig :
         resultado.append({
             "id": mov.carta_fig,
             "figura": mov.figura.fig.value
         })
         
-    en_mano = len(cartas_mov)
-    cartas_a_asignar = max(0, CARTAS_EN_MANO - en_mano)
-         
-    if cartas_a_asignar == 0:
-        return resultado 
+    en_mano = len(cartas_fig)
+    reponer = max(0, CARTAS_EN_MANO - en_mano)
     
-    cartas_fig = db.query(CartasFigura).filter(
-        CartasFigura.id_partida == idPartida,
-        CartasFigura.id_jugador == idJugador,
-        CartasFigura.en_mano == False
-    ).limit(cartas_a_asignar).all()
+    repuestas = asignar_cartas_figuras(idPartida, idJugador, reponer, db )  
     
-    for fig in cartas_fig:
-        fig.en_mano = True
-        resultado.append(
-            {
-                "id": fig.carta_fig,
-                "figura": fig.figura.fig.value
-            }
-        )   
-        
-    db.commit()
+    resultado = resultado + repuestas
+    
+    return resultado
 
-    return resultado     
+def asignar_cartas_movimientos(idPartida: int, idJugador: int , reponer: int, db: Session): 
     
-
-def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar: int, db: Session): 
+    resultado = []
     
-    resultado = []   
-    
-    if cartas_a_asignar == 0:
-        return resultado 
+    if reponer == 0:
+        return resultado   
     
     cartas_mov = db.query(CartaMovimientos).filter(
         CartaMovimientos.id_partida == idPartida,
         CartaMovimientos.id_jugador == idJugador,
         CartaMovimientos.en_mano == False
-    ).limit(cartas_a_asignar).all()
+    ).order_by(func.random()).limit(reponer).all()
     
     for mov in cartas_mov:
-        mov.en_mano = True
         resultado.append(
             {
                 "id": mov.carta_mov,
@@ -232,26 +213,27 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , cartas_a_asignar
         )
    
     db.commit()
-
     return resultado
+
+
 
 def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
         
-    mov = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == idJugador,
+    resultado = []    
+        
+    cartas_mov = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == idJugador,
                                       CartaMovimientos.id_partida == idPartida,
                                       CartaMovimientos.en_mano == True).all()
-    en_mano = len(mov)
+           
+    for mov in cartas_mov:
+        resultado.append({
+            "id": mov.movimiento.id,
+            "movimiento": mov.movimiento.mov.value         
+        })
     
-    if mov == 3:
-        return []
+    en_mano = len(cartas_mov)
     
-    cartas_a_asignar = max(0, 3 - en_mano)
-        
-    return asignar_cartas_movimientos(idPartida, idJugador, cartas_a_asignar, db)
-        
-        
-        
-        
+    reponer = max(0, CARTAS_EN_MANO - en_mano)
+    repuestas =  asignar_cartas_movimientos(idPartida, idJugador, reponer, db)
     
-    
-    
+    return resultado + repuestas       

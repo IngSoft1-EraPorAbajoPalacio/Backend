@@ -108,22 +108,16 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
         reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
-        reposicion_movimientos = reposicion_cartas_movimientos(id_partida, id_jugador, db)
-                
+                                                
         declarar_figura_message = ReposicionFiguras(
             type= WebSocketMessageType.REPOSICION_FIGURAS,
             data= DeclararFiguraDataSchema(
                 cartasFig= reposicion_figuras
             )
         )
-        reposicion_mov = ReposicionCartasMovimientos(
-            type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
-            cartas = reposicion_movimientos
-        ) 
-        
-        await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
         await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
+        await asyncio.sleep(1)
         await computar_y_enviar_figuras(id_partida, db)
 
     except Exception as e:

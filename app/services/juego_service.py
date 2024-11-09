@@ -202,9 +202,12 @@ class JuegoService:
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
     
         if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
-                                             CartasFigura.carta_fig == figura.idCarta).first().en_mano:
-            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en ninguna mano")
+                                             CartasFigura.carta_fig == figura.idCarta,
+                                             CartasFigura.en_mano == True).first():
+            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en tu mano")
 
+        carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
+        
         # Validar la figura
         carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
         if not carta_figura == figura.tipo_figura:
@@ -291,6 +294,18 @@ class JuegoService:
         cartas =[]
         posiciones =[]
         
+        movimientos = (
+            db.query(CartaMovimientos).
+            filter(
+                CartaMovimientos.id_partida == idPartida,
+                CartaMovimientos.id_jugador == idJugador,
+                CartaMovimientos.en_mano == True)
+            .all()
+        )
+        
+        movimientos_en_mano = len(movimientos)
+        print(f"movimientos_en_mano : {movimientos_en_mano}")
+        
         movimientos_parciales = (
             db.query(MovimientosParciales).
             filter(
@@ -298,7 +313,7 @@ class JuegoService:
                 MovimientosParciales.id_jugador == idJugador)
             .all()
         )
-        
+                
         cantidad_mov_parciales = len(movimientos_parciales)
         cantidad_mov_deshechos = len(movimientos_parciales)
         
@@ -318,6 +333,30 @@ class JuegoService:
             "cantMovimientosDesechos": cantidad_mov_deshechos,
             "posiciones": posiciones
         }
+        
+    
+
+        movimientos_parciales_devueltos = len(resultado['cartas'])
+        print(f"movimientos parciales devueltos : {movimientos_parciales_devueltos}")
+        
+        movimientos_a_devolver = max(0, 3 - movimientos_en_mano)
+        print(f"movimientos a devolver : {movimientos_a_devolver}")
+        
+        asignacion = asignar_cartas_movimientos(idPartida, idJugador, movimientos_a_devolver, db)
+        print(asignacion)
+        
+        while len(resultado['cartas']) != movimientos_a_devolver:
+            movimiento = db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == idPartida,
+                                              CartaMovimientos.id_jugador == idJugador,
+                                              CartaMovimientos.carta_mov == asignacion[0]['id']).first()
+            movimiento.en_mano = True
+            db.commit()
+            
+            resultado["cartas"].append(asignacion[0])
+            asignacion.pop(0)
+            
+            
+        print(f"al final retorno : {resultado}")    
         return  resultado   
 
 juego_service = JuegoService()
