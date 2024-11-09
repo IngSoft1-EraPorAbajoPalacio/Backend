@@ -187,8 +187,10 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
         
     en_mano = len(cartas_mov)
     cartas_a_asignar = max(0, CARTAS_EN_MANO - en_mano)
-         
-    if cartas_a_asignar == 0:
+    esta_bloqueado = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
+                                                   CartasFigura.en_mano == True,
+                                                   CartasFigura.bloqueada == True).first()
+    if cartas_a_asignar == 0 or esta_bloqueado:
         return resultado 
     
     cartas_fig = db.query(CartasFigura).filter(
