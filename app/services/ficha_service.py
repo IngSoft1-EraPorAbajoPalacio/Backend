@@ -19,6 +19,27 @@ def crear_tablero(id_partida: int, db: Session):
         db.add(tablero_nuevo)
         db.commit()
         
+def imprimir_tablero(lista_fichas):
+    """ Imprimir el tablero a partir de la lista de fichas """
+    tablero = [[' ' for _ in range(6)] for _ in range(6)]  
+    for ficha in lista_fichas:
+        x = ficha['x']
+        y = ficha['y']
+        color = ficha['color']
+        
+        if color == "Azul":
+            tablero[x][y] = "A"
+        elif color == "Rojo":
+            tablero[x][y] = "R"
+        elif color == "Verde":
+            tablero[x][y] = "V"
+        elif color == "Amarillo":
+            tablero[x][y] = "Y"  
+
+    for fila in tablero:
+        print(' '.join(fila))
+    print("\n")        
+        
 def repartir_fichas(id_partida: int, db: Session):
     posiciones = []
     colores = {"Rojo": 0, "Verde": 0, "Azul": 0, "Amarillo": 0}
