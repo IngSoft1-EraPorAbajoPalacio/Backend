@@ -12,7 +12,7 @@ class DB_Service:
     ########## QUERIES RELACIONADAS A PARTIDAS ##########
     
     def crear_partida(self, nombre_partida: str, min_jugadores: int, max_jugadores: int,
-                      id_owner: int, db: Session):
+                      id_owner: int, contrasena: str, db: Session):
         """
         Se crea una partida en la base de datos.
         El id_owner representa que la partida fue creada por el jugador con ese id.
@@ -21,7 +21,8 @@ class DB_Service:
                 nombre=nombre_partida,
                 min=min_jugadores,
                 max=max_jugadores,
-                id_owner=id_owner
+                id_owner=id_owner,
+                contrasena=contrasena
             )
         db.add(partida_creada)
         db.commit()
@@ -130,7 +131,14 @@ class DB_Service:
             jugador.jugando = True
         db.commit()
     
-    
+    def obtener_contraseña(self, id_partida, db: Session):
+        """
+        Se obtiene la contraseña de la partida con id: id_partida.
+        En caso de que la partida no tenga contraseña se devolverá None.
+        """
+        return db.query(Partida).filter(Partida.id == id_partida).first().contrasena
+
+        
     ########## QUERIES RELACIONADAS A CARTAS DE MOVIMIENTOS ##########
     
     def obtener_movimiento_bd(self, id: int, db: Session): 
