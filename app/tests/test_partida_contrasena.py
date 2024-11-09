@@ -78,4 +78,4 @@ async def test_unirse_partida_inválida(crear_session, partida_service: PartidaS
             f"/partida/{partida_creada.id_partida}/jugador",
             json=unirse_inválido.model_dump()
         )
-        assert response.status_code == 450
+        assert response.status_code == 404
