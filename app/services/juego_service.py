@@ -10,7 +10,6 @@ from app.services.partida_service import *
 from app.services.encontrar_fig import *
 from app.services.bd_service import *
 from app.db.models import Color
-from app.services.encontrar_fig import buscar_figuras_f5
 
 
 class JuegoService:
@@ -32,8 +31,6 @@ class JuegoService:
             )
         ).count()
         color_prohibido = db_service.obtener_color_prohibido(id_partida, db)
-        figurasResaltadas = buscar_figuras_f5(id_partida, db)
-        figurasResaltadas = figurasResaltadas["figuras"]["figura"]
         
         response = {
             "type": "InicioConexion",
@@ -46,7 +43,6 @@ class JuegoService:
             "cartasFigura": cartas_figuras,
             "cartasBloqueadas": [], # Hay que cambiar cuando se implemente el bloqueo de cartas
             "cantMovimientosParciales": cantidad_movimientos_parciales,
-            "figurasResaltadas": figurasResaltadas
         }
                         
         return response

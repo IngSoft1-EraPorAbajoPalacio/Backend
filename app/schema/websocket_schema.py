@@ -54,9 +54,7 @@ class InicioConexionDataSchema(BaseModel):
     cartasMovimiento: List[dict]
     cartasFigura: List[dict]
     cartasBloqueadas: List[int]
-    cantMovimientosParciales: int
-    figurasResaltadas : List[FiguraResaltada]
-    
+    cantMovimientosParciales: int    
     
 class FiguraSchema(BaseModel):
     idFig: str

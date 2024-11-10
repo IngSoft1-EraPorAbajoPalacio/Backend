@@ -39,7 +39,7 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugado
     
     print("SE INICIO LA CONEXION DEL GAME")
     print(manager_game.active_connections)
-    
+                
     # Obtiene los datos de la partida
     response =  juego_service.obtener_datos_partida(idPartida, idJugador, db)
 
@@ -56,12 +56,11 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugado
             cartasFigura=response["cartasFigura"],
             cartasBloqueadas=response["cartasBloqueadas"],
             cantMovimientosParciales=response["cantMovimientosParciales"],
-            figurasResaltadas=response["figurasResaltadas"]
         )
     )
-    
-    print(f"LAS FIGURAS RESALTADAS SON : {conexion_message.data.figurasResaltadas}")
-    
+    figuras_data = await computar_y_enviar_figuras(idPartida, db)
+    await manager_game.broadcast(idPartida, figuras_data)
+        
     # Envía el mensaje de inicio de conexión
     await manager_game.broadcast_personal(idPartida, idJugador, conexion_message.dict())
     
