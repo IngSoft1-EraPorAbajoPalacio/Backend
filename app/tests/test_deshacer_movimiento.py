@@ -122,7 +122,8 @@ async def test_deshacer_movimiento(crear_session):
     data = await partida_service.crear_partida(datos_partida, db)
     await partida_service.unirse_partida(data.id_partida, "j1", db)
     await partida_service.unirse_partida(data.id_partida, "j2", db)
-    partida_iniciada = await partida_service.iniciar_partida(int(data.id_partida), int(data.id_jugador), db)
+    await partida_service.iniciar_partida(int(data.id_partida), int(data.id_jugador), db)
+    partida_iniciada = juego_service.obtener_datos_partida(data.id_partida, data.id_jugador, db)
     
     tablero_inicial = partida_iniciada["fichas"]
     
@@ -163,7 +164,8 @@ async def test_deshacer_movimientos(crear_session):
     data = await partida_service.crear_partida(datos_partida, db)
     await partida_service.unirse_partida(data.id_partida, "j3", db)
     await partida_service.unirse_partida(data.id_partida, "j4", db)
-    partida_iniciada = await partida_service.iniciar_partida(int(data.id_partida), int(data.id_jugador), db)
+    await partida_service.iniciar_partida(int(data.id_partida), int(data.id_jugador), db)
+    partida_iniciada = juego_service.obtener_datos_partida(data.id_partida, data.id_jugador, db)
     
     tablero_inicial = partida_iniciada["fichas"]
     
