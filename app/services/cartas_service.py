@@ -110,6 +110,18 @@ def obtener_cartas_figuras(id_partida: int, db: Session):
         
     return resultado
 
+def obtener_cartas_figuras_bloqueadas(id_partida: int, db: Session):
+    
+    figuras_bloqueadas = db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.bloqueada == True
+        ).all()
+        
+    cartas_bloqueadas = [fig.carta_fig for fig in figuras_bloqueadas]
+        
+    return cartas_bloqueadas
+        
+
 def obtener_figuras_en_juego(id_partida: int, db: Session) -> List[int]:
     """retorna lista de tipos (sin repeticion ) de figura en juego (cartas de figura visibles)"""
     id_jugadores = obtener_id_jugadores(id_partida, db)

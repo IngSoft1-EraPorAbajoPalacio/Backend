@@ -17,6 +17,7 @@ class JuegoService:
         partida = partida_service.obtener_partida(id_partida, db)
         cartas_movimientos = obtener_cartas_movimientos_jugador(id_jugador, db)
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
+        cartas_bloqueadas = obtener_cartas_figuras_bloqueadas(id_partida, db)
         fichas = fichas_service.obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
         cantidad_movimientos_parciales = (
@@ -36,7 +37,7 @@ class JuegoService:
             "tiempo": 160, # Hay que cambiar cuando se implemente el temporizador
             "cartasMovimiento": cartas_movimientos,
             "cartasFigura": cartas_figuras,
-            "cartasBloqueadas": [], # Hay que cambiar cuando se implemente el bloqueo de cartas
+            "cartasBloqueadas": cartas_bloqueadas,
             "cantMovimientosParciales": cantidad_movimientos_parciales
         }
                 
