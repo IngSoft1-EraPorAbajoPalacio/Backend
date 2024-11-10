@@ -100,6 +100,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
     
     await asyncio.sleep(0.5)    
     await computar_y_enviar_figuras(id_partida, db)
+    timer_service.iniciar_temporizador(id_partida, db)
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
@@ -124,8 +125,9 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         
         await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
         await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
-        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
+        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno, "timeout": False})
         await computar_y_enviar_figuras(id_partida, db)
+        await timer_service.reiniciar_temporizador(id_partida, db)
 
     except Exception as e:
         raise HTTPException(status_code=410, detail=str(e))
