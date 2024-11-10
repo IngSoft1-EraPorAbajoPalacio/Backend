@@ -17,7 +17,8 @@ import logging
 from app.services.cartas_service import obtener_figuras_en_juego
 import  asyncio
 
-from app.services.timer_service import timer_service
+from datetime import datetime, timedelta
+from typing import Dict
 
 router = APIRouter()
 
@@ -102,7 +103,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
     
     await asyncio.sleep(0.5)    
     await computar_y_enviar_figuras(id_partida, db)
-    timer_service.manejar_temporizador(id_partida, db)
+    timer.manejar_temporizador(id_partida, db)
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
@@ -129,7 +130,7 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno, "timeout": False})
         await computar_y_enviar_figuras(id_partida, db)
-        timer_service.manejar_temporizador(id_partida, db)
+        timer.manejar_temporizador(id_partida, db)
 
     except Exception as e:
         raise HTTPException(status_code=410, detail=str(e))
@@ -160,10 +161,13 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                await manager_game.broadcast(id_partida, eliminar_partida_message.model_dump())
                #ws para que se deje de mostrar en el inicio si la partida terminó
                await manager.broadcast(eliminar_partida_message.model_dump())
+               timer.cancelar_temporizador(id_partida)
 
             else:
                #ws para que se deje de mostrar jugador el juego
                await manager_game.broadcast(id_partida, abandonar_partida_message.model_dump())
+               timer.manejar_temporizador(id_partida, db)
+
         else:
             if id_jugador == partida.id_owner:
                #ws para que los demas jugadores vuelvan al inicio si el host cancela la partida
@@ -264,3 +268,60 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugado
             await websocket.receive_text()
     except WebSocketDisconnect:
         await manager_game.disconnect(idPartida, idJugador,websocket)    
+    
+
+class Timer:
+    def __init__(self):
+        self.timers: Dict[int, asyncio.Task] = {}
+    
+    async def reiniciar_temporizador(self, id_partida: int, db: Session):
+        partida = partida_service.obtener_partida(id_partida, db)
+        jugador = db.query(Jugador).filter(Jugador.id == partida.tablero.turno).first()
+
+        if not partida:
+            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
+
+        if not partida.activa:
+            raise HTTPException(status_code=404, detail=f"La partida {id_partida} no está activa")
+
+        # Tiempo de duración del turno
+        duracion_turno = datetime.utcnow() + timedelta(seconds=10) # Despues cambiar a 2 minutos  
+        while datetime.utcnow() <= duracion_turno:
+            tiempo_restante = (duracion_turno - datetime.utcnow()).total_seconds()
+            await manager_game.broadcast(id_partida, {"type": "Temporizador", "tiempoRestante": tiempo_restante})
+            await asyncio.sleep(1)
+
+        # Pasar al siguiente turno y enviar mensajes de reposición de cartas
+        sigTurno = partida_service.pasar_turno(id_partida, jugador.id, db)
+        reposicion_figuras = reposicion_cartas_figuras(id_partida, jugador.id, db)
+        reposicion_movimientos = reposicion_cartas_movimientos(id_partida, jugador.id, db)
+                
+        declarar_figura_message = ReposicionFiguras(
+            type= WebSocketMessageType.REPOSICION_FIGURAS,
+            data= DeclararFiguraDataSchema(
+                cartasFig= reposicion_figuras
+            )
+        )
+        reposicion_mov = ReposicionCartasMovimientos(
+            type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
+            cartas = reposicion_movimientos
+        ) 
+        await manager_game.broadcast_personal(id_partida, jugador.id, reposicion_mov.model_dump())
+        await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
+        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno, "timeout": True})
+        await computar_y_enviar_figuras(id_partida, db)
+
+        # Reiniciar el temporizador
+        timer.manejar_temporizador(id_partida, db)
+
+    def cancelar_temporizador(self, id_partida: int):
+        if id_partida in self.timers:
+            self.timers[id_partida].cancel()
+            del self.timers[id_partida]
+            
+    def manejar_temporizador(self, id_partida: int, db: Session):
+        if id_partida in self.timers:
+            self.cancelar_temporizador(id_partida)
+        self.timers[id_partida] = asyncio.create_task(self.reiniciar_temporizador(id_partida, db))
+
+timer = Timer()
