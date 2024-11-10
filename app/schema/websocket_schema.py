@@ -28,13 +28,6 @@ class AgregarPartidaDataSchema(BaseModel):
     nombrePartida: str
     cantJugadoresMin: int
     cantJugadoresMax: int
-    
-"""
-class IniciarPartidaDataSchema(BaseModel):
-    jugadorInicial: str
-    listaJugadores: List[str]
-    cartas: List[str]
-"""
 
 class Coordenada(BaseModel):
     x: int
@@ -99,10 +92,6 @@ class EliminarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.ELIMINAR_PARTIDA] = WebSocketMessageType.ELIMINAR_PARTIDA
     data: EliminarPartidaDataSchema
 
-"""class MovimientoParcialSchema(BaseModel):
-    type: Literal[WebSocketMessageType.MOVIMIENTO_PARCIAL]
-    data: MovimientoParcialDataSchema"""
-    
 class DeshacerMovimiento(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTO]
     posiciones: List[Posicion]

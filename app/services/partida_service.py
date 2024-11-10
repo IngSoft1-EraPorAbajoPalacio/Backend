@@ -168,11 +168,9 @@ class PartidaService:
                     db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
                     db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
                     db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
-                    
-                    print(jugadores)
+
                     for jugador in jugadores:
                         db.delete(jugador)
-                    
                     
                     db.delete(partida)
                     
