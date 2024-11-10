@@ -1,5 +1,4 @@
 from app.schema.partida_schema import *
-from typing import List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.db.models import Partida, Jugador_Partida
@@ -141,19 +140,7 @@ class PartidaService:
             
         db.commit()        
         
-        cartas_movimientos = obtener_cartas_movimientos(id_partida, db)
-        cartas_figuras = obtener_cartas_figuras(id_partida, db)
-        fichas = fichas_service.obtener_fichas(id_partida, db)
-        orden = obtener_id_jugadores(id_partida, db)
-        
-        response = {
-            "type": "IniciarPartida",
-            "fichas": fichas, 
-            "orden": orden,
-            "cartasMovimiento": cartas_movimientos,  
-            "cartasFigura": cartas_figuras   
-        } 
-        return response
+        return { "type": "IniciarPartida"} 
     
     def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
         

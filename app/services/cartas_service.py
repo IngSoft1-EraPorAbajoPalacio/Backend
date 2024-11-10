@@ -1,4 +1,3 @@
-from sqlalchemy import select, distinct
 from app.schema.partida_schema import *
 from app.services.jugador_service import *
 from sqlalchemy.exc import *
@@ -7,7 +6,6 @@ from sqlalchemy.orm import Session
 from app.db.models import *
 from app.schema.partida_schema import *
 import random
-from sqlalchemy import true
 
 CANTIDAD_CARTAS_FIG = 50
 CANTIDAD_CARTAS_MOV = 49
@@ -136,7 +134,12 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
             "cartas": cartas
         })  
     return resultado
-   
+
+def obtener_cartas_movimientos_jugador(id_jugador: int, db: Session):
+    movimientos = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == id_jugador, CartaMovimientos.en_mano == True).all()
+    cartas = [{"id": mov.carta_mov, "movimiento": mov.movimiento.mov.value } for mov in movimientos]    
+    
+    return cartas
    
 def asignar_cartas_figuras(idPartida: int, idJugador: int, n: int, db: Session):
        
