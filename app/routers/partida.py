@@ -270,10 +270,16 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugado
         await manager_game.disconnect(idPartida, idJugador,websocket)    
     
 
+import asyncio
+from datetime import datetime, timedelta
+from typing import Dict
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
 class Timer:
     def __init__(self):
         self.timers: Dict[int, asyncio.Task] = {}
-    
+
     async def reiniciar_temporizador(self, id_partida: int, db: Session):
         partida = partida_service.obtener_partida(id_partida, db)
         jugador = db.query(Jugador).filter(Jugador.id == partida.tablero.turno).first()
@@ -285,11 +291,10 @@ class Timer:
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} no está activa")
 
         # Tiempo de duración del turno
-        duracion_turno = datetime.utcnow() + timedelta(seconds=10) # Despues cambiar a 2 minutos  
-        while datetime.utcnow() <= duracion_turno:
-            tiempo_restante = (duracion_turno - datetime.utcnow()).total_seconds()
-            await manager_game.broadcast(id_partida, {"type": "Temporizador", "tiempoRestante": tiempo_restante})
+        while partida.tiempo > 0:
             await asyncio.sleep(1)
+            partida.tiempo -= 1
+            db.commit()
 
         # Pasar al siguiente turno y enviar mensajes de reposición de cartas
         sigTurno = partida_service.pasar_turno(id_partida, jugador.id, db)

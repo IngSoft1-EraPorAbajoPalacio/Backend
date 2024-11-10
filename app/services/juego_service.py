@@ -19,6 +19,7 @@ class JuegoService:
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
         fichas = fichas_service.obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
+        tiempo = partida.tiempo
         cantidad_movimientos_parciales = (
             db.query(MovimientosParciales)
             .filter(
@@ -33,7 +34,7 @@ class JuegoService:
             "orden": orden,
             "turnoActual": partida.tablero.turno,
             "colorProhibido": "Amarillo", # Hay que cambiar cuando se implemente el color prohibido
-            "tiempo": 160, # Hay que cambiar cuando se implemente el temporizador
+            "tiempo": tiempo,
             "cartasMovimiento": cartas_movimientos,
             "cartasFigura": cartas_figuras,
             "cartasBloqueadas": [], # Hay que cambiar cuando se implemente el bloqueo de cartas

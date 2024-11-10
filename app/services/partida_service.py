@@ -132,6 +132,7 @@ class PartidaService:
         repartir_cartas_figuras(id_partida, db)
 
         partida.activa = True
+        partida.tiempo = 120
         db.commit()
         
         jugadores = obtener_jugadores(id_partida, db)
@@ -160,7 +161,7 @@ class PartidaService:
         
         turno_nuevo = (id_jugadores.index(turno_actual) + 1) % cantidad_jugadores
         tablero.turno = id_jugadores[turno_nuevo]
-
+        partida.tiempo = 120
         db.commit()
         
         return tablero.turno       
