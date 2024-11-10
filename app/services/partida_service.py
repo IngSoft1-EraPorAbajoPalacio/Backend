@@ -7,11 +7,6 @@ from app.services.jugador_service import *
 from app.services.ficha_service import * 
 from app.services.cartas_service import *
 
-import asyncio
-from datetime import datetime, timedelta
-from app.routers.websocket_manager_game import manager_game
-from typing import Dict
-
 class PartidaService:
     
     def init(self):
@@ -278,42 +273,3 @@ class PartidaService:
             raise HTTPException(status_code=500, detail=f"Error eliminando la partida: {str(e)}")
         
 partida_service = PartidaService()
-
-
-
-
-
-class TimerService:
-    def __init__(self):
-        self.timers: Dict[int, asyncio.Task] = {}
-
-    async def reiniciar_temporizador(self, id_partida: int, db: Session):
-        partida = partida_service.obtener_partida(id_partida, db)
-
-        if not partida:
-            raise HTTPException(status_code=404, detail=f"No existe ninguna partida con id {id_partida}")
-
-        if not partida.activa:
-            raise HTTPException(status_code=404, detail=f"La partida {id_partida} no está activa")
-
-        duracion_turno = datetime.utcnow() + timedelta(seconds=15) # Despues cambiar a 2 minutos  
-
-        while datetime.utcnow() <= duracion_turno:
-            tiempo_restante = (duracion_turno - datetime.utcnow()).total_seconds()
-            await manager_game.broadcast(id_partida, {"type": "Temporizador", "tiempoRestante": tiempo_restante})
-            await asyncio.sleep(1)
-
-        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "timeout": True})
-        
-    def iniciar_temporizador(self, id_partida: int, db: Session):
-        if id_partida in self.timers:
-            self.timers[id_partida].cancel()
-        self.timers[id_partida] = asyncio.create_task(self.reiniciar_temporizador(id_partida, db))
-
-        
-    def cancelar_temporizador(self, id_partida: int):
-        if id_partida in self.timers:
-            self.timers[id_partida].cancel()
-            del self.timers[id_partida]
-
-timer_service = TimerService()
