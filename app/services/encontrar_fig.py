@@ -406,3 +406,4 @@ async def computar_y_enviar_figuras(id_partida: int, db: Session):
         return figuras_data
     except Exception as e:
         logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
+        
