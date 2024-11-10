@@ -303,8 +303,8 @@ class TimerService:
             await manager_game.broadcast(id_partida, {"type": "Temporizador", "tiempoRestante": tiempo_restante})
             await asyncio.sleep(1)
 
-        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": siguiente, "timeout": True})
         siguiente = partida_service.pasar_turno(id_partida, partida.tablero.turno, db)
+        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": siguiente, "timeout": True})
         
     def iniciar_temporizador(self, id_partida: int, db: Session):
         if id_partida in self.timers:
