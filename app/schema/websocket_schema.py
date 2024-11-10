@@ -34,7 +34,7 @@ class IniciarPartidaDataSchema(BaseModel):
     jugadorInicial: str
     listaJugadores: List[str]
     cartas: List[str]
-"""
+
 
 class Coordenada(BaseModel):
     x: int
