@@ -74,7 +74,8 @@ async def listar_partidas(db: Session = Depends(crear_session)):
                 id_partida=str(partida.id),
                 nombre_partida=partida.nombre,
                 cant_min_jugadores=partida.min, 
-                cant_max_jugadores=partida.max
+                cant_max_jugadores=partida.max,
+                privada= True if partida.contrasena else False  
             ) for partida in partidas
         ] 
 

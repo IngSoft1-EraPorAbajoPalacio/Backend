@@ -63,6 +63,7 @@ class PartidaResponse(BaseModel):
     nombre_partida: str
     cant_min_jugadores: int
     cant_max_jugadores: int
+    privada: bool
          
 
 class JugadorListado(BaseModel):

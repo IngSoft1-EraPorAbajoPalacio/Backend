@@ -34,8 +34,8 @@ class PartidaService:
             id_partida=str(partida_creada.id),
             nombre_partida=partida_creada.nombre,
             id_jugador=str(owner.id)
-        )                
-                    
+        )             
+                            
     async def unirse_partida(self, id_partida: str, nombre_jugador: str, contrasena: str, db: Session) -> UnirsePartidaResponse:
         
         partida = db_service.obtener_partida(int(id_partida), db)
