@@ -67,6 +67,7 @@ class PartidaService:
                 JugadorListado(id=str(jugador.jugador.id), nombre=jugador.jugador.nickname)
                 for jugador in partida.jugadores
             ]
+            #contrasena=contrasena
         )
 
 

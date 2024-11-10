@@ -27,7 +27,8 @@ def obtener_partida(id_partida: int, db: Session = Depends(crear_session)):
         id_partida=str(id_partida),
         nombre_partida=partida.nombre,
         cant_min_jugadores= partida.min,
-        cant_max_jugadores= partida.max
+        cant_max_jugadores= partida.max,
+        privada=True if partida.contrasena else False
     )    
 
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
@@ -40,7 +41,8 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
                 idPartida=int(partida_creada.id_partida),
                 nombrePartida=partida.nombre_partida,
                 cantJugadoresMin=partida.cant_min_jugadores,
-                cantJugadoresMax=partida.cant_max_jugadores
+                cantJugadoresMax=partida.cant_max_jugadores,
+                privada= True if partida.contrasena else False  
             )
         )
         await manager.broadcast(agregar_partida_message.model_dump())
