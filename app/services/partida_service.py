@@ -296,7 +296,7 @@ class TimerService:
         if not partida.activa:
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} no está activa")
 
-        duracion_turno = datetime.utcnow() + timedelta(seconds=5)
+        duracion_turno = datetime.utcnow() + timedelta(seconds=15) # Despues cambiar a 2 minutos  
 
         while datetime.utcnow() <= duracion_turno:
             tiempo_restante = (duracion_turno - datetime.utcnow()).total_seconds()
@@ -305,10 +305,10 @@ class TimerService:
 
         await manager_game.broadcast(id_partida, {"type": "PasarTurno", "timeout": True})
         
-    async def iniciar_temporizador(self, id_partida: int, db: Session):
+    def iniciar_temporizador(self, id_partida: int, db: Session):
         if id_partida in self.timers:
             self.timers[id_partida].cancel()
-        self.timers[id_partida] = asyncio.create_task(await self.reiniciar_temporizador(id_partida, db))
+        self.timers[id_partida] = asyncio.create_task(self.reiniciar_temporizador(id_partida, db))
 
         
     def cancelar_temporizador(self, id_partida: int):

@@ -100,7 +100,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
     
     await asyncio.sleep(0.5)    
     await computar_y_enviar_figuras(id_partida, db)
-    await timer_service.iniciar_temporizador(id_partida, db)
+    timer_service.iniciar_temporizador(id_partida, db)
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
