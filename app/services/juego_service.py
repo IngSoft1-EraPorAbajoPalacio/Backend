@@ -122,12 +122,17 @@ class JuegoService:
             cartas_en_mano = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                                            CartasFigura.id_jugador == id_jugador,
                                                            CartasFigura.en_mano == True).count()
+            
+                                                                
             if esta_bloqueado and cartas_en_mano == 1:
+                carta_a_desbloquear = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                                                    CartasFigura.id_jugador == id_jugador,
+                                                                    CartasFigura.en_mano == True).first()
                 carta_bloqueada.bloqueada = False
                 return {
                     "completarFigura": "desbloquearFigura",
                     "cartasFig": cartas,
-                    "idCarta": figura.idCarta,
+                    "idCarta": carta_a_desbloquear.carta_fig,
                     "idJugador": id_jugador
                 }
             else:
