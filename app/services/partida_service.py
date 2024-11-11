@@ -176,7 +176,6 @@ class PartidaService:
                     for jugador in jugadores:
                         db.delete(jugador)
                     
-                    
                     db.delete(partida)
                     
                 else:
