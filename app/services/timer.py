@@ -34,7 +34,6 @@ class Timer:
         
         # Tiempo de duración del turno
         while tiempo > 0:
-            print(tiempo)
             await asyncio.sleep(2)
             tiempo -= 2
             db.execute(update(Partida).values(tiempo=tiempo-2))
