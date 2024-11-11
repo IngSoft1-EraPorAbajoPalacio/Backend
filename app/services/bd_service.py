@@ -88,6 +88,27 @@ class DB_Service:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
         partida.activa = True
         db.commit()
+        
+    def obtener_turno_actual(self, id_partida, db: Session):
+        """
+        Obtener el turno actual de la partida con id: id_partida
+        """
+        return db.query(Tablero).filter(Tablero.id_partida == id_partida).first().turno
+    
+    def setear_tiempo(self, id_partida, tiempo: int, db: Session):
+        """
+        Seteo el tiempo de la partida con id : id_partida
+        """
+        partida = self.obtener_partida(id_partida, db)
+        partida.tiempo = tiempo
+        db.commit() 
+        
+    def obtener_tiempo_actual(self, id_partida,  db: Session):
+        """
+        Obtengo el tiempo de la partida con id : id_partida
+        """
+        partida = self.obtener_partida(id_partida, db)
+        return partida.tiempo
 
     ########## QUERIES RELACIONADAS A JUGADORES ##########
     
@@ -245,6 +266,15 @@ class DB_Service:
         for mov in movimientos_parciales:
             db.delete(mov)
         db.commit()
+
+    def obtener_cantidad_movimientos_parciales(self, id_partida: int, id_jugador: int, db: Session):
+          return (
+            db.query(MovimientosParciales)
+            .filter(
+                MovimientosParciales.id_partida == id_partida,
+                MovimientosParciales.id_jugador == id_jugador
+            )
+        ).count()
 
     ########## QUERIES RELACIONADAS A CARTAS DE FIGURAS ##########
     
