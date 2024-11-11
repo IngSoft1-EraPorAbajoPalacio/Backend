@@ -154,6 +154,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                await manager_game.broadcast(id_partida, eliminar_partida_message.model_dump())
                #ws para que se deje de mostrar en el inicio si la partida terminó
                await manager.broadcast(eliminar_partida_message.model_dump())
+               timer.cancelar_temporizador(id_partida)
 
             else:
                #ws para que se deje de mostrar jugador el juego

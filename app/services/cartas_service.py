@@ -9,7 +9,7 @@ import random
 from sqlalchemy import func
 from app.services.bd_service import db_service
 
-CANTIDAD_CARTAS_FIG = 50
+CANTIDAD_CARTAS_FIG = 4
 CANTIDAD_CARTAS_MOV = 49
 CARTAS_EN_MANO = 3
 

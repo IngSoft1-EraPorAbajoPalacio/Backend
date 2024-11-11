@@ -29,7 +29,7 @@ class Timer:
         if not partida.activa:
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} no está activa")
 
-        db_service.setear_tiempo(id_partida, 20, db)
+        db_service.setear_tiempo(id_partida, 120, db)
         tiempo = db_service.obtener_tiempo_actual(id_partida, db)
         
         # Tiempo de duración del turno
