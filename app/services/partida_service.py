@@ -50,7 +50,7 @@ class PartidaService:
             raise HTTPException(status_code=404, detail=f"No se puede unir a una partida en progreso")
         
         if (db_service.obtener_contraseña(id_partida, db) !=  contrasena):
-            raise HTTPException(status_code=404, detail=f"La contraseña es incorrecta")
+            raise HTTPException(status_code=401, detail=f"La contraseña es incorrecta")
 
         jugador_a_unirse = crear_jugador(nombre_jugador, db)
 
