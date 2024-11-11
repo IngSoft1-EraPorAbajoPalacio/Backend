@@ -67,7 +67,6 @@ class PartidaService:
                 JugadorListado(id=str(jugador.jugador.id), nombre=jugador.jugador.nickname)
                 for jugador in partida.jugadores
             ]
-            #contrasena=contrasena
         )
 
 
@@ -174,7 +173,6 @@ class PartidaService:
                     db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
                     db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
                     
-                    print(jugadores)
                     for jugador in jugadores:
                         db.delete(jugador)
                     

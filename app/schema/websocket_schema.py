@@ -99,10 +99,6 @@ class EliminarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.ELIMINAR_PARTIDA] = WebSocketMessageType.ELIMINAR_PARTIDA
     data: EliminarPartidaDataSchema
 
-"""class MovimientoParcialSchema(BaseModel):
-    type: Literal[WebSocketMessageType.MOVIMIENTO_PARCIAL]
-    data: MovimientoParcialDataSchema"""
-    
 class DeshacerMovimiento(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTO]
     posiciones: List[Posicion]

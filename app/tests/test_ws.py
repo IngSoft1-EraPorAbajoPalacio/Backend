@@ -36,7 +36,7 @@ async def test_crear_partida_ws():
                     "nombre_partida": "partida_1",
                     "cant_min_jugadores": 2,
                     "cant_max_jugadores": 3,
-                    "contrasena": " "    
+                    "contrasena": ""    
                 })
 
                 assert response_1.status_code == 201                
@@ -54,7 +54,8 @@ async def test_crear_partida_ws():
                         "idPartida": 1,
                         "nombrePartida": "partida_1",
                         "cantJugadoresMin": 2,
-                        "cantJugadoresMax": 3
+                        "cantJugadoresMax": 3,
+                        "privada": False
                     }
                 }
                 
@@ -73,7 +74,7 @@ async def test_crear_partida_ws():
                     "nombre_partida": "partida_2",
                     "cant_min_jugadores": 3,
                     "cant_max_jugadores": 4,
-                    "contrasena": ""     
+                    "contrasena": "lucas"     
                 })
                 assert response_2.status_code == 201
                 
@@ -91,6 +92,7 @@ async def test_crear_partida_ws():
                         "nombrePartida": "partida_2",
                         "cantJugadoresMin": 3,
                         "cantJugadoresMax": 4,
+                        "privada": True
                     }
                 }
                 
