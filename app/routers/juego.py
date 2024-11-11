@@ -106,5 +106,6 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
         await manager_game.broadcast(idPartida, figuras_data)
     except HTTPException as e:    
-        await computar_y_enviar_figuras(idPartida, db)
+        figuras_data = await computar_y_enviar_figuras(idPartida, db)
+        await manager_game.broadcast(idPartida, figuras_data)        
         raise e
