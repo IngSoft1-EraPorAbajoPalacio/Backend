@@ -1,8 +1,28 @@
-import logging
 from app.services.encontrar_fig import encontrar_figuras
 import pytest
-from unittest.mock import MagicMock
 from app.services.ficha_service import fichas_service
+from app.services.bd_service import db_service
+
+def imprimir_tablero(lista_fichas):
+    """Imprimir el tablero a partir de la lista de fichas"""
+    tablero = [[' ' for _ in range(6)] for _ in range(6)]  
+    for ficha in lista_fichas:
+        x = ficha['x']
+        y = ficha['y']
+        color = ficha['color']
+        
+        if color == "Azul":
+            tablero[x][y] = "A"
+        elif color == "Rojo":
+            tablero[x][y] = "R"
+        elif color == "Verde":
+            tablero[x][y] = "V"
+        elif color == "Amarillo":
+            tablero[x][y] = "Y"  
+
+    for fila in tablero:
+        print(' '.join(fila))
+    print()
 
 @pytest.fixture
 def mock_db(monkeypatch):
@@ -14,7 +34,17 @@ def mock_db(monkeypatch):
 
     return _mock_db
 
-def test_encontrar_figuras(mock_db):
+@pytest.fixture
+def mock_color_prohibido(monkeypatch):
+    def _mock_color_prohibido(color_mock):
+        def mock_obtener_color_prohibido(id_tablero, db):
+            return color_mock
+
+        monkeypatch.setattr(db_service, "obtener_color_prohibido", mock_obtener_color_prohibido)
+
+    return _mock_color_prohibido
+
+def test_encontrar_figuras(mock_db, mock_color_prohibido):
     test_cases = [
         {
             "db_mock": [
@@ -1310,6 +1340,8 @@ def test_encontrar_figuras(mock_db):
 
     for case in test_cases:
         mock_db(case["db_mock"])
+        imprimir_tablero(case["db_mock"])
+        mock_color_prohibido("Azul")
         figuras_encontradas = encontrar_figuras(1, [case["figura_esperada"]], case["db_mock"])
             
         assert case["db_mock"] == fichas_service.obtener_fichas(1, case["db_mock"])

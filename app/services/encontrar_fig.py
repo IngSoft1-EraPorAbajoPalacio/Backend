@@ -2,7 +2,11 @@ import logging
 from collections import defaultdict
 from app.services.ficha_service import fichas_service
 from typing import List, Set
+from app.services.cartas_service import obtener_figuras_en_juego
+from operator import index
 from sqlalchemy.orm import Session
+from app.services.bd_service import *
+from app.services.bd_service import *
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
  
@@ -361,13 +365,15 @@ def agrupar_fichas(lista_fichas):
         grupos[color].append((x, y))  # Agrupa por color y almacena las posiciones
     return grupos
 
-def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
+def  encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
     """Encontrar las figuras de la listaFig en el tablero de la partida con id = id_partida"""
     tablero = fichas_service.obtener_fichas(id_partida, db)
     grupos = agrupar_fichas(tablero)
     figuras = []
     
     for color, posiciones in grupos.items():
+        if color == db_service.obtener_color_prohibido(id_partida, db):
+            continue
         # Dividimos en grupos adyacentes
         grupos_adyacentes = obtener_grupos_adyacentes(posiciones)
 
@@ -378,3 +384,26 @@ def encontrar_figuras(id_partida : int, listaFig : List[int], db : Session):
                     figuras.append((figNum, color, grupo))
 
     return figuras
+
+
+async def computar_y_enviar_figuras(id_partida: int, db: Session):
+    try:
+        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
+        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
+        
+        figuras_data = {
+            "type": "DeclararFigura",
+            "figuras": {
+                "figura": [
+                    {
+                        "idFig": f"{tipo}_{index}",
+                        "tipoFig": tipo,
+                        "coordenadas": list(map(lambda pos: [pos[1], pos[0]], posiciones))
+                    } for tipo, _, posiciones in figuras
+                ]
+            }
+        } 
+        return figuras_data
+    except Exception as e:
+        logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
+        
