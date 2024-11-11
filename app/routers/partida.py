@@ -17,8 +17,9 @@ import logging
 from app.services.cartas_service import obtener_figuras_en_juego
 import  asyncio
 
-from datetime import datetime, timedelta
 from typing import Dict
+from sqlalchemy import update
+
 
 router = APIRouter()
 
@@ -270,11 +271,6 @@ async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugado
         await manager_game.disconnect(idPartida, idJugador,websocket)    
     
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
 
 class Timer:
     def __init__(self):
@@ -290,10 +286,12 @@ class Timer:
         if not partida.activa:
             raise HTTPException(status_code=404, detail=f"La partida {id_partida} no está activa")
 
+        tiempo = partida.tiempo
         # Tiempo de duración del turno
-        while partida.tiempo > 0:
-            await asyncio.sleep(1)
-            partida.tiempo -= 1
+        while tiempo > 0:
+            await asyncio.sleep(2)
+            tiempo -= 2
+            db.execute(update(Partida).values(tiempo=tiempo-2))
             db.commit()
 
         # Pasar al siguiente turno y enviar mensajes de reposición de cartas
