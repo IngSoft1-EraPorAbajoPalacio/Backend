@@ -18,6 +18,7 @@ class WebSocketMessageType(str, Enum):
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
     PARTIDA_FINALIZADA = "PartidaFinalizada"
+    INICIO_CONEXION = "InicioConexion"
 
 class JugadorSchema(BaseModel):
     id: int
@@ -29,10 +30,30 @@ class AgregarPartidaDataSchema(BaseModel):
     cantJugadoresMin: int
     cantJugadoresMax: int
 
-class IniciarPartidaDataSchema(BaseModel):
-    jugadorInicial: str
-    listaJugadores: List[str]
-    cartas: List[str]
+class Coordenada(BaseModel):
+    x: int
+    y: int
+    
+class FiguraResaltada(BaseModel):
+    idFig: str
+    tipoFig: int
+    coordenadas: List[Coordenada]
+    
+class InicioConexionDataSchema(BaseModel):
+    fichas: List[dict]
+    orden: List[int]
+    turnoActual: int
+    colorProhibido: str
+    tiempo: int
+    cartasMovimiento: List[dict]
+    cartasFigura: List[dict]
+    cartasBloqueadas: List[int]
+    cantMovimientosParciales: int    
+    
+class FiguraSchema(BaseModel):
+    idFig: str
+    tipoFig: str
+    coordenadas: List[Coordenada]
 
 class AbandonarPartidaDataSchema(BaseModel):
     idPartida: int
@@ -58,7 +79,11 @@ class AgregarPartidaSchema(BaseModel):
 
 class IniciarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.INICIAR_PARTIDA]
-    data: IniciarPartidaDataSchema
+
+class InicioConexionSchema(BaseModel):
+    type: Literal[WebSocketMessageType.INICIO_CONEXION]
+    data: InicioConexionDataSchema
+
 
 class AbandonarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.ABANDONAR_PARTIDA]
@@ -68,10 +93,6 @@ class EliminarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.ELIMINAR_PARTIDA] = WebSocketMessageType.ELIMINAR_PARTIDA
     data: EliminarPartidaDataSchema
 
-class MovimientoParcialSchema(BaseModel):
-    type: Literal[WebSocketMessageType.MOVIMIENTO_PARCIAL]
-    data: MovimientoParcialDataSchema
-    
 class DeshacerMovimiento(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTO]
     posiciones: List[Posicion]
@@ -80,10 +101,6 @@ class DeshacerMovimientos(BaseModel):
     type: Literal[WebSocketMessageType.DESHACER_MOVIMIENTOS]
     posiciones: List[List[Posicion]]    
     cantMovimientosDesechos: int
-    
-class Coordenada(BaseModel):
-    x: int
-    y: int
 
 class Figura(BaseModel):
     tipoFig: int

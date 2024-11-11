@@ -140,6 +140,11 @@ def obtener_cartas_movimientos(id_partida: int, db: Session):
         })  
     return resultado
    
+def obtener_cartas_movimientos_jugador(id_partida: int, id_jugador: int, db: Session):
+    movimientos = db_service.obtener_movimientos_en_mano(id_partida, id_jugador, db)
+    cartas = [{"id": mov.carta_mov, "movimiento": mov.movimiento.mov.value } for mov in movimientos]    
+
+    return cartas   
 
 def asignar_cartas_figuras(idPartida: int, idJugador: int, reponer: int, db: Session):
        

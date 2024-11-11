@@ -75,7 +75,8 @@ class DB_Service:
 
         tablero_nuevo = Tablero(
             id_partida = id_partida,
-            turno = random.choice(id_jugadores) 
+            turno = random.choice(id_jugadores) ,
+            color_prohibido = None,
         )
         db.add(tablero_nuevo)
         db.commit()
@@ -323,11 +324,11 @@ class DB_Service:
     def obtener_color_prohibido(self, id_partida: int, db: Session):
         """
         Se obtiene el color prohibido del tablero relacionado a la partida con id : id_partida.
-        En caso de no existir color prohibido, devuelvo None
+        En caso de no existir color prohibido, devuelvo el string vacío : "" 
         """
         tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
         if tablero.color_prohibido is None:
-            return None
+            return ""
         return tablero.color_prohibido.value
         
     def swapear_color_fichas(self, ficha1: Ficha, ficha2: Ficha, db: Session):

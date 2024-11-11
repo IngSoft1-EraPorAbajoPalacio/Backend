@@ -196,7 +196,7 @@ def is_fig9(posiciones_normalizadas):
 
 def is_fig10(posiciones_normalizadas):
     rotaciones =[
-        {(1,0),(0,3),(1,1),(1,2),(2,0)},
+        {(1,0),(0,2),(1,1),(1,2),(2,0)},
         {(0,0),(0,1),(1,1),(2,1),(2,2)},
     ]
     
@@ -223,17 +223,17 @@ def is_fig13(posiciones_normalizadas):
     rotaciones =[
         {(0,0),(0,1),(0,2),(0,3),(1,2)},
         {(0,0),(1,0),(1,1),(2,0),(3,0)},
-        {(0,1),(1,0),(1,1),(1,2),(1,3)},
-        {(0,1),(0,2),(1,1),(2,1),(2,0)}
+        {(0,1),(1,0),(1,1),(1,2),(1,3)}, 
+        {(0,1),(1,1),(2,0),(2,1),(3,1)}
     ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
 def is_fig14(posiciones_normalizadas):
     rotaciones =[
         {(0,2),(1,0),(1,1),(1,2),(1,3)},
-        {(1,1),(0,1),(1,1),(2,1),(3,1)},
+        {(1,0),(0,1),(1,1),(2,1),(3,1)},
         {(0,0),(0,1),(0,2),(0,3),(1,1)},
-        {(0,0),(1,0),(2,0),(3,0),(2,1)}
+        {(0,0),(1,0),(2,0),(3,0),(2,1)} 
         ]
     return any(posiciones_normalizadas == rotacion for rotacion in rotaciones)
 
@@ -406,3 +406,4 @@ async def computar_y_enviar_figuras(id_partida: int, db: Session):
         return figuras_data
     except Exception as e:
         logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
+        
