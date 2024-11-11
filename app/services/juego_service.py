@@ -8,14 +8,18 @@ from app.services.ficha_service import *
 from app.services.cartas_service import *
 from app.services.partida_service import *
 from app.services.encontrar_fig import *
-from sqlalchemy import desc
+from app.services.bd_service import *
+from app.db.models import Color
+
 
 class JuegoService:
-
+    
     def obtener_datos_partida(self, id_partida: int, id_jugador: int, db: Session):
         
-        partida = partida_service.obtener_partida(id_partida, db)
-        cartas_movimientos = obtener_cartas_movimientos_jugador(id_jugador, db)
+        print("SE LLAMA A OBTENER DATOS PARTIDA")
+        
+        partida = db_service.obtener_partida(id_partida, db)
+        cartas_movimientos = obtener_cartas_movimientos_jugador(id_partida, id_jugador, db)
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
         cartas_bloqueadas = obtener_cartas_figuras_bloqueadas(id_partida, db)
         fichas = fichas_service.obtener_fichas(id_partida, db)
@@ -27,22 +31,24 @@ class JuegoService:
                 MovimientosParciales.id_jugador == id_jugador
             )
         ).count()
+        color_prohibido = db_service.obtener_color_prohibido(id_partida, db)
         
         response = {
             "type": "InicioConexion",
             "fichas": fichas,
             "orden": orden,
             "turnoActual": partida.tablero.turno,
-            "colorProhibido": "Amarillo", # Hay que cambiar cuando se implemente el color prohibido
+            "colorProhibido": color_prohibido, # Hay que cambiar cuando se implemente el color prohibido
             "tiempo": 160, # Hay que cambiar cuando se implemente el temporizador
             "cartasMovimiento": cartas_movimientos,
             "cartasFigura": cartas_figuras,
             "cartasBloqueadas": cartas_bloqueadas,
             "cantMovimientosParciales": cantidad_movimientos_parciales
         }
-                
+                        
         return response
-
+    
+    
     def validar_movimiento(self, movimiento: int, posicion_1: tuple, posicion_2: tuple):
         x1, y1 = posicion_1
         x2, y2 = posicion_2
@@ -92,20 +98,15 @@ class JuegoService:
             return False
 
     def completar_figura(self, id_partida: int, id_jugador: int, figura: DeclararFiguraRequest, tipo: str, db: Session):
+        #Cambio el color prohibido
+        color = Color(figura.color)
+        db_service.cambiar_color_prohibido(id_partida, color, db)
         if tipo == "descartar":
             # Eliminar la carta de la mano del jugador
-            db.query(CartasFigura).filter(
-                CartasFigura.id_partida == id_partida,
-                CartasFigura.id_jugador == id_jugador,
-                CartasFigura.carta_fig == figura.idCarta
-            ).delete()
+            db_service.eliminar_carta_figura(id_partida, id_jugador, figura.idCarta, db)
 
             # Cartas en mano
-            cartas_en_mano = db.query(CartasFigura).filter(
-                CartasFigura.id_partida == id_partida,
-                CartasFigura.id_jugador == id_jugador,
-                CartasFigura.en_mano == True
-            ).all()
+            cartas_en_mano = db_service.obtener_figuras_en_mano(id_partida, id_jugador, db)
             cartas = []
             for carta in cartas_en_mano:
                 cartas.append({
@@ -122,8 +123,7 @@ class JuegoService:
             cartas_en_mano = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                                            CartasFigura.id_jugador == id_jugador,
                                                            CartasFigura.en_mano == True).count()
-            
-                                                                
+              
             if esta_bloqueado and cartas_en_mano == 1:
                 carta_a_desbloquear = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                                                     CartasFigura.id_jugador == id_jugador,
@@ -132,13 +132,15 @@ class JuegoService:
                 return {
                     "completarFigura": "desbloquearFigura",
                     "cartasFig": cartas,
+                    "colorProhibido": str(color.value),
                     "idCarta": carta_a_desbloquear.carta_fig,
                     "idJugador": id_jugador
                 }
             else:
                 return {
                     "completarFigura": "descartarFigura",
-                    "cartasFig": cartas
+                    "cartasFig": cartas,
+                    "colorProhibido": str(color.value)
                 }
         elif tipo == "bloquear":
             # Bloquear la carta
@@ -149,28 +151,29 @@ class JuegoService:
             return {
                 "completarFigura": "bloquearFigura",
                 "idCarta": figura.idCarta,
-                "idJugador": id_jugador
+                "idJugador": id_jugador,
+                "colorProhibido": str(color.value)
             }
         
     async def jugar_movimiento(self, id_partida: int, id_jugador: int, movimiento: JugarMovimientoRequest, db: Session):
-        partida = partida_service.obtener_partida(id_partida, db)
+        partida = db_service.obtener_partida(id_partida, db)
         if not partida.activa:
             raise HTTPException(status_code=404, detail="La partida no ha sido iniciada")
         
-        if not partida_service.pertenece(id_partida, id_jugador, db):
+        if not pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
         
-        jugador = db.query(Jugador).filter(Jugador.id == id_jugador).first()
+        jugador = db_service.obtener_jugador(id_jugador, db)
         if not jugador.jugando:
             raise HTTPException(status_code=404, detail="No es tu turno")
 
-        if not db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida, 
-                                                 CartaMovimientos.carta_mov == movimiento.idCarta).first().en_mano:
+        if not db_service.obtener_movimiento_en_mano(id_partida, movimiento.idCarta, db):
             raise HTTPException(status_code=404, detail=f"La carta {movimiento.idCarta} no está en tu mano")
 
         tablero = partida.tablero
-        carta_movimiento = db.query(Movimientos).filter(Movimientos.id == movimiento.idCarta).first().mov.value
-
+        movimiento_bd = db_service.obtener_movimiento_bd(movimiento.idCarta, db)
+        carta_movimiento = movimiento_bd.mov.value
+        
         posicion_1 = (movimiento.posiciones[0].x, movimiento.posiciones[0].y)
         posicion_2 = (movimiento.posiciones[1].x, movimiento.posiciones[1].y)
         
@@ -186,29 +189,16 @@ class JuegoService:
         if not self.validar_movimiento(carta_movimiento, posicion_1, posicion_2):
             raise HTTPException(status_code=400, detail="Movimiento inválido")
         
+        
         # Eliminar la carta de la mano del jugador
-        db.query(CartaMovimientos).filter(
-            CartaMovimientos.id_partida == id_partida,
-            CartaMovimientos.id_jugador == id_jugador,
-            CartaMovimientos.carta_mov == movimiento.idCarta
-        ).first().en_mano = False
+        db_service.eliminar_carta_movimiento(id_partida, id_jugador, movimiento.idCarta, db)
 
         # Cambiar las posiciones de las fichas
-        ficha1 = db.query(Ficha).filter(
-                Ficha.id_tablero == tablero.id_partida, 
-                Ficha.x == posicion_1[0],
-                Ficha.y == posicion_1[1]
-        ).first()
+        ficha1 = db_service.obtener_ficha(tablero.id_partida, posicion_1[0], posicion_1[1], db)
+  
+        ficha2 = db_service.obtener_ficha(tablero.id_partida, posicion_2[0], posicion_2[1], db)
 
-        ficha2 = db.query(Ficha).filter(
-                Ficha.id_tablero == tablero.id_partida, 
-                Ficha.x == posicion_2[0],
-                Ficha.y == posicion_2[1]
-        ).first()
-
-        ficha1.color, ficha2.color = ficha2.color, ficha1.color
-        
-        db.commit()
+        db_service.swapear_color_fichas(ficha1, ficha2, db)                
         
         response = {"type": "MovimientoParcial", 
                     "carta": {"id": movimiento.idCarta, "movimiento": carta_movimiento}, 
@@ -216,58 +206,39 @@ class JuegoService:
                                {"x": ficha1.x, "y": ficha1.y, "color": ficha1.color.name}]
                     }
                 
-        fila_nueva = MovimientosParciales(
-            id_partida = id_partida, id_jugador = id_jugador,
-            movimiento = movimiento.idCarta,
-            x1 = ficha1.x,
-            y1 = ficha1.y,
-            x2 = ficha2.x,
-            y2= ficha2.y
-        )
-        
-        db.add(fila_nueva)
-        db.commit()
+        db_service.crear_movimiento_parcial(id_partida, id_jugador, movimiento.idCarta,
+                                            ficha1.x, ficha1.y, ficha2.x, ficha2.y, db)
              
         return response
     
     async def declarar_figura(self, id_partida: int, id_jugador: int, figura: DeclararFiguraRequest, db: Session):
-        partida = partida_service.obtener_partida(id_partida, db)
+        partida = db_service.obtener_partida(id_partida, db)
         if not partida.activa:
             raise HTTPException(status_code=404, detail="La partida no ha sido iniciada")
         
-        if not partida_service.pertenece(id_partida, id_jugador, db):
+        if not pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
     
-        if not db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
-                                             CartasFigura.carta_fig == figura.idCarta,
-                                             CartasFigura.en_mano == True).first():
-            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en tu mano")
+        if not db_service.obtener_todas_figuras_en_mano(id_partida, db):
+            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en ninguna mano")
 
-        carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
-        
+        figura_db = db_service.obtener_figura(figura.idCarta, db)
+        carta_figura = figura_db.fig.value
+                
         # Validar la figura
         carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
         if not carta_figura == figura.tipo_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
-
-        # Eliminar movimientos parciales 
-        movimintos_parciales = db.query(MovimientosParciales).filter(MovimientosParciales.id_jugador == id_jugador,
-                                                                     MovimientosParciales.id_partida == id_partida).all()
         
-        for mov in movimintos_parciales:
-            cm = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == id_jugador,
-                                                   CartaMovimientos.id_partida == id_partida,
-                                                   CartaMovimientos.carta_mov == mov.movimiento).first()
-            cm.en_mano = False
+        # Eliminar movimientos parciales
+        movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
         
-        if movimintos_parciales is not None:
-            for mov in movimintos_parciales:
-                db.delete(mov)
-                
-        carta_figura = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
-                                                     CartasFigura.id_jugador == id_jugador,
-                                                     CartasFigura.carta_fig == figura.idCarta).first()
-        esta_en_mano = carta_figura.en_mano if carta_figura else False
+        for mov in movimientos_parciales:
+            db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
+            
+        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db)                   
+        
+        esta_en_mano = db_service.obtener_figura_en_mano(id_partida, id_jugador, figura.idCarta, db)
         
         if esta_en_mano:
             # Descartar una figura propia
@@ -303,26 +274,20 @@ class JuegoService:
             response = self.completar_figura(id_partida, id_jugador, figura, "bloquear", db)
             db.commit()
             return response
-    
-    
+
     def deshacer_movimiento(self, idPartida: int, idJugador: int, db: Session):
         
-        ultimo_movimiento_parcial = (
-            db.query(MovimientosParciales).filter(
-                MovimientosParciales.id_partida == idPartida,
-                MovimientosParciales.id_jugador == idJugador).order_by(desc(MovimientosParciales.id)).first()
-        )
+        ultimo_movimiento_parcial = db_service.obtener_ultimo_movimiento_parcial(idPartida, idJugador, db)
 
         if ultimo_movimiento_parcial is None:
             raise HTTPException(status_code=404, detail=f"El jugador con id {idJugador} no realizo ningun movimiento ")
                 
         movimiento = obtener_movimiento(ultimo_movimiento_parcial.movimiento, db)
         
-        carta_movimiento = db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == idPartida,
-                                                             CartaMovimientos.id_jugador == idJugador,
-                                                             CartaMovimientos.carta_mov == ultimo_movimiento_parcial.movimiento).first()
+        carta_movimiento = db_service.obtener_movimiento(idPartida, idJugador, ultimo_movimiento_parcial.movimiento, db)
         
-        carta_movimiento.en_mano = True
+        db_service.setear_carta_movimiento(carta_movimiento, db)
+              
         posiciones_actualizadas = switchear_fichas_tablero(ultimo_movimiento_parcial, db)
         
         resultado = {
@@ -333,23 +298,19 @@ class JuegoService:
                 
         return resultado
     
+    
     def deshacer_movimientos(self,idPartida: int, idJugador: int, db:Session):
         
         cartas =[]
         posiciones =[]
         
-        movimientos = (
-            db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == idPartida,
-                                              CartaMovimientos.id_jugador == idJugador,
-                                              CartaMovimientos.en_mano == True).all()
-        )
+        movimientos = db_service.obtener_movimientos_en_mano(idPartida, idJugador, db)
         
         movimientos_en_mano = len(movimientos)
-        movimientos_parciales = (
-            db.query(MovimientosParciales).filter(MovimientosParciales.id_partida == idPartida,
-                                                  MovimientosParciales.id_jugador == idJugador).all()
-        )
-                
+
+        movimientos_parciales = db_service.obtener_movimientos_parciales(idPartida, idJugador, db)
+        
+        
         cantidad_mov_parciales = len(movimientos_parciales)
         cantidad_mov_deshechos = len(movimientos_parciales)
         
@@ -364,28 +325,26 @@ class JuegoService:
             posiciones.append(movimiento_desecho['posiciones'])
             cantidad_mov_parciales-=1
         
-        resultado = {
-            "cartas": cartas,
-            "cantMovimientosDesechos": cantidad_mov_deshechos,
-            "posiciones": posiciones
-        }
-
+        
         movimientos_a_devolver = max(0, 3 - movimientos_en_mano)
         
         asignacion = asignar_cartas_movimientos(idPartida, idJugador, movimientos_a_devolver, db)
         
-        while len(resultado['cartas']) != movimientos_a_devolver:
-            movimiento = db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == idPartida,
-                                                           CartaMovimientos.id_jugador == idJugador,
-                                                           CartaMovimientos.carta_mov == asignacion[0]['id']).first()
-            movimiento.en_mano = True
-            db.commit()
-            
-            resultado["cartas"].append(asignacion[0])
+    
+        while len(cartas) != movimientos_a_devolver:            
+            movimiento = db_service.obtener_movimiento(idPartida, idJugador, asignacion[0]['id'], db)
+            db_service.setear_carta_movimiento(movimiento, db)
+                        
+            cartas.append(asignacion[0])
             asignacion.pop(0)
-            
-            
-        print(f"al final retorno : {resultado}")    
-        return  resultado   
+        
+        
+        resultado = {
+            "cartas": cartas,
+            "cantMovimientosDesechos": cantidad_mov_deshechos,
+            "posiciones": posiciones
+        }    
+    
+        return  resultado     
 
 juego_service = JuegoService()
