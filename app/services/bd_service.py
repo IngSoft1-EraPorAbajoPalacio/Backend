@@ -129,6 +129,14 @@ class DB_Service:
         for jugador in jugadores:
             jugador.jugando = True
         db.commit()
+        
+        
+    def obtener_nombre_jugador(self, id_jugador: int, db: Session):
+        """
+        Se obtiene el nombre del jugador con id: id_jugador.
+        Se asume que el jugador existe.
+        """
+        return db.query(Jugador).filter(Jugador.id == id_jugador).first().nickname        
     
     
     ########## QUERIES RELACIONADAS A CARTAS DE MOVIMIENTOS ##########
@@ -267,8 +275,19 @@ class DB_Service:
 
 
     def cantidad_figuras(self, db: Session):
+        """
+        Se devuelve al cantidad de figuras total del juego.
+        """
         return db.query(Figuras).count()
 
+
+    def cantidad_cartas_figuras(self, id_partida: int, id_jugador: int, db: Session):
+        """
+        Se devuelve la cantidad de cartas de figuras que tiene el jugador con id: id_jugador
+        que se encuentra en la partida con id: id_partida
+        """
+        return db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == id_jugador).count()
 
     def eliminar_carta_figura(self, id_partida: int, id_jugador: int, id_figura: int, db: Session):
         """

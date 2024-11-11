@@ -170,6 +170,8 @@ class JuegoService:
         if not figura.tipo_figura == carta_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
         
+        nombre = db_service.obtener_nombre_jugador(id_jugador, db)
+        
         #Cambio el color prohibido
         color = Color(figura.color)
         db_service.cambiar_color_prohibido(id_partida, color, db)
@@ -189,7 +191,9 @@ class JuegoService:
         for mov in movimientos_parciales:
             db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
             
-        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db)                   
+        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db) 
+        
+        ganó = db_service.cantidad_cartas_figuras(id_partida, id_jugador, db) == 0                  
         
         cartas = [
             {
@@ -200,7 +204,9 @@ class JuegoService:
             
         response = {
             "cartasFig": cartas,
-            "color_prohibido": str(color.value)
+            "color_prohibido": str(color.value),
+            "ganar": ganó,
+            "nombre": nombre
         }
         
         return response
