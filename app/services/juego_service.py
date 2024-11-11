@@ -98,6 +98,14 @@ class JuegoService:
             return False
 
     def completar_figura(self, id_partida: int, id_jugador: int, figura: DeclararFiguraRequest, tipo: str, db: Session):
+        # Eliminar movimientos parciales
+        movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
+        
+        for mov in movimientos_parciales:
+            db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
+            
+        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db)    
+        db.commit()
         #Cambio el color prohibido
         color = Color(figura.color)
         db_service.cambiar_color_prohibido(id_partida, color, db)
@@ -222,24 +230,13 @@ class JuegoService:
         if not db_service.obtener_todas_figuras_en_mano(id_partida, db):
             raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en ninguna mano")
 
+        # Validar la figura
         figura_db = db_service.obtener_figura(figura.idCarta, db)
         carta_figura = figura_db.fig.value
-                
-        # Validar la figura
-        carta_figura = db.query(Figuras).filter(Figuras.id == figura.idCarta).first().fig.value
         if not carta_figura == figura.tipo_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
         
-        # Eliminar movimientos parciales
-        movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
-        
-        for mov in movimientos_parciales:
-            db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
-            
-        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db)                   
-        
         esta_en_mano = db_service.obtener_figura_en_mano(id_partida, id_jugador, figura.idCarta, db)
-        
         if esta_en_mano:
             # Descartar una figura propia
             if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
