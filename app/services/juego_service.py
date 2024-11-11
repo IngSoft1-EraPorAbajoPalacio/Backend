@@ -109,7 +109,7 @@ class JuegoService:
             cartas = []
             for carta in cartas_en_mano:
                 cartas.append({
-                    "id": carta.id,
+                    "id": carta.carta_fig,
                     "figura": carta.figura.fig.value
                 })
 
