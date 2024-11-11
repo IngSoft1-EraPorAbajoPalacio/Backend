@@ -13,6 +13,7 @@ from typing import List
 import logging
 from app.services.encontrar_fig import computar_y_enviar_figuras
 import  asyncio
+from app.services.timer import timer
 
 router = APIRouter()
 
@@ -90,7 +91,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
                )
 
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
-        await manager_lobby.broadcast(id_partida,response)
+        await manager_lobby.broadcast(id_partida, response)
         await manager.broadcast(eliminar_partida_message.model_dump())
         figuras_data = await computar_y_enviar_figuras(id_partida, db)
         await manager_game.broadcast(id_partida, figuras_data)
@@ -101,6 +102,7 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
     await asyncio.sleep(0.5)    
     figuras_data = await computar_y_enviar_figuras(id_partida, db)
     await manager_game.broadcast(id_partida, figuras_data)
+    timer.manejar_temporizador(id_partida, db)
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
@@ -119,10 +121,10 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         )
 
         await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
-        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
+        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno, "timeout": False})
         figuras_data = await computar_y_enviar_figuras(id_partida, db)
         await manager_game.broadcast(id_partida, figuras_data)
-
+        timer.manejar_temporizador(id_partida, db)
     except Exception as e:
         raise HTTPException(status_code=410, detail=str(e))
 
@@ -154,6 +156,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                await manager_game.broadcast(id_partida, eliminar_partida_message.model_dump())
                #ws para que se deje de mostrar en el inicio si la partida terminó
                await manager.broadcast(eliminar_partida_message.model_dump())
+               timer.cancelar_temporizador(id_partida)
 
             else:
                #ws para que se deje de mostrar jugador el juego

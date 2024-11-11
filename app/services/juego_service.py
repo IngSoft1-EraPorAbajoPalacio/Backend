@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.db.models import Jugador, Ficha
 from sqlalchemy.exc import *
 from app.schema.juego_schema import *
 from app.services.jugador_service import *
@@ -15,30 +14,24 @@ from app.db.models import Color
 class JuegoService:
     
     def obtener_datos_partida(self, id_partida: int, id_jugador: int, db: Session):
-        
-        print("SE LLAMA A OBTENER DATOS PARTIDA")
-        
+                
         partida = db_service.obtener_partida(id_partida, db)
         cartas_movimientos = obtener_cartas_movimientos_jugador(id_partida, id_jugador, db)
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
         fichas = fichas_service.obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
-        cantidad_movimientos_parciales = (
-            db.query(MovimientosParciales)
-            .filter(
-                MovimientosParciales.id_partida == id_partida,
-                MovimientosParciales.id_jugador == id_jugador
-            )
-        ).count()
+        cantidad_movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
+        cantidad_movimientos_parciales = db_service.obtener_cantidad_movimientos_parciales(id_partida, id_jugador, db)
         color_prohibido = db_service.obtener_color_prohibido(id_partida, db)
+        tiempo = db_service.obtener_tiempo_actual(id_partida, db)
         
         response = {
             "type": "InicioConexion",
             "fichas": fichas,
             "orden": orden,
             "turnoActual": partida.tablero.turno,
-            "colorProhibido": color_prohibido, # Hay que cambiar cuando se implemente el color prohibido
-            "tiempo": 160, # Hay que cambiar cuando se implemente el temporizador
+            "colorProhibido": color_prohibido,
+            "tiempo": tiempo ,
             "cartasMovimiento": cartas_movimientos,
             "cartasFigura": cartas_figuras,
             "cartasBloqueadas": [], # Hay que cambiar cuando se implemente el bloqueo de cartas
@@ -170,6 +163,8 @@ class JuegoService:
         if not figura.tipo_figura == carta_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
         
+        nombre = db_service.obtener_nombre_jugador(id_jugador, db)
+        
         #Cambio el color prohibido
         color = Color(figura.color)
         db_service.cambiar_color_prohibido(id_partida, color, db)
@@ -181,15 +176,16 @@ class JuegoService:
         # Cartas en mano
         cartas_en_mano = db_service.obtener_figuras_en_mano(id_partida, id_jugador, db)
         
-        #veo si el jugador hizo movimientos parciales para armar la figura
-        # si hizo , los busco y los elimino , si no hizo alguno no pasa nada
+        # Eliminar movimientos parciales
         
         movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
         
         for mov in movimientos_parciales:
             db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
             
-        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db)                   
+        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db) 
+        
+        ganó = db_service.cantidad_cartas_figuras(id_partida, id_jugador, db) == 0                  
         
         cartas = [
             {
@@ -200,7 +196,9 @@ class JuegoService:
             
         response = {
             "cartasFig": cartas,
-            "color_prohibido": str(color.value)
+            "color_prohibido": str(color.value),
+            "ganar": ganó,
+            "nombre": nombre
         }
         
         return response

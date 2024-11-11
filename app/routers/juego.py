@@ -82,6 +82,17 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
             )
         )
         
+        if response["ganar"]:
+            ganador_message= FinalizarPartidaSchema(
+                type = WebSocketMessageType.PARTIDA_FINALIZADA,
+                data= FinalizarPartidaDataSchema(
+                idGanador= idJugador,
+                nombreGanador=response["nombre"]
+                )
+            )
+            
+            await manager_game.broadcast(idPartida, ganador_message.model_dump())
+        
         await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
         await manager_game.broadcast(idPartida, figuras_data)
