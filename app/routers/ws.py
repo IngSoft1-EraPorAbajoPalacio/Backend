@@ -12,7 +12,6 @@ router = APIRouter()
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
-    print("SE INICIO CONEXION")
     try:
         while True:
             await websocket.receive_text()
@@ -25,7 +24,6 @@ async def websocket_endpoint(websocket: WebSocket):
 @router.websocket("/ws/lobby/{idPartida}")
 async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
     await manager_lobby.connect(int(idPartida),websocket)
-    print("SE INICIO LA CONEXION DEL LOBBY")
     try:
         while True:
             await websocket.receive_text()
@@ -36,10 +34,7 @@ async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
 @router.websocket("/ws/game/{idPartida}/jugador/{idJugador}")
 async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
     await manager_game.connect(idPartida, idJugador, websocket)
-    
-    print("SE INICIO LA CONEXION DEL GAME")
-    print(manager_game.active_connections)
-                
+                    
     # Obtiene los datos de la partida
     response =  juego_service.obtener_datos_partida(idPartida, idJugador, db)
 

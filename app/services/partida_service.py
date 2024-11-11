@@ -107,8 +107,7 @@ class PartidaService:
         return response
     
     
-    def pasar_turno(self, id_partida: int, id_jugador, db: Session):  
-        
+    def pasar_turno(self, id_partida: int, id_jugador: int, db: Session):  
         partida = db_service.obtener_partida(id_partida,db) 
         
         if partida is None:
@@ -128,8 +127,6 @@ class PartidaService:
         turno_nuevo = (id_jugadores.index(turno_actual) + 1) % cantidad_jugadores
         tablero.turno = id_jugadores[turno_nuevo]
 
-        db.commit()
-        
         return tablero.turno       
 
 
