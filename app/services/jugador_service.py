@@ -6,7 +6,6 @@ from app.db.models import *
 from fastapi import HTTPException
 from app.services.bd_service import db_service
 
-
 def crear_jugador(nombre: str,db: Session):
     jugador_creado = Jugador(nickname=nombre)
     try :
@@ -30,6 +29,14 @@ def obtener_cantidad_jugadores(id_partida: int, db: Session):
     partida = db_service.obtener_partida(id_partida, db)
     return len(partida.jugadores)
 
-def pertenece( id_partida: int, id_jugador: int, db: Session) -> bool:
+def pertenece(id_partida: int, id_jugador: int, db: Session) -> bool:
       id_jugadores = obtener_id_jugadores(id_partida, db)
       return id_jugador in id_jugadores
+
+def eliminar_jugadores(id_partida: int, db: Session):
+      """ Se eliminan todos los jugadores de la partida con id: id_partida """
+      partida = db_service.obtener_partida(id_partida, db)
+      jugadores =  [jugador.jugador for jugador in partida.jugadores]
+      for jugador in jugadores:
+          db.delete(jugador)
+      db.commit()
