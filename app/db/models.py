@@ -34,13 +34,15 @@ class Partida(Base):
     max : Mapped[int] = mapped_column(nullable=False)
     activa : Mapped[bool] = mapped_column(Boolean,default=False)
     id_owner : Mapped[int] = mapped_column(nullable=False)
+    contrasena: Mapped[str] = mapped_column(String(40), nullable=False)
+    tiempo : Mapped[int] = mapped_column(default=120)
     
     #relaciones
     jugadores : Mapped[List['Jugador_Partida']] = relationship(back_populates='partida', cascade="all")
     tablero : Mapped['Tablero'] = relationship(back_populates = 'relacion_partida' , cascade="all")
         
     def __repr__(self):
-        return f"Partida( id : {self.id}, name : {self.name})"   
+        return f"Partida( id : {self.id}, name : {self.nombre})"   
 
     
 class Jugador_Partida(Base) :
@@ -59,7 +61,7 @@ class Jugador_Partida(Base) :
  
 
 colores = ["Rojo","Verde","Azul","Amarillo"] 
-Color = PyEnum("Color",colores)
+Color = PyEnum("Color",{color: color for color in colores})
 
 
 class Tablero(Base):
@@ -116,6 +118,7 @@ class CartasFigura(Base):
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE')) 
     carta_fig : Mapped[int]  = mapped_column(ForeignKey('Figuras.id'))
     en_mano : Mapped[Boolean] = mapped_column(Boolean,nullable=False)
+    bloqueada: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     #relaciones
     jugador_fig: Mapped["Jugador"] = relationship(back_populates='cartas_de_figuras')
