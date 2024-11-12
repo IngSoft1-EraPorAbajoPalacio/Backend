@@ -17,7 +17,10 @@ class WebSocketMessageType(str, Enum):
     FIGURA_DESCARTAR = "FiguraDescartar"
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
-    PARTIDA_FINALIZADA = "PartidaFinalizada"
+    REPOSICION_FIGURA = "ReposicionFigura"
+    REPOSICION_MOVIMIENTO = "ReposicionMovimiento"
+    BLOQUEAR_FIGURA = "FiguraBloqueada"
+    DESBLOQUEAR_FIGURA = "FiguraDesbloqueada"
     INICIO_CONEXION = "InicioConexion"
 
 class JugadorSchema(BaseModel):
@@ -68,6 +71,9 @@ class MovimientoParcialDataSchema(BaseModel):
 
 class DeclararFiguraDataSchema(BaseModel):
     cartasFig: List[dict]
+    
+class DeclararMovimientoDataSchema(BaseModel):
+    cartas: List[dict]
 
 class JugadorUnidoSchema(BaseModel):
     type: Literal[WebSocketMessageType.JUGADOR_UNIDO]
@@ -119,8 +125,7 @@ class MovimientoParcialSchema(BaseModel):
 
 class DeclararFiguraColorProhibido(BaseModel):
     cartasFig: List[dict]
-    colorProhibido : str
-
+    colorProhibido: str
 
 class DeclararFiguraSchema(BaseModel):
     type: Literal[WebSocketMessageType.FIGURA_DESCARTAR]
@@ -139,11 +144,21 @@ class ReposicionCartasFiguras(BaseModel):
 class ReposicionCartasMovimientos(BaseModel):
     type : Literal[WebSocketMessageType.REPOSICION_MOVIMIENTOS]
     cartas: List[dict]
-    
-class FinalizarPartidaDataSchema(BaseModel):
-    idGanador: int
-    nombreGanador: str
 
-class FinalizarPartidaSchema(BaseModel):
-    type: Literal[WebSocketMessageType.PARTIDA_FINALIZADA]
-    data: FinalizarPartidaDataSchema    
+class BloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+    colorProhibido: str
+
+class BloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.BLOQUEAR_FIGURA]
+    data: BloquearFiguraDataSchema
+
+class DesbloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+    colorProhibido: str
+
+class DesbloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.DESBLOQUEAR_FIGURA]
+    data: DesbloquearFiguraDataSchema

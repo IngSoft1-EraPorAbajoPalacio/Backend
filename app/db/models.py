@@ -34,7 +34,6 @@ class Partida(Base):
     max : Mapped[int] = mapped_column(nullable=False)
     activa : Mapped[bool] = mapped_column(Boolean,default=False)
     id_owner : Mapped[int] = mapped_column(nullable=False)
-    tiempo : Mapped[int] = mapped_column(default=120)
     
     #relaciones
     jugadores : Mapped[List['Jugador_Partida']] = relationship(back_populates='partida', cascade="all")
@@ -117,6 +116,7 @@ class CartasFigura(Base):
     id_jugador : Mapped[int] = mapped_column(ForeignKey('Jugadores.id',ondelete='CASCADE')) 
     carta_fig : Mapped[int]  = mapped_column(ForeignKey('Figuras.id'))
     en_mano : Mapped[Boolean] = mapped_column(Boolean,nullable=False)
+    bloqueada: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     #relaciones
     jugador_fig: Mapped["Jugador"] = relationship(back_populates='cartas_de_figuras')

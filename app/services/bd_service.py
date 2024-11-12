@@ -88,27 +88,6 @@ class DB_Service:
         partida = db.query(Partida).filter(Partida.id == id_partida).first()
         partida.activa = True
         db.commit()
-        
-    def obtener_turno_actual(self, id_partida, db: Session):
-        """
-        Obtener el turno actual de la partida con id: id_partida
-        """
-        return db.query(Tablero).filter(Tablero.id_partida == id_partida).first().turno
-    
-    def setear_tiempo(self, id_partida, tiempo: int, db: Session):
-        """
-        Seteo el tiempo de la partida con id : id_partida
-        """
-        partida = self.obtener_partida(id_partida, db)
-        partida.tiempo = tiempo
-        db.commit() 
-        
-    def obtener_tiempo_actual(self, id_partida,  db: Session):
-        """
-        Obtengo el tiempo de la partida con id : id_partida
-        """
-        partida = self.obtener_partida(id_partida, db)
-        return partida.tiempo
 
     ########## QUERIES RELACIONADAS A JUGADORES ##########
     
@@ -150,14 +129,6 @@ class DB_Service:
         for jugador in jugadores:
             jugador.jugando = True
         db.commit()
-        
-        
-    def obtener_nombre_jugador(self, id_jugador: int, db: Session):
-        """
-        Se obtiene el nombre del jugador con id: id_jugador.
-        Se asume que el jugador existe.
-        """
-        return db.query(Jugador).filter(Jugador.id == id_jugador).first().nickname        
     
     
     ########## QUERIES RELACIONADAS A CARTAS DE MOVIMIENTOS ##########
@@ -267,15 +238,6 @@ class DB_Service:
             db.delete(mov)
         db.commit()
 
-    def obtener_cantidad_movimientos_parciales(self, id_partida: int, id_jugador: int, db: Session):
-          return (
-            db.query(MovimientosParciales)
-            .filter(
-                MovimientosParciales.id_partida == id_partida,
-                MovimientosParciales.id_jugador == id_jugador
-            )
-        ).count()
-
     ########## QUERIES RELACIONADAS A CARTAS DE FIGURAS ##########
     
     def obtener_figura_en_mano(self, id_partida: int, id_jugador: int, id_figura: int, db: Session):
@@ -303,21 +265,37 @@ class DB_Service:
              CartasFigura.en_mano == True
          ).all()        
 
+    def obtener_todas_figuras_en_mano(self, id_partida: int, db: Session):
+        """
+        Obtengo todas las cartas de figuras en mano
+        """
+        return db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, CartasFigura.en_mano == True).all()
+    
+    def obtener_figura_bloqueada(self, id_partida: int, id_jugador: int, db: Session):
+        """
+        Obtengo la carta de figura bloqueada del jugador con id : id_jugador
+        que se encuentra en la partida con id: id_partida.
+        En caso de no encontrar ninguna carta de figura bloqueada, devuelvo None.
+        """    
+        return db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.id_jugador == id_jugador,
+            CartasFigura.bloqueada == True
+        ).first()
 
     def cantidad_figuras(self, db: Session):
-        """
-        Se devuelve al cantidad de figuras total del juego.
-        """
         return db.query(Figuras).count()
 
-
-    def cantidad_cartas_figuras(self, id_partida: int, id_jugador: int, db: Session):
+    def bloquear_carta_figura(self, id_partida: int, id_jugador: int, id_figura: int, db: Session):
         """
-        Se devuelve la cantidad de cartas de figuras que tiene el jugador con id: id_jugador
-        que se encuentra en la partida con id: id_partida
+        Se bloquea la carta de figura con id: id_figura del jugador con id : id_jugador
         """
-        return db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
-                                             CartasFigura.id_jugador == id_jugador).count()
+        db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.id_jugador == id_jugador,
+            CartasFigura.carta_fig == id_figura
+        ).first().bloqueada = True
+        db.commit()
 
     def eliminar_carta_figura(self, id_partida: int, id_jugador: int, id_figura: int, db: Session):
         """

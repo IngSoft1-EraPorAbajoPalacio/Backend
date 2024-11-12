@@ -113,13 +113,25 @@ def obtener_cartas_figuras(id_partida: int, db: Session):
         
     return resultado
 
+def obtener_cartas_figuras_bloqueadas(id_partida: int, db: Session):
+    
+    figuras_bloqueadas = db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.bloqueada == True
+        ).all()
+        
+    cartas_bloqueadas = [fig.carta_fig for fig in figuras_bloqueadas]
+        
+    return cartas_bloqueadas
+        
+
 def obtener_figuras_en_juego(id_partida: int, db: Session) -> List[int]:
     """retorna lista de tipos (sin repeticion ) de figura en juego (cartas de figura visibles)"""
     id_jugadores = obtener_id_jugadores(id_partida, db)
     tipos_figura = []
     
     for id_jugador in id_jugadores:
-        figuras = db_service.obtener_figuras_en_mano(id_partida, id_jugador, db)
+        figuras = db.query(CartasFigura).filter(CartasFigura.id_jugador == id_jugador, CartasFigura.en_mano == True, CartasFigura.bloqueada == False).all()
         cartas = [fig.figura.fig.value for fig in figuras if fig.figura]    
         tipos_figura.extend(cartas)
         
@@ -185,13 +197,31 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
         })
         
     en_mano = len(cartas_fig)
-    reponer = max(0, CARTAS_EN_MANO - en_mano)
+    cartas_a_asignar = max(0, CARTAS_EN_MANO - en_mano)
+    esta_bloqueado = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
+                                                   CartasFigura.en_mano == True,
+                                                   CartasFigura.bloqueada == True).first()
+    if cartas_a_asignar == 0 or esta_bloqueado:
+        return resultado 
     
-    repuestas = asignar_cartas_figuras(idPartida, idJugador, reponer, db )  
+    cartas_fig = db.query(CartasFigura).filter(
+        CartasFigura.id_partida == idPartida,
+        CartasFigura.id_jugador == idJugador,
+        CartasFigura.en_mano == False
+    ).limit(cartas_a_asignar).all()
     
-    resultado = resultado + repuestas
-    
-    return resultado
+    for fig in cartas_fig:
+        fig.en_mano = True
+        resultado.append(
+            {
+                "id": fig.carta_fig,
+                "figura": fig.figura.fig.value
+            }
+        )   
+        
+    db.commit()
+
+    return resultado   
 
 def asignar_cartas_movimientos(idPartida: int, idJugador: int , reponer: int, db: Session): 
     
@@ -218,4 +248,24 @@ def asignar_cartas_movimientos(idPartida: int, idJugador: int , reponer: int, db
     db.commit()
     
     return resultado
- 
+
+def reposicion_cartas_movimientos(idPartida: int, idJugador: int, db: Session):
+        
+    mov = db.query(CartaMovimientos).filter(CartaMovimientos.id_jugador == idJugador,
+                                      CartaMovimientos.id_partida == idPartida,
+                                      CartaMovimientos.en_mano == True).all()
+    en_mano = len(mov)
+    
+    if mov == 3:
+        return []
+    
+    cartas_a_asignar = max(0, 3 - en_mano)
+        
+    return asignar_cartas_movimientos(idPartida, idJugador, cartas_a_asignar, db)
+        
+        
+        
+        
+    
+    
+    
