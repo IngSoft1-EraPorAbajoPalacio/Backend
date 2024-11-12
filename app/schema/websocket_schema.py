@@ -186,9 +186,6 @@ class DesbloquearFiguraSchema(BaseModel):
     type: Literal[WebSocketMessageType.DESBLOQUEAR_FIGURA]
     data: DesbloquearFiguraDataSchema
 
-
-
-
 class MensajeSchema(BaseModel):
     type: Literal[WebSocketMessageType.MENSAJE_ENVIADO]
     mensaje: str
