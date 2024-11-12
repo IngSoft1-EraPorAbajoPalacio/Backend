@@ -113,13 +113,24 @@ def obtener_cartas_figuras(id_partida: int, db: Session):
         
     return resultado
 
+def obtener_cartas_figuras_bloqueadas(id_partida: int, db: Session):
+    
+    figuras_bloqueadas = db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.bloqueada == True
+        ).all()
+        
+    cartas_bloqueadas = [fig.carta_fig for fig in figuras_bloqueadas]
+        
+    return cartas_bloqueadas
+
 def obtener_figuras_en_juego(id_partida: int, db: Session) -> List[int]:
     """retorna lista de tipos (sin repeticion ) de figura en juego (cartas de figura visibles)"""
     id_jugadores = obtener_id_jugadores(id_partida, db)
     tipos_figura = []
     
     for id_jugador in id_jugadores:
-        figuras = db_service.obtener_figuras_en_mano(id_partida, id_jugador, db)
+        figuras = db.query(CartasFigura).filter(CartasFigura.id_jugador == id_jugador, CartasFigura.en_mano == True, CartasFigura.bloqueada == False).all()
         cartas = [fig.figura.fig.value for fig in figuras if fig.figura]    
         tipos_figura.extend(cartas)
         
@@ -183,6 +194,12 @@ def reposicion_cartas_figuras(idPartida: int, idJugador: int, db:Session):
             "id": mov.carta_fig,
             "figura": mov.figura.fig.value
         })
+
+    esta_bloqueado = db.query(CartasFigura).filter(CartasFigura.id_jugador == idJugador,
+                                                   CartasFigura.en_mano == True,
+                                                   CartasFigura.bloqueada == True).first()
+    if esta_bloqueado:
+        return resultado
         
     en_mano = len(cartas_fig)
     reponer = max(0, CARTAS_EN_MANO - en_mano)

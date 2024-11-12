@@ -5,29 +5,29 @@ DB_NAME = el_switcher
 SOURCE_DIR = app
 
 # Targets
-.PHONY: all venv activate update-pip install-deps mysql-start mysql-status create-db run test test-report test-all clean
+.PHONY: all venv activate update-pip install-deps start status create-db run test test-report test-all clean env
 
 venv:
 	python3 -m venv $(VENV_DIR)
 
 install: 
-	python -m pip install --upgrade pip
+	python3 -m pip install --upgrade pip
 	python3 -m pip install -r $(REQ_FILE)
 	python3 -m pip install mysqlclient
-	pip install coverage
-	pip install pytest
-	pip install pytest-asyncio
+	pip3 install coverage
+	pip3 install pytest
+	pip3 install pytest-asyncio
 
-mysql-start:
+start:
 	sudo systemctl start mysql
 
-mysql-stop:
+stop:
 	sudo systemctl stop mysql
 
-mysql-status:
+status:
 	sudo systemctl status mysql
 
-create-db: mysql-start
+create-db: start
 	mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS $(DB_NAME);"
 
 run: 
@@ -52,3 +52,11 @@ clean:
 	rm -rf $(SOURCE_DIR)/tests/__pycache__
 	rm -rf .pytest_cache
 	rm -rf .mypy
+
+env:
+	@read -p "Ingrese su usuario de mysql: " DB_USER; \
+	read -p "Ingrese su contraseña de mysql: " DB_PASSWORD; \
+	echo "DB_USER=$$DB_USER" > .env; \
+	echo "DB_PASSWORD=$$DB_PASSWORD" >> .env; \
+	echo "DB_HOST=localhost" >> .env; \
+	echo "DB_NAME=$(DB_NAME)" >> .env;

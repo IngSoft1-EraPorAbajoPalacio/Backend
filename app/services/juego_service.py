@@ -18,6 +18,7 @@ class JuegoService:
         partida = db_service.obtener_partida(id_partida, db)
         cartas_movimientos = obtener_cartas_movimientos_jugador(id_partida, id_jugador, db)
         cartas_figuras = obtener_cartas_figuras(id_partida, db)
+        cartas_bloqueadas = obtener_cartas_figuras_bloqueadas(id_partida, db)
         fichas = fichas_service.obtener_fichas(id_partida, db)
         orden = obtener_id_jugadores(id_partida, db)
         cantidad_movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
@@ -34,8 +35,8 @@ class JuegoService:
             "tiempo": tiempo ,
             "cartasMovimiento": cartas_movimientos,
             "cartasFigura": cartas_figuras,
-            "cartasBloqueadas": [], # Hay que cambiar cuando se implemente el bloqueo de cartas
-            "cantMovimientosParciales": cantidad_movimientos_parciales,
+            "cartasBloqueadas": cartas_bloqueadas,
+            "cantMovimientosParciales": cantidad_movimientos_parciales
         }
                         
         return response
@@ -89,6 +90,84 @@ class JuegoService:
         else:
             return False
 
+    def completar_figura(self, id_partida: int, jugador_a_bloquear: int, id_jugador: int, figura: DeclararFiguraRequest, tipo: str, db: Session):
+        nombre_jugador = db_service.obtener_nombre_jugador(id_jugador, db)
+        accion = ""
+        idCarta = None
+        idJugador = None
+        color_prohibido = None
+        gano = False
+        cartas = []
+
+        # Eliminar movimientos parciales
+        movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
+        for mov in movimientos_parciales:
+            db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
+
+        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db)    
+        
+        #Cambio el color prohibido
+        color = Color(figura.color)
+        db_service.cambiar_color_prohibido(id_partida, color, db)
+        color_prohibido = db_service.obtener_color_prohibido(id_partida, db)
+        if tipo == "descartar":
+            # Eliminar la carta de la mano del jugador
+            db_service.eliminar_carta_figura(id_partida, id_jugador, figura.idCarta, db)
+            
+            # Verificar si el jugador ganó
+            gano = db_service.cantidad_cartas_figuras(id_partida, id_jugador, db) == 0  
+
+            # Cartas en mano
+            cartas_en_mano = db_service.obtener_figuras_en_mano(id_partida, id_jugador, db)
+            for carta in cartas_en_mano:
+                cartas.append({
+                    "id": carta.carta_fig,
+                    "figura": carta.figura.fig.value
+                })
+
+            # Desbloquear la carta si es necesario    
+            carta_bloqueada = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == id_jugador,
+                                             CartasFigura.en_mano == True,
+                                             CartasFigura.bloqueada == True).first()
+            esta_bloqueado = carta_bloqueada.bloqueada if carta_bloqueada else False
+            cartas_en_mano = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                                           CartasFigura.id_jugador == id_jugador,
+                                                           CartasFigura.en_mano == True).count()
+              
+            if esta_bloqueado and cartas_en_mano == 1:
+                carta_a_desbloquear = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                                                    CartasFigura.id_jugador == id_jugador,
+                                                                    CartasFigura.en_mano == True).first()
+                carta_bloqueada.bloqueada = False
+                db.commit()
+
+                accion = "desbloquearFigura"
+                idCarta = carta_a_desbloquear.carta_fig
+                idJugador = id_jugador
+            else:
+                accion = "descartarFigura"
+
+        elif tipo == "bloquear":
+            # Bloquear la carta
+            db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, 
+                                          CartasFigura.id_jugador == jugador_a_bloquear,
+                                          CartasFigura.carta_fig == figura.idCarta).first().bloqueada = True
+            db.commit()
+            accion = "bloquearFigura"
+            idCarta = figura.idCarta
+            idJugador = jugador_a_bloquear
+
+        return {
+            "completarFigura": accion,
+            "idCarta": idCarta,
+            "idJugador": idJugador,
+            "colorProhibido": color_prohibido,
+            "ganar": gano,
+            "cartasFig": cartas,
+            "nombre": nombre_jugador
+        }
+        
     async def jugar_movimiento(self, id_partida: int, id_jugador: int, movimiento: JugarMovimientoRequest, db: Session):
         partida = db_service.obtener_partida(id_partida, db)
         if not partida.activa:
@@ -153,57 +232,51 @@ class JuegoService:
         if not pertenece(id_partida, id_jugador, db):
             raise HTTPException(status_code=404, detail="El jugador no pertenece a la partida")
     
-        if not db_service.obtener_figura_en_mano(id_partida, id_jugador, figura.idCarta, db):
-            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en tu mano")
+        if not db_service.obtener_todas_figuras_en_mano(id_partida, db):
+            raise HTTPException(status_code=431, detail=f"La carta {figura.idCarta} no está en ninguna mano")
 
+        # Validar la figura
         figura_db = db_service.obtener_figura(figura.idCarta, db)
         carta_figura = figura_db.fig.value
-                
-        # Validar la figura
-        if not figura.tipo_figura == carta_figura:
+        if not carta_figura == figura.tipo_figura:
             raise HTTPException(status_code=432, detail="Figura inválida")
         
-        nombre = db_service.obtener_nombre_jugador(id_jugador, db)
-        
-        #Cambio el color prohibido
-        color = Color(figura.color)
-        db_service.cambiar_color_prohibido(id_partida, color, db)
-        
-        
-        # Eliminar la carta de la mano del jugador
-        db_service.eliminar_carta_figura(id_partida, id_jugador, figura.idCarta, db)
+        esta_en_mano = db_service.obtener_figura_en_mano(id_partida, id_jugador, figura.idCarta, db)
+        if esta_en_mano:
+            # Descartar una figura propia
+            if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == id_jugador,
+                                             CartasFigura.carta_fig == figura.idCarta).first().bloqueada:
+                raise HTTPException(status_code=433, detail="No puedes descartar una figura bloqueada")
+            
+            # Descartar la carta y desbloquear si es necesario
+            response = self.completar_figura(id_partida, None, id_jugador, figura, "descartar", db)
+            db.commit()
+            return response
+        else:   
+            # Bloquear una figura
+            jugador_a_bloquear = db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, 
+                                                       CartasFigura.carta_fig == figura.idCarta).first().id_jugador
+            
+            if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == jugador_a_bloquear,
+                                             CartasFigura.carta_fig == figura.idCarta).first().bloqueada:
+                raise HTTPException(status_code=434, detail="Figura ya bloqueada")
+            
+            if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == jugador_a_bloquear).count() == 1:
+                raise HTTPException(status_code=435, detail="No puedes bloquear un jugador con una sola carta de figura")
 
-        # Cartas en mano
-        cartas_en_mano = db_service.obtener_figuras_en_mano(id_partida, id_jugador, db)
-        
-        # Eliminar movimientos parciales
-        
-        movimientos_parciales = db_service.obtener_movimientos_parciales(id_partida, id_jugador, db)
-        
-        for mov in movimientos_parciales:
-            db_service.eliminar_carta_movimiento(id_partida, id_jugador, mov.movimiento, db)
+            if db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
+                                             CartasFigura.id_jugador == jugador_a_bloquear,
+                                             CartasFigura.bloqueada == True).count() == 1:
+                raise HTTPException(status_code=436, detail="No puedes bloquear 2 cartas de un mismo jugador")
             
-        db_service.eliminar_movimientos_parciales(id_partida, id_jugador, db) 
-        
-        ganó = db_service.cantidad_cartas_figuras(id_partida, id_jugador, db) == 0                  
-        
-        cartas = [
-            {
-                "id": carta.carta_fig,
-                "figura": carta.figura.fig.value
-            } for carta in cartas_en_mano
-        ]    
-            
-        response = {
-            "cartasFig": cartas,
-            "color_prohibido": str(color.value),
-            "ganar": ganó,
-            "nombre": nombre
-        }
-        
-        return response
-    
-    
+            # Bloquear la carta
+            response = self.completar_figura(id_partida, jugador_a_bloquear, id_jugador, figura, "bloquear", db)
+            db.commit()
+            return response
+
     def deshacer_movimiento(self, idPartida: int, idJugador: int, db: Session):
         
         ultimo_movimiento_parcial = db_service.obtener_ultimo_movimiento_parcial(idPartida, idJugador, db)
