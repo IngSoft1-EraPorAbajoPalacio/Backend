@@ -36,7 +36,7 @@ class Timer:
         while tiempo > 0:
             await asyncio.sleep(2)
             tiempo -= 2
-            db.execute(update(Partida).values(tiempo=tiempo-2))
+            db.execute(update(Partida).where(Partida.id == id_partida).values(tiempo=tiempo-2))
             db.commit()
             
         # Pasar al siguiente turno y enviar mensajes de reposición de cartas
