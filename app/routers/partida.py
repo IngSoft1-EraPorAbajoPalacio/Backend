@@ -114,7 +114,8 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         declarar_figura_message = ReposicionFiguras(
             type= WebSocketMessageType.REPOSICION_FIGURAS,
             data= DeclararFiguraDataSchema(
-                cartasFig= reposicion_figuras
+                cartasFig= reposicion_figuras,
+                idJugador=id_jugador
             )
         )
 
