@@ -10,7 +10,6 @@ from app.services.encontrar_fig import *
 from app.services.bd_service import *
 from app.db.models import Color
 
-
 class JuegoService:
     
     def obtener_datos_partida(self, id_partida: int, id_jugador: int, db: Session):
