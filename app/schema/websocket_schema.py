@@ -21,6 +21,7 @@ class WebSocketMessageType(str, Enum):
     BLOQUEAR_FIGURA = "FiguraBloqueada"
     DESBLOQUEAR_FIGURA = "FiguraDesbloqueada"
     INICIO_CONEXION = "InicioConexion"
+    MENSAJE_ENVIADO = "Mensaje"
 
 class JugadorSchema(BaseModel):
     id: int
@@ -176,3 +177,6 @@ class DesbloquearFiguraSchema(BaseModel):
     type: Literal[WebSocketMessageType.DESBLOQUEAR_FIGURA]
     data: DesbloquearFiguraDataSchema
 
+class MensajeSchema(BaseModel):
+    type: Literal[WebSocketMessageType.MENSAJE_ENVIADO]
+    mensaje: str
