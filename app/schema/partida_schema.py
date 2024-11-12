@@ -73,8 +73,6 @@ class JugadorListado(BaseModel):
 class UnirsePartidaResponse(BaseModel):
     idJugador: str
     unidos: List[JugadorListado]
-    #contrasena: str
-
 
 class IniciarPartidaResponse(BaseModel):
     idPartida : str

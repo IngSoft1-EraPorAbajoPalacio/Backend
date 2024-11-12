@@ -110,6 +110,22 @@ class DB_Service:
         """
         partida = self.obtener_partida(id_partida, db)
         return partida.tiempo
+    
+    def eliminar_tablero(self, id_partida: int, db: Session):
+        """ Eliminar el tablero asociado a la partida con id: id_partida """
+        db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
+        db.commit()
+
+    def eliminar_partida(self, id_partida: int, db: Session):
+        """ Eliminar la partida con id: id_partida """
+        partida = self.obtener_partida(id_partida, db)
+        db.delete(partida)
+        db.commit()
+        
+    def eliminar_ficha(self, id_partida: int, db: Session):
+        """ Eliminar las fichas asociadas al tablero con id: id_partida """
+        db.query(Ficha).filter(Ficha.id_tablero == id_partida).delete()
+        db.commit()
 
     ########## QUERIES RELACIONADAS A JUGADORES ##########
     
@@ -167,6 +183,24 @@ class DB_Service:
         """
         return db.query(Partida).filter(Partida.id == id_partida).first().contrasena
 
+    def eliminar_jugador_partida(self, id_partida: int, db: Session):
+        jugador_partida = db.query(Jugador_Partida).filter(Jugador_Partida.id_partida == id_partida).all()
+        if (jugador_partida):
+            for jp in jugador_partida:
+                db.delete(jp)
+        db.commit()   
+    
+    def eliminar_jugador_partida_particular(self, id_partida: int, id_jugador: int, db: Session):
+        db.query(Jugador_Partida).filter(
+            Jugador_Partida.id_partida == id_partida,
+            Jugador_Partida.id_jugador == id_jugador).delete()
+        db.commit()
+        
+    def eliminar_jugador(self, id_jugador: int, db: Session):
+        jugador = self.obtener_jugador(id_jugador, db)
+        if jugador:
+            db.delete(jugador)
+        db.commit()
         
     ########## QUERIES RELACIONADAS A CARTAS DE MOVIMIENTOS ##########
     
@@ -220,6 +254,22 @@ class DB_Service:
             CartaMovimientos.id_jugador == id_jugador,
             CartaMovimientos.carta_mov == id_carta
         ).first().en_mano = False
+        
+    def eliminar_carta_movimiento_particular(self, id_partida: int, db: Session):   
+        """ Eliminar las cartas de movimientos relacionadas a la partida con id: id_partida """
+        db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
+        db.commit()
+    
+    def eliminacion_carta_movimiento(self, id_partida: int, id_jugador: int, db: Session):
+        """ 
+        Eliminar las cartas de movimientos del jugador con id: id_jugador
+        que se encuentra en la partida con id: id_partida
+        """
+        db.query(CartaMovimientos).filter(
+            CartaMovimientos.id_partida == id_partida,
+            CartaMovimientos.id_jugador == id_jugador
+        ).delete()
+        db.commit()
         
     def setear_carta_movimiento(self, carta_movimiento: CartaMovimientos, db: Session):
         """
@@ -373,6 +423,21 @@ class DB_Service:
         """
         return db.query(Figuras).filter(Figuras.id == id_figura).first()
     
+    def eliminar_carta_figura_particular(self, id_partida: int, id_jugador: int, db: Session):
+        """ 
+        Se eliminan las cartas de figuras de la partida con id: id_partida
+        del jugador con id: id_jugador
+        """
+        db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.id_jugador == id_jugador
+        ).delete()
+        db.commit()    
+        
+    def eliminar_carta_figura_id(self, id_partida: int, db: Session):    
+        """ Eliminar la carta de figura perteneciente a la partida con id: id_partida """
+        db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
+        db.commit()
     
     ########## QUERIES RELACIONADAS A FICHAS ##########
     
@@ -403,6 +468,7 @@ class DB_Service:
         db.commit()
         
     def cambiar_color_prohibido(self, id_partida: int,  color: Color , db: Session):
+        """ Cambiar el color prohibido """
         tablero = db.query(Tablero).filter(Tablero.id_partida == id_partida).first()
         tablero.color_prohibido = color
         db.commit()
