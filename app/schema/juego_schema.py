@@ -35,3 +35,6 @@ class DeclararFiguraRequest(BaseModel):
     idCarta: int
     tipo_figura: int
     color: str
+
+class MensajeRequest(BaseModel):
+    mensaje: str
