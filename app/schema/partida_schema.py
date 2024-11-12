@@ -8,7 +8,7 @@ class CrearPartida(BaseModel):
     nombre_partida: str
     cant_min_jugadores: int
     cant_max_jugadores: int
-    
+    contrasena: str
     
     @field_validator('nombre_host')
     def nombre_host_no_vacio(cls, v):
@@ -41,6 +41,7 @@ class CrearPartida(BaseModel):
 
 class UnirsePartidaRequest(BaseModel):
     nombreJugador: str
+    contrasena: str
 
     @field_validator('nombreJugador')
     def nombreJugador_no_vacio(cls, v):
@@ -62,6 +63,7 @@ class PartidaResponse(BaseModel):
     nombre_partida: str
     cant_min_jugadores: int
     cant_max_jugadores: int
+    privada: bool
          
 
 class JugadorListado(BaseModel):
@@ -71,6 +73,7 @@ class JugadorListado(BaseModel):
 class UnirsePartidaResponse(BaseModel):
     idJugador: str
     unidos: List[JugadorListado]
+    #contrasena: str
 
 
 class IniciarPartidaResponse(BaseModel):

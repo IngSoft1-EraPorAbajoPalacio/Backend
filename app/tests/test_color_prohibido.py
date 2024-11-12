@@ -28,7 +28,8 @@ def partida_test():
         nombre_host='Jugador 1',
         nombre_partida='Partida 1',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
 @pytest.fixture
@@ -47,7 +48,7 @@ async def test_color_prohibido(partida_service: PartidaService, partida_test, fi
     Base.metadata.create_all(bind=engine)
     
     partida_creada = await partida_service.crear_partida(partida_test, session)
-    await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", session)
+    await partida_service.unirse_partida(partida_creada.id_partida, "Jugador 2", "", session)
     await partida_service.iniciar_partida(int(partida_creada.id_partida), int(partida_creada.id_jugador), session)
     
     # Acomodo las fichas del tablero para la figura 9

@@ -12,7 +12,7 @@ class DB_Service:
     ########## QUERIES RELACIONADAS A PARTIDAS ##########
     
     def crear_partida(self, nombre_partida: str, min_jugadores: int, max_jugadores: int,
-                      id_owner: int, db: Session):
+                      id_owner: int, contrasena: str, db: Session):
         """
         Se crea una partida en la base de datos.
         El id_owner representa que la partida fue creada por el jugador con ese id.
@@ -21,7 +21,8 @@ class DB_Service:
                 nombre=nombre_partida,
                 min=min_jugadores,
                 max=max_jugadores,
-                id_owner=id_owner
+                id_owner=id_owner,
+                contrasena=contrasena
             )
         db.add(partida_creada)
         db.commit()
@@ -159,7 +160,14 @@ class DB_Service:
         """
         return db.query(Jugador).filter(Jugador.id == id_jugador).first().nickname        
     
-    
+    def obtener_contraseña(self, id_partida, db: Session):
+        """
+        Se obtiene la contraseña de la partida con id: id_partida.
+        En caso de que la partida no tenga contraseña se devolverá None.
+        """
+        return db.query(Partida).filter(Partida.id == id_partida).first().contrasena
+
+        
     ########## QUERIES RELACIONADAS A CARTAS DE MOVIMIENTOS ##########
     
     def obtener_movimiento_bd(self, id: int, db: Session): 
@@ -319,6 +327,35 @@ class DB_Service:
         return db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida,
                                              CartasFigura.id_jugador == id_jugador).count()
 
+    def obtener_todas_figuras_en_mano(self, id_partida: int, db: Session):
+        """
+        Obtengo todas las cartas de figuras en mano
+        """
+        return db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida, CartasFigura.en_mano == True).all()
+    
+    def obtener_figura_bloqueada(self, id_partida: int, id_jugador: int, db: Session):
+        """
+        Obtengo la carta de figura bloqueada del jugador con id : id_jugador
+        que se encuentra en la partida con id: id_partida.
+        En caso de no encontrar ninguna carta de figura bloqueada, devuelvo None.
+        """    
+        return db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.id_jugador == id_jugador,
+            CartasFigura.bloqueada == True
+        ).first()
+
+    def bloquear_carta_figura(self, id_partida: int, id_jugador: int, id_figura: int, db: Session):
+        """
+        Se bloquea la carta de figura con id: id_figura del jugador con id : id_jugador
+        """
+        db.query(CartasFigura).filter(
+            CartasFigura.id_partida == id_partida,
+            CartasFigura.id_jugador == id_jugador,
+            CartasFigura.carta_fig == id_figura
+        ).first().bloqueada = True
+        db.commit()
+        
     def eliminar_carta_figura(self, id_partida: int, id_jugador: int, id_figura: int, db: Session):
         """
         Se elimina la carta de figura con id: id_figura del jugador con id : id_jugador

@@ -20,6 +20,7 @@ class PartidaService:
                 partida.cant_min_jugadores,
                 partida.cant_max_jugadores,
                 owner.id,
+                partida.contrasena,
                 db
             )
 
@@ -33,9 +34,9 @@ class PartidaService:
             id_partida=str(partida_creada.id),
             nombre_partida=partida_creada.nombre,
             id_jugador=str(owner.id)
-        )                
-                    
-    async def unirse_partida(self, id_partida: str, nombre_jugador: str, db: Session) -> UnirsePartidaResponse:
+        )             
+                            
+    async def unirse_partida(self, id_partida: str, nombre_jugador: str, contrasena: str, db: Session) -> UnirsePartidaResponse:
         
         partida = db_service.obtener_partida(int(id_partida), db)
                 
@@ -45,8 +46,11 @@ class PartidaService:
         if len(partida.jugadores) >= partida.max:
             raise HTTPException(status_code=404, detail="La partida está llena")
         
-        if(db_service.partida_iniciada(int(id_partida), db)):
+        if (db_service.partida_iniciada(int(id_partida), db)):
             raise HTTPException(status_code=404, detail=f"No se puede unir a una partida en progreso")
+        
+        if (db_service.obtener_contraseña(id_partida, db) !=  contrasena):
+            raise HTTPException(status_code=401, detail=f"La contraseña es incorrecta")
 
         jugador_a_unirse = crear_jugador(nombre_jugador, db)
 
@@ -165,7 +169,7 @@ class PartidaService:
                     db.query(Tablero).filter(Tablero.id_partida == id_partida).delete()
                     db.query(CartasFigura).filter(CartasFigura.id_partida == id_partida).delete()
                     db.query(CartaMovimientos).filter(CartaMovimientos.id_partida == id_partida).delete()
-
+                    
                     for jugador in jugadores:
                         db.delete(jugador)
                     

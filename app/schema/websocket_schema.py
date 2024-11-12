@@ -18,6 +18,8 @@ class WebSocketMessageType(str, Enum):
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
     PARTIDA_FINALIZADA = "PartidaFinalizada"
+    BLOQUEAR_FIGURA = "FiguraBloqueada"
+    DESBLOQUEAR_FIGURA = "FiguraDesbloqueada"
     INICIO_CONEXION = "InicioConexion"
     MENSAJE_ENVIADO = "Mensaje"
 
@@ -30,6 +32,13 @@ class AgregarPartidaDataSchema(BaseModel):
     nombrePartida: str
     cantJugadoresMin: int
     cantJugadoresMax: int
+    privada: bool
+
+class IniciarPartidaDataSchema(BaseModel):
+    jugadorInicial: str
+    listaJugadores: List[str]
+    cartas: List[str]
+
 
 class Coordenada(BaseModel):
     x: int
@@ -157,6 +166,27 @@ class FinalizarPartidaDataSchema(BaseModel):
 class FinalizarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.PARTIDA_FINALIZADA]
     data: FinalizarPartidaDataSchema    
+
+
+class BloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+    colorProhibido: str
+
+class BloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.BLOQUEAR_FIGURA]
+    data: BloquearFiguraDataSchema
+
+class DesbloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+    colorProhibido: str
+
+class DesbloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.DESBLOQUEAR_FIGURA]
+    data: DesbloquearFiguraDataSchema
+
+
 
 
 class MensajeSchema(BaseModel):

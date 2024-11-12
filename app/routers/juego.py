@@ -94,15 +94,44 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
                 nombreGanador=response["nombre"]
                 )
             )
-            
             await manager_game.broadcast(idPartida, ganador_message.model_dump())
-        
-        await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
+
+        elif response["completarFigura"] == "descartarFigura" or response["completarFigura"] == "desbloquearFigura":
+            declarar_figura_message = DeclararFiguraSchema(
+                type=WebSocketMessageType.FIGURA_DESCARTAR,
+                data=DeclararFiguraColorProhibido(
+                    cartasFig=response["cartasFig"],
+                    colorProhibido=response["colorProhibido"]
+                )
+            )
+            await manager_game.broadcast(idPartida, declarar_figura_message.model_dump())            
+            if response["completarFigura"] == "desbloquearFigura":
+                desbloquear_figuras_message = DesbloquearFiguraSchema(
+                    type=WebSocketMessageType.DESBLOQUEAR_FIGURA,
+                    data=DesbloquearFiguraDataSchema(
+                        idCarta=response["idCarta"],
+                        idJugador=response["idJugador"],
+                        colorProhibido=response["colorProhibido"]
+                    )
+                )
+                await manager_game.broadcast(idPartida, desbloquear_figuras_message.model_dump())
+                
+        elif response["completarFigura"] == "bloquearFigura":
+            bloquear_figuras_message = BloquearFiguraSchema(
+                type=WebSocketMessageType.BLOQUEAR_FIGURA,
+                data=BloquearFiguraDataSchema(
+                    idCarta=response["idCarta"],
+                    idJugador=response["idJugador"],
+                    colorProhibido=response["colorProhibido"]
+                )
+            )
+            await manager_game.broadcast(idPartida, bloquear_figuras_message.model_dump())
+         
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
         await manager_game.broadcast(idPartida, figuras_data)
     except HTTPException as e:    
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
-        await manager_game.broadcast(idPartida, figuras_data)
+        await manager_game.broadcast(idPartida, figuras_data)        
         raise e
     
 

@@ -22,7 +22,8 @@ def partida_1():
         nombre_host='Jugador1',
         nombre_partida='Partida 1',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
 @pytest.fixture
@@ -31,7 +32,8 @@ def partida_2():
         nombre_host='Jugador2',
         nombre_partida='Partida 2',
         cant_min_jugadores=3,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
 @pytest.mark.asyncio

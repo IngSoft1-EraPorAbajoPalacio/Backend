@@ -23,7 +23,8 @@ def test_crear_partida_bien():
             nombre_host='Jugador1',
             nombre_partida='Partida Test',
             cant_min_jugadores=2,
-            cant_max_jugadores=4
+            cant_max_jugadores=4,
+            contrasena=""
         )
         response = client.post("/partida", json=partida_data.model_dump())
         session.commit()
@@ -45,13 +46,15 @@ def test_identificador_unico():
         nombre_host='Jugador1',
         nombre_partida='Partida Test 1',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
     partida_data_2 = CrearPartida(
         nombre_host='Jugador2',
         nombre_partida='Partida Test 2',
         cant_min_jugadores=2,
-        cant_max_jugadores=4
+        cant_max_jugadores=4,
+        contrasena=""
     )
 
     response_1 = client.post("/partida", json=partida_data_1.model_dump())
