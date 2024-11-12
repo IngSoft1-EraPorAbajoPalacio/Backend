@@ -122,3 +122,17 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
         await manager_game.broadcast(idPartida, figuras_data)        
         raise e
+    
+@router.post("/partida/{idPartida}/jugador/{nombreJugador}/mensaje", status_code=202) 
+async def enviar_mensaje(idPartida: int, nombreJugador: str, request: MensajeRequest, db: Session = Depends(crear_session)):
+    try: 
+
+        textoMensaje = f"{nombreJugador}: {request.mensaje}"
+        enviar_mensaje_message = MensajeSchema(
+            type = WebSocketMessageType.MENSAJE_ENVIADO,
+            mensaje = textoMensaje
+        )
+        await manager_game.broadcast(idPartida, enviar_mensaje_message.model_dump())
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
