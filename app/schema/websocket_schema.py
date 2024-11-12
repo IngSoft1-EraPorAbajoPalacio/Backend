@@ -18,6 +18,8 @@ class WebSocketMessageType(str, Enum):
     REPOSICION_FIGURAS = "ReposicionFiguras"
     REPOSICION_MOVIMIENTOS = "ReposicionMovimientos"
     PARTIDA_FINALIZADA = "PartidaFinalizada"
+    BLOQUEAR_FIGURA = "FiguraBloqueada"
+    DESBLOQUEAR_FIGURA = "FiguraDesbloqueada"
     INICIO_CONEXION = "InicioConexion"
 
 class JugadorSchema(BaseModel):
@@ -147,3 +149,23 @@ class FinalizarPartidaDataSchema(BaseModel):
 class FinalizarPartidaSchema(BaseModel):
     type: Literal[WebSocketMessageType.PARTIDA_FINALIZADA]
     data: FinalizarPartidaDataSchema    
+
+
+class BloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+    colorProhibido: str
+
+class BloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.BLOQUEAR_FIGURA]
+    data: BloquearFiguraDataSchema
+
+class DesbloquearFiguraDataSchema(BaseModel):
+    idCarta: int
+    idJugador: int
+    colorProhibido: str
+
+class DesbloquearFiguraSchema(BaseModel):
+    type: Literal[WebSocketMessageType.DESBLOQUEAR_FIGURA]
+    data: DesbloquearFiguraDataSchema
+
