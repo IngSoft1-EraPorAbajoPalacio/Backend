@@ -34,6 +34,7 @@ class Partida(Base):
     max : Mapped[int] = mapped_column(nullable=False)
     activa : Mapped[bool] = mapped_column(Boolean,default=False)
     id_owner : Mapped[int] = mapped_column(nullable=False)
+    tiempo : Mapped[int] = mapped_column(default=120)
     
     #relaciones
     jugadores : Mapped[List['Jugador_Partida']] = relationship(back_populates='partida', cascade="all")
@@ -59,7 +60,7 @@ class Jugador_Partida(Base) :
  
 
 colores = ["Rojo","Verde","Azul","Amarillo"] 
-Color = PyEnum("Color",colores)
+Color = PyEnum("Color",{color: color for color in colores})
 
 
 class Tablero(Base):

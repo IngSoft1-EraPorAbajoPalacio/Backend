@@ -1,9 +1,7 @@
-from operator import index
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from app.schema.partida_schema import * 
 from app.services.partida_service import partida_service
 from app.services.jugador_service import *
-from app.services.juego_service import *
 from app.services.cartas_service import *
 from app.db.base import crear_session
 from sqlalchemy.orm import Session
@@ -12,17 +10,17 @@ from app.routers.websocket_manager_game import manager_game
 from app.routers.websocket_manager_lobby import manager_lobby
 from app.schema.websocket_schema import * 
 from typing import List
-from app.services.encontrar_fig import encontrar_figuras
 import logging
-from app.services.cartas_service import obtener_figuras_en_juego
+from app.services.encontrar_fig import computar_y_enviar_figuras
 import  asyncio
+from app.services.timer import timer
 
 router = APIRouter()
 
 @router.get("/partidas/{id}", response_model=PartidaResponse)
 def obtener_partida(id_partida: int, db: Session = Depends(crear_session)):
     try:
-        partida = partida_service.obtener_partida(id_partida, db)
+        partida = db_service.obtener_partida(id_partida, db)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))    
 
@@ -32,7 +30,6 @@ def obtener_partida(id_partida: int, db: Session = Depends(crear_session)):
         cant_min_jugadores= partida.min,
         cant_max_jugadores= partida.max
     )    
-
 
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
 async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_session)):
@@ -73,7 +70,7 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
 
 @router.get("/partidas", response_model=List[PartidaResponse])
 async def listar_partidas(db: Session = Depends(crear_session)):
-    partidas = partida_service.obtener_partidas(db)
+    partidas = db_service.obtener_partidas(db)
     return [
             PartidaResponse(
                 id_partida=str(partida.id),
@@ -92,14 +89,18 @@ async def iniciar_partida(id_partida: int, id_jugador: int, db: Session = Depend
                )
 
         response = await partida_service.iniciar_partida(id_partida, id_jugador, db)
-        await manager_lobby.broadcast(id_partida,response)
+        await manager_lobby.broadcast(id_partida, response)
         await manager.broadcast(eliminar_partida_message.model_dump())
-        await computar_y_enviar_figuras(id_partida, db)
+        figuras_data = await computar_y_enviar_figuras(id_partida, db)
+        await manager_game.broadcast(id_partida, figuras_data)
+
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e)) 
     
     await asyncio.sleep(0.5)    
-    await computar_y_enviar_figuras(id_partida, db)
+    figuras_data = await computar_y_enviar_figuras(id_partida, db)
+    await manager_game.broadcast(id_partida, figuras_data)
+    timer.manejar_temporizador(id_partida, db)
     return IniciarPartidaResponse(idPartida=str(id_partida))
 
     
@@ -109,7 +110,6 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
         
         sigTurno = partida_service.pasar_turno(id_partida, id_jugador, db)
         reposicion_figuras = reposicion_cartas_figuras(id_partida, id_jugador, db)
-        reposicion_movimientos = reposicion_cartas_movimientos(id_partida, id_jugador, db)
                 
         declarar_figura_message = ReposicionFiguras(
             type= WebSocketMessageType.REPOSICION_FIGURAS,
@@ -117,24 +117,22 @@ async def pasar_turno(id_partida: int, id_jugador: int, db: Session = Depends(cr
                 cartasFig= reposicion_figuras
             )
         )
-        reposicion_mov = ReposicionCartasMovimientos(
-            type = WebSocketMessageType.REPOSICION_MOVIMIENTOS,
-            cartas = reposicion_movimientos
-        ) 
-        
-        await manager_game.broadcast_personal(id_partida, id_jugador, reposicion_mov.model_dump())
-        await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
-        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno})
-        await computar_y_enviar_figuras(id_partida, db)
 
+        await manager_game.broadcast(id_partida, declarar_figura_message.model_dump())    
+        await manager_game.broadcast(id_partida, {"type": "PasarTurno", "turno": sigTurno, "timeout": False})
+        figuras_data = await computar_y_enviar_figuras(id_partida, db)
+        await manager_game.broadcast(id_partida, figuras_data)
+        timer.manejar_temporizador(id_partida, db)
     except Exception as e:
         raise HTTPException(status_code=410, detail=str(e))
 
 
 @router.delete("/partida/{id_partida}/jugador/{id_jugador}", status_code = 202)
 async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depends(crear_session)):
-    try:
-        partida = partida_service.obtener_partida(id_partida, db)
+    try:   
+        partida = db_service.obtener_partida(id_partida, db)
+        if partida is None:
+            raise HTTPException(status_code=404, detail=f"No existe partida con id: {id_partida}")
         cantidad_jugadores = obtener_cantidad_jugadores(id_partida, db)
                 
         abandonar_partida_message = AbandonarPartidaSchema(
@@ -156,6 +154,7 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                await manager_game.broadcast(id_partida, eliminar_partida_message.model_dump())
                #ws para que se deje de mostrar en el inicio si la partida terminó
                await manager.broadcast(eliminar_partida_message.model_dump())
+               timer.cancelar_temporizador(id_partida)
 
             else:
                #ws para que se deje de mostrar jugador el juego
@@ -170,9 +169,9 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
                #ws para que deje de mostrar al jugador en el lobby
                await manager_lobby.broadcast(id_partida, abandonar_partida_message.model_dump()) #para que deje de mostrar al jugador en el lobby
 
-        
         await partida_service.abandonar_partida(id_partida, id_jugador, db)   
-        await computar_y_enviar_figuras(id_partida, db)   
+        figuras_data = await computar_y_enviar_figuras(id_partida, db)   
+        await manager_game.broadcast(id_partida, figuras_data)
     
     except HTTPException as he:
         logging.error(f"HTTP exception in abandonar_partida route: {str(he)}")
@@ -181,82 +180,3 @@ async def abandonar_partida(id_partida: int, id_jugador: int, db: Session = Depe
         logging.error(f"Unexpected error in abandonar_partida route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
-async def computar_y_enviar_figuras(id_partida: int, db: Session):
-    try:
-        figuras_en_juego = obtener_figuras_en_juego(id_partida, db)
-        figuras = encontrar_figuras(id_partida, figuras_en_juego, db)
-        
-        figuras_data = {
-            "type": "DeclararFigura",
-            "figuras": {
-                "figura": [
-                    {
-                        "idFig": f"{tipo}_{index}",
-                        "tipoFig": tipo,
-                        "coordenadas": list(map(lambda pos: [pos[1], pos[0]], posiciones))
-                    } for tipo, _, posiciones in figuras
-                ]
-            }
-        } 
-        await manager_game.broadcast(id_partida, figuras_data)
-    except Exception as e:
-        logging.error(f"Error al computar figuras para partida {id_partida}: {str(e)}")
-
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    print("SE INICIO CONEXION")
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect as e :
-        await manager.eliminar_lista(websocket)
-    except RuntimeError as e:
-        print(str(e))
-    
-
-@router.websocket("/ws/lobby/{idPartida}")
-async def websocket_endpoint_lobby(websocket: WebSocket, idPartida: str):
-    await manager_lobby.connect(int(idPartida),websocket)
-    print("SE INICIO LA CONEXION DEL LOBBY")
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        await manager_lobby.disconnect(int(idPartida),websocket)
-          
-        
-@router.websocket("/ws/game/{idPartida}/jugador/{idJugador}")
-async def websocket_endpoint_game(websocket: WebSocket, idPartida: int, idJugador: int, db: Session = Depends(crear_session)):
-    await manager_game.connect(idPartida, idJugador, websocket)
-    
-    print("SE INICIO LA CONEXION DEL GAME")
-    print(manager_game.active_connections)
-    
-    # Obtiene los datos de la partida
-    response = juego_service.obtener_datos_partida(idPartida, idJugador, db)
-
-    # Crea un mensaje de inicio de conexión con los datos de la partida
-    conexion_message = InicioConexionSchema(
-        type=WebSocketMessageType.INICIO_CONEXION,
-        data=InicioConexionDataSchema(
-            fichas=response["fichas"],
-            orden=response["orden"],
-            turnoActual=response["turnoActual"],
-            colorProhibido=response["colorProhibido"],
-            tiempo=response["tiempo"],
-            cartasMovimiento=response["cartasMovimiento"],
-            cartasFigura=response["cartasFigura"],
-            cartasBloqueadas=response["cartasBloqueadas"],
-            cantMovimientosParciales=response["cantMovimientosParciales"]
-        )
-    )
-
-    # Envía el mensaje de inicio de conexión
-    await manager_game.broadcast_personal(idPartida, idJugador, conexion_message.dict())
-
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        await manager_game.disconnect(idPartida, idJugador,websocket)    

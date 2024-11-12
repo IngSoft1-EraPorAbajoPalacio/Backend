@@ -1,28 +1,110 @@
-en ~/Backend
-Crear entorno virtual
-###  python3 -m venv .venv
-Activar entorno virtual
-###  source .venv/bin/activate
-Actualizar pip e instalar dependencias:
-###  python -m pip install --upgrade pip
-###  python3 -m pip install -r requirements.txt
-###  python3 -m pip install mysqlclient
+# Proyecto de la materia Ingeniería de Software 1: El switcher
+## Backend
 
-Necesitaremos tener instalado MySQL:
-### https://dev.mysql.com/downloads/mysql/
+Este proyecto es el backend de la aplicación El Switcher, desarrollado en Python con el framework FastAPI.
 
-Una vez instalado, iniciamos el servidor MYSQL:
-### sudo systemctl start mysql
+### Requisitos
 
-Verificar el estado de la conexión:
-### sudo systemctl status mysql
+- Python 3.8 o superior
+- MySQL 5.7 o superior
 
-Iniciar una sesión
-### mysql -u root -p
+### Instalación y environment
 
-Creamos una base de datos llamada el_switcher
-### CREATE DATABASE el_switcher
+1. Clona el repositorio:
 
-Correr proyecto
+```bash
+git clone https://github.com/IngSoft1-EraPorAbajoPalacio/Backend.git
+cd Backend
+```
 
-###  uvicorn app.main:app --reload
+2. Crea y activa el entorno virtual:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+4. Instala las dependencias:
+
+```bash
+make install
+```
+
+5. Crea el enviroment de mysql:
+
+```bash
+make env
+```
+
+6. Inicia el servidor MYSQL:
+
+```bash
+make start
+```
+
+### Ejecución del servidor
+Para ejecutar el servidor, usa:
+```bash
+make run
+```
+El servidor estará disponible en `http://localhost:8000`.
+
+### Pruebas
+
+Este proyecto utiliza Pytest para las pruebas. Para ejecutar las pruebas, usa:
+
+```bash
+make test
+```
+
+### Pruebas con reportes
+
+Para ejecutar las pruebas con reportes, usa:
+
+```bash
+make test-report
+```
+
+### Comandos Adicionales
+
+#### Verificar el estado del servidor MySQL:
+
+```bash
+make status
+```
+
+#### Detener el servidor MySQL:
+
+```bash
+make stop
+```
+
+#### Crear la base de datos:
+
+```bash
+make create-db
+```
+
+#### Ejecutar pruebas:
+
+```bash
+make test
+```
+
+#### Ejecutar pruebas con reportes:
+
+```bash
+make test-report
+```
+
+#### Ejecutar todas las pruebas y generar reportes:
+
+```bash
+make test-all
+```
+
+#### Limpiar archivos generados:
+
+```bash
+make clean
+```
