@@ -129,6 +129,7 @@ class MovimientoParcialSchema(BaseModel):
 class DeclararFiguraColorProhibido(BaseModel):
     cartasFig: List[dict]
     colorProhibido : str
+    idJugador: int
 
 
 class DeclararFiguraSchema(BaseModel):

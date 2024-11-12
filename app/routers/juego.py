@@ -78,17 +78,11 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
     try:
         response = await juego_service.declarar_figura(idPartida, idJugador, request, db)
         declarar_figura_message = DeclararFiguraSchema(
-<<<<<<< HEAD
-            type=WebSocketMessageType.FIGURA_DECLARADA,
-            data=DeclararFiguraDataSchema(
-                cartasFig=response["cartasFig"],
-                idJugador= idJugador
-=======
             type=WebSocketMessageType.FIGURA_DESCARTAR,
             data=DeclararFiguraColorProhibido(
                 cartasFig=response["cartasFig"],
-                colorProhibido=response["color_prohibido"]
->>>>>>> origin/dev
+                colorProhibido=response["color_prohibido"],
+                idJugador=idJugador
             )
         )
         
@@ -107,8 +101,8 @@ async def declarar_figura(idPartida: int, idJugador: int, request: DeclararFigur
         figuras_data = await computar_y_enviar_figuras(idPartida, db)
         await manager_game.broadcast(idPartida, figuras_data)
     except HTTPException as e:    
-<<<<<<< HEAD
-        await computar_y_enviar_figuras(idPartida, db)
+        figuras_data = await computar_y_enviar_figuras(idPartida, db)
+        await manager_game.broadcast(idPartida, figuras_data)
         raise e
     
 
@@ -126,8 +120,3 @@ async def enviar_mensaje(idPartida: int, nombreJugador: str, request: MensajeReq
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-=======
-        figuras_data = await computar_y_enviar_figuras(idPartida, db)
-        await manager_game.broadcast(idPartida, figuras_data)
-        raise e
->>>>>>> origin/dev
