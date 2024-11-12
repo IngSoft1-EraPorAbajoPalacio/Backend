@@ -28,7 +28,8 @@ def obtener_partida(id_partida: int, db: Session = Depends(crear_session)):
         id_partida=str(id_partida),
         nombre_partida=partida.nombre,
         cant_min_jugadores= partida.min,
-        cant_max_jugadores= partida.max
+        cant_max_jugadores= partida.max,
+        privada=True if partida.contrasena else False
     )    
 
 @router.post("/partida", response_model=CrearPartidaResponse, status_code=201)
@@ -41,7 +42,8 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
                 idPartida=int(partida_creada.id_partida),
                 nombrePartida=partida.nombre_partida,
                 cantJugadoresMin=partida.cant_min_jugadores,
-                cantJugadoresMax=partida.cant_max_jugadores
+                cantJugadoresMax=partida.cant_max_jugadores,
+                privada= True if partida.contrasena else False  
             )
         )
         await manager.broadcast(agregar_partida_message.model_dump())
@@ -52,7 +54,7 @@ async def crear_partida(partida: CrearPartida, db: Session = Depends(crear_sessi
 @router.post("/partida/{idPartida}/jugador", response_model=UnirsePartidaResponse, status_code=201)
 async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Session = Depends(crear_session)):
     try:
-        response = await partida_service.unirse_partida(idPartida, request.nombreJugador, db)
+        response = await partida_service.unirse_partida(idPartida, request.nombreJugador, request.contrasena, db)
         jugadores = obtener_jugadores(int(idPartida), db)
 
         lista_jugadores = [
@@ -64,9 +66,8 @@ async def unirse_partida(idPartida: str, request: UnirsePartidaRequest, db: Sess
         )
         await manager_lobby.broadcast(int(idPartida), jugador_unido_message.model_dump())
         return response
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))    
-
+    except HTTPException as e:
+        raise e
 
 @router.get("/partidas", response_model=List[PartidaResponse])
 async def listar_partidas(db: Session = Depends(crear_session)):
@@ -76,7 +77,8 @@ async def listar_partidas(db: Session = Depends(crear_session)):
                 id_partida=str(partida.id),
                 nombre_partida=partida.nombre,
                 cant_min_jugadores=partida.min, 
-                cant_max_jugadores=partida.max
+                cant_max_jugadores=partida.max,
+                privada= True if partida.contrasena else False  
             ) for partida in partidas
         ] 
 

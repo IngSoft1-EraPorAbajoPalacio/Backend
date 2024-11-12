@@ -34,6 +34,7 @@ class Partida(Base):
     max : Mapped[int] = mapped_column(nullable=False)
     activa : Mapped[bool] = mapped_column(Boolean,default=False)
     id_owner : Mapped[int] = mapped_column(nullable=False)
+    contrasena: Mapped[str] = mapped_column(String(40), nullable=False)
     tiempo : Mapped[int] = mapped_column(default=120)
     
     #relaciones
@@ -41,7 +42,7 @@ class Partida(Base):
     tablero : Mapped['Tablero'] = relationship(back_populates = 'relacion_partida' , cascade="all")
         
     def __repr__(self):
-        return f"Partida( id : {self.id}, name : {self.name})"   
+        return f"Partida( id : {self.id}, name : {self.nombre})"   
 
     
 class Jugador_Partida(Base) :

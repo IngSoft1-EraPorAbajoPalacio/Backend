@@ -31,6 +31,13 @@ class AgregarPartidaDataSchema(BaseModel):
     nombrePartida: str
     cantJugadoresMin: int
     cantJugadoresMax: int
+    privada: bool
+
+class IniciarPartidaDataSchema(BaseModel):
+    jugadorInicial: str
+    listaJugadores: List[str]
+    cartas: List[str]
+
 
 class Coordenada(BaseModel):
     x: int
